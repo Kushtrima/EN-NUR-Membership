@@ -1,0 +1,98 @@
+# Laravel Framework
+/vendor/
+/node_modules/
+/public/hot
+/public/storage
+/storage/*.key
+/storage/app/public/*
+!/storage/app/public/.gitkeep
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/bootstrap/cache/*
+!/bootstrap/cache/.gitkeep
+
+# Environment files (CRITICAL - Never commit these)
+.env
+.env.backup
+.env.production
+.env.local
+.env.*.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Backup files
+*.backup
+*.bak
+*.tmp
+*.temp
+
+# Database files (if using SQLite)
+*.sqlite
+*.sqlite3
+*.db
+
+# Compiled assets
+/public/css/
+/public/js/
+/public/mix-manifest.json
+
+# Testing
+/coverage/
+.phpunit.result.cache
+
+# Deployment
+/deploy.php
+/Envoy.blade.php
+
+# Security sensitive files
+/config/app.php.backup
+/config/database.php.backup
+*.pem
+*.key
+*.crt
+*.p12
+
+# Payment gateway files
+/storage/app/receipts/
+/storage/app/backups/
+/storage/app/exports/
+
+# Temporary files
+/temp/
+/tmp/ 
