@@ -34,24 +34,31 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # Copy application files
 COPY . /var/www/html
 
-# Create required directories
-RUN mkdir -p /var/www/html/storage/logs \
-    && mkdir -p /var/www/html/storage/framework/cache \
-    && mkdir -p /var/www/html/storage/framework/sessions \
-    && mkdir -p /var/www/html/storage/framework/views \
-    && mkdir -p /var/www/html/storage/app/backups
+# Create Laravel required directories FIRST (before Composer)
+RUN mkdir -p bootstrap/cache \
+    && mkdir -p storage/app/public \
+    && mkdir -p storage/framework/cache \
+    && mkdir -p storage/framework/sessions \
+    && mkdir -p storage/framework/views \
+    && mkdir -p storage/logs \
+    && mkdir -p storage/app/backups
+
+# Set permissions for Laravel directories
+RUN chmod -R 777 storage bootstrap/cache
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-# Set permissions (simplified approach)
-RUN chmod -R 777 /var/www/html/storage \
-    && chmod -R 777 /var/www/html/bootstrap/cache
+# Create symbolic link for storage
+RUN php artisan storage:link || true
 
-# Laravel optimization commands (with error handling)
+# Cache Laravel configuration and routes (with error handling)
 RUN php artisan config:cache || true
 RUN php artisan route:cache || true
 RUN php artisan view:cache || true
+
+# Set final permissions
+RUN chmod -R 777 storage bootstrap/cache
 
 # Expose port 80
 EXPOSE 80
