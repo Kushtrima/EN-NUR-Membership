@@ -3,7 +3,7 @@ Dockerfile*
 docker-compose*
 .dockerignore
 
-# Git
+# Git files
 .git
 .gitignore
 .gitattributes
@@ -11,6 +11,7 @@ docker-compose*
 # Documentation
 *.md
 docs/
+README.md
 
 # Node modules and build files
 node_modules/
@@ -18,11 +19,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment files
+# Environment files (security)
+.env
 .env.local
 .env.development
 .env.test
 .env.production
+.env.example
 
 # IDE files
 .vscode/
@@ -40,14 +43,15 @@ yarn-error.log*
 ehthumbs.db
 Thumbs.db
 
-# Laravel specific
+# Laravel specific - these will be created by the container
 /storage/logs/*
 /storage/framework/cache/*
 /storage/framework/sessions/*
 /storage/framework/views/*
 /storage/app/backups/*
+/bootstrap/cache/*
 
-# Composer
+# Composer vendor (will be installed in container)
 /vendor/
 
 # Testing
@@ -58,21 +62,13 @@ phpunit.xml
 # Build artifacts
 /public/hot
 /public/storage
-/storage/*.key
 
 # Deployment files
 deploy.sh
 setup-*.sh
+docker-compose.yml
+docker-compose.override.yml
 
-APP_NAME=EN NUR - MEMBERSHIP
-APP_ENV=production
-APP_DEBUG=false
-APP_KEY=base64:YOUR_GENERATED_KEY_HERE
-APP_URL=https://your-actual-render-url.onrender.com
-
-DB_CONNECTION=pgsql
-DB_HOST=your-postgres-host-from-render
-DB_PORT=5432
-DB_DATABASE=en_nur_membership
-DB_USERNAME=en_nur_user
-DB_PASSWORD=your-postgres-password-from-render 
+# Temporary files
+*.tmp
+*.temp 
