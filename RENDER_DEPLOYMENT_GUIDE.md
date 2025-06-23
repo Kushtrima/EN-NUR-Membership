@@ -62,11 +62,11 @@ After creation, note down:
 4. **Environment**: `PHP`
 5. **Build Command**:
    ```bash
-   composer install --no-dev --optimize-autoloader && php artisan config:cache && php artisan route:cache && php artisan view:cache
+   composer install --no-dev --optimize-autoloader && php artisan key:generate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache
    ```
 6. **Start Command**:
    ```bash
-   php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
+   php artisan migrate --force && php artisan config:clear && php artisan serve --host=0.0.0.0 --port=$PORT
    ```
 
 #### **Environment Variables Setup:**

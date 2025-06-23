@@ -57,4 +57,17 @@ phpunit.xml
 
 # Deployment files
 deploy.sh
-setup-*.sh 
+setup-*.sh
+
+APP_NAME=EN NUR - MEMBERSHIP
+APP_ENV=production
+APP_DEBUG=false
+APP_KEY=base64:YOUR_GENERATED_KEY_HERE
+APP_URL=https://your-actual-render-url.onrender.com
+
+DB_CONNECTION=pgsql
+DB_HOST=your-postgres-host-from-render
+DB_PORT=5432
+DB_DATABASE=en_nur_membership
+DB_USERNAME=en_nur_user
+DB_PASSWORD=your-postgres-password-from-render 

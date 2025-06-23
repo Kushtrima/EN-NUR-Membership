@@ -1,26 +1,19 @@
 services:
   - type: web
     name: en-nur-membership
-    env: php
-    buildCommand: |
-      composer install --no-dev --optimize-autoloader
-      php artisan key:generate
-      php artisan config:clear
-      php artisan cache:clear
-      php artisan route:clear
-      php artisan view:clear
-      php artisan migrate --force
-      php artisan config:cache
-      php artisan view:cache
-    startCommand: |
-      php artisan serve --host=0.0.0.0 --port=$PORT
+    env: docker
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: APP_NAME
         value: "EN NUR - MEMBERSHIP"
       - key: APP_ENV
-        value: production
+        value: local
       - key: APP_DEBUG
-        value: false
+        value: true
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: debug
       - key: APP_URL
         sync: false
       - key: APP_KEY

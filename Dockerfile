@@ -34,7 +34,7 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # Copy application files
 COPY . /var/www/html
 
-# Create Laravel required directories FIRST (before Composer)
+# Create Laravel required directories
 RUN mkdir -p bootstrap/cache \
     && mkdir -p storage/app/public \
     && mkdir -p storage/framework/cache \
@@ -49,19 +49,36 @@ RUN chmod -R 777 storage bootstrap/cache
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-# Create symbolic link for storage
-RUN php artisan storage:link || true
+# Create startup script
+RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+# Configure Apache to listen on the PORT provided by Render\n\
+if [ -n "$PORT" ]; then\n\
+    sed -i "s/Listen 80/Listen $PORT/" /etc/apache2/ports.conf\n\
+    sed -i "s/:80/:$PORT/" /etc/apache2/sites-available/000-default.conf\n\
+fi\n\
+\n\
+# Run Laravel setup commands\n\
+php artisan key:generate --force || echo "Key generation failed"\n\
+php artisan config:clear || echo "Config clear failed"\n\
+php artisan cache:clear || echo "Cache clear failed"\n\
+php artisan route:clear || echo "Route clear failed"\n\
+php artisan view:clear || echo "View clear failed"\n\
+php artisan migrate --force || echo "Migration failed"\n\
+php artisan config:cache || echo "Config cache failed"\n\
+php artisan view:cache || echo "View cache failed"\n\
+php artisan storage:link || echo "Storage link failed"\n\
+\n\
+# Set final permissions\n\
+chmod -R 777 storage bootstrap/cache\n\
+\n\
+# Start Apache\n\
+exec apache2-foreground\n\
+' > /usr/local/bin/start.sh && chmod +x /usr/local/bin/start.sh
 
-# Cache Laravel configuration and routes (with error handling)
-RUN php artisan config:cache || true
-RUN php artisan route:cache || true
-RUN php artisan view:cache || true
-
-# Set final permissions
-RUN chmod -R 777 storage bootstrap/cache
-
-# Expose port 80
+# Expose port (will be overridden by Render)
 EXPOSE 80
 
-# Start Apache
-CMD ["apache2-foreground"] 
+# Use startup script
+CMD ["/usr/local/bin/start.sh"] 
