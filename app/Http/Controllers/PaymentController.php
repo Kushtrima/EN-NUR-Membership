@@ -1222,17 +1222,26 @@ class PaymentController extends Controller
      */
     private function generateReceipt(Payment $payment)
     {
-        $payment->load('user');
-        
-        // Choose template based on payment type
-        $template = $payment->payment_type === 'membership' 
-            ? 'admin.payment-receipt-membership' 
-            : 'admin.payment-receipt-donation';
-        
-        $pdf = Pdf::loadView($template, compact('payment'));
-        
-        // Return PDF content as string for email attachment
-        return $pdf->output();
+        try {
+            // Check if required extensions are available
+            if (!extension_loaded('gd') || !extension_loaded('dom')) {
+                Log::warning('PDF generation skipped - missing required extensions', [
+                    'payment_id' => $payment->id,
+                    'gd_loaded' => extension_loaded('gd'),
+                    'dom_loaded' => extension_loaded('dom')
+                ]);
+                return null;
+            }
+
+            $pdf = Pdf::loadView('admin.payment-receipt', compact('payment'));
+            return $pdf->output();
+        } catch (\Exception $e) {
+            Log::error('PDF generation failed', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
     /**
@@ -1242,47 +1251,42 @@ class PaymentController extends Controller
     {
         try {
             $user = $payment->user;
-            
-            // Different subject and content based on payment type
-            if ($payment->payment_type === 'membership') {
-                $subject = 'Membership Confirmation - Welcome to ' . config('app.name');
-                $message = $this->getMembershipConfirmationMessage($payment);
-            } else {
-                $subject = 'Donation Receipt - Thank You from ' . config('app.name');
-                $message = $this->getDonationConfirmationMessage($payment);
-            }
+            $subject = $payment->payment_type === 'membership' 
+                ? 'Membership Payment Confirmation - EN NUR'
+                : 'Donation Confirmation - EN NUR';
 
-            // Send actual email with PDF attachment
-            try {
-                Mail::raw($message, function ($mail) use ($user, $subject, $receiptPdf, $payment) {
-                    $mail->to($user->email, $user->name)
-                         ->subject($subject)
-                         ->from(config('mail.from.address'), config('mail.from.name'));
-                    
-                    if ($receiptPdf) {
-                        $mail->attachData($receiptPdf, "receipt_{$payment->id}.pdf", [
-                            'mime' => 'application/pdf',
-                        ]);
-                    }
-                });
+            $message = $payment->payment_type === 'membership'
+                ? $this->getMembershipConfirmationMessage($payment)
+                : $this->getDonationConfirmationMessage($payment);
 
-                Log::info("Payment confirmation email sent to {$user->email}", [
-                    'payment_id' => $payment->id,
-                    'payment_type' => $payment->payment_type,
-                    'subject' => $subject,
-                    'has_receipt' => !is_null($receiptPdf)
-                ]);
-            } catch (\Exception $emailError) {
-                // Log email failure but don't break the payment process
-                Log::error("Failed to send payment confirmation email", [
-                    'payment_id' => $payment->id,
-                    'user_email' => $user->email,
-                    'error' => $emailError->getMessage()
-                ]);
-            }
+            // Attempt to send email
+            Mail::raw($message, function ($mail) use ($user, $subject, $receiptPdf, $payment) {
+                $mail->to($user->email, $user->name)
+                     ->subject($subject);
+
+                // Attach PDF receipt if available
+                if ($receiptPdf) {
+                    $filename = "receipt-{$payment->id}-" . now()->format('Y-m-d') . ".pdf";
+                    $mail->attachData($receiptPdf, $filename, [
+                        'mime' => 'application/pdf',
+                    ]);
+                }
+            });
+
+            Log::info('Payment confirmation email sent successfully', [
+                'payment_id' => $payment->id,
+                'user_email' => $user->email,
+                'payment_type' => $payment->payment_type
+            ]);
 
         } catch (\Exception $e) {
-            Log::error('Failed to send payment confirmation: ' . $e->getMessage());
+            // Log email failure but don't stop the payment process
+            Log::warning('Payment confirmation email failed to send', [
+                'payment_id' => $payment->id,
+                'user_email' => $payment->user->email ?? 'unknown',
+                'error' => $e->getMessage(),
+                'note' => 'Payment was successful but email notification failed'
+            ]);
         }
     }
 

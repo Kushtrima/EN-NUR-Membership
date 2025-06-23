@@ -15,6 +15,33 @@ services:
       echo "Checking PHP extensions..."
       php -m | grep -E "(pdo_pgsql|mbstring|openssl|tokenizer|xml|ctype|json|bcmath|curl|fileinfo|filter)"
       
+      # Check critical extensions individually
+      echo "Detailed extension check..."
+      MISSING_EXTENSIONS=""
+      for ext in pdo_pgsql mbstring openssl tokenizer xml ctype json bcmath curl fileinfo filter; do
+        if php -m | grep -q "^$ext$"; then
+          echo "✅ $ext: LOADED"
+        else
+          echo "❌ $ext: MISSING"
+          MISSING_EXTENSIONS="$MISSING_EXTENSIONS $ext"
+        fi
+      done
+      
+      # Check optional extensions for PDF generation
+      echo "Optional extensions for PDF generation..."
+      for ext in gd dom libxml; do
+        if php -m | grep -q "^$ext$"; then
+          echo "✅ $ext: LOADED (PDF generation available)"
+        else
+          echo "⚠️  $ext: MISSING (PDF generation will be disabled)"
+        fi
+      done
+      
+      if [ ! -z "$MISSING_EXTENSIONS" ]; then
+        echo "⚠️  WARNING: Missing critical extensions:$MISSING_EXTENSIONS"
+        echo "Application will attempt to continue with fallbacks..."
+      fi
+      
       # 3. Create necessary directories with proper permissions
       echo "Setting up storage directories..."
       mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views
