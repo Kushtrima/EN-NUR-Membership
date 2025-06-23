@@ -8,8 +8,83 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MembershipRenewalController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/debug-info', function() {
+    $info = [
+        'laravel_working' => 'YES - Laravel is booting successfully!',
+        'php_version' => phpversion(),
+        'laravel_version' => app()->version(),
+        'current_time' => now()->toDateTimeString(),
+        'environment' => [
+            'APP_ENV' => env('APP_ENV'),
+            'APP_DEBUG' => env('APP_DEBUG'),
+            'APP_KEY' => env('APP_KEY') ? 'Set (' . strlen(env('APP_KEY')) . ' chars)' : 'NOT SET',
+            'APP_URL' => env('APP_URL'),
+        ],
+        'database' => [
+            'DB_CONNECTION' => env('DB_CONNECTION'),
+            'DB_HOST' => env('DB_HOST'),
+            'DB_PORT' => env('DB_PORT'),
+            'DB_DATABASE' => env('DB_DATABASE'),
+            'DB_USERNAME' => env('DB_USERNAME') ? 'Set' : 'NOT SET',
+            'DB_PASSWORD' => env('DB_PASSWORD') ? 'Set' : 'NOT SET',
+        ],
+        'directories' => [
+            'storage_writable' => is_writable(storage_path()) ? 'YES' : 'NO',
+            'bootstrap_cache_writable' => is_writable(base_path('bootstrap/cache')) ? 'YES' : 'NO',
+            'storage_logs_exists' => file_exists(storage_path('logs')) ? 'YES' : 'NO',
+        ],
+        'database_test' => 'Testing...'
+    ];
+    
+    // Test database connection
+    try {
+        \DB::connection()->getPdo();
+        $info['database_test'] = 'SUCCESS - Database connected';
+    } catch (\Exception $e) {
+        $info['database_test'] = 'FAILED: ' . $e->getMessage();
+    }
+    
+    return response()->json($info, 200, [], JSON_PRETTY_PRINT);
+});
+
+Route::get('/view-logs', function() {
+    $logPath = storage_path('logs/laravel.log');
+    
+    if (!file_exists($logPath)) {
+        return response()->json([
+            'status' => 'No log file found',
+            'path' => $logPath,
+            'storage_path' => storage_path(),
+            'files_in_logs' => file_exists(storage_path('logs')) ? scandir(storage_path('logs')) : 'logs directory does not exist'
+        ]);
+    }
+    
+    $logs = file_get_contents($logPath);
+    $recentLogs = collect(explode("\n", $logs))
+        ->filter()
+        ->takeLast(50)
+        ->implode("\n");
+    
+    return response('<pre>' . htmlspecialchars($recentLogs) . '</pre>');
+});
+
+Route::get('/debug', function() {
+    return dd('Laravel is booting successfully!', [
+        'php_version' => phpversion(),
+        'laravel_version' => app()->version(),
+        'app_env' => env('APP_ENV'),
+        'app_debug' => env('APP_DEBUG'),
+        'db_connection' => env('DB_CONNECTION'),
+        'app_key_set' => env('APP_KEY') ? 'Yes' : 'No',
+    ]);
+});
+
 Route::get('/', function () {
     return '<h1>Laravel is Working!</h1><p>Your EN NUR Membership System is successfully deployed!</p><p>PHP Version: ' . phpversion() . '</p><p>Laravel Version: ' . app()->version() . '</p>';
+});
+
+Route::get('/health', function () {
+    return response('OK', 200);
 });
 
 Route::get('/test-route', function () {
