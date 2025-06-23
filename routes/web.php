@@ -82,11 +82,21 @@ Route::get('/debug', function() {
 });
 
 Route::get('/', function () {
-    return '<h1>Laravel is Working!</h1><p>Your EN NUR Membership System is successfully deployed!</p><p>PHP Version: ' . phpversion() . '</p><p>Laravel Version: ' . app()->version() . '</p>';
+    // Redirect authenticated users to dashboard
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+    
+    // Redirect unauthenticated users to login
+    return redirect()->route('login');
 });
 
 Route::get('/health', function () {
     return response('OK', 200);
+});
+
+Route::get('/status', function () {
+    return '<h1>Laravel is Working!</h1><p>Your EN NUR Membership System is successfully deployed!</p><p>PHP Version: ' . phpversion() . '</p><p>Laravel Version: ' . app()->version() . '</p>';
 });
 
 Route::get('/health/detailed', function () {
