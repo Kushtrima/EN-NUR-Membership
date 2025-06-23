@@ -86,7 +86,7 @@ services:
       
       # Queue Configuration
       - key: QUEUE_CONNECTION
-        value: database
+        value: sync
       
       # Logging Configuration
       - key: LOG_CHANNEL

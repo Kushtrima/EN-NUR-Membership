@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MembershipRenewalController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Artisan;
 
 Route::get('/debug-info', function() {
     $info = [
@@ -223,6 +224,42 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
         Route::post('/system/clear-logs', [AdminController::class, 'clearSystemLogs'])->name('system.clear-logs');
         Route::post('/notifications/bulk-send', [AdminController::class, 'sendBulkNotifications'])->name('notifications.bulk-send');
     });
+});
+
+Route::get('/force-migrate', function() {
+    if (env('APP_ENV') !== 'production') {
+        return response('Only available in production', 403);
+    }
+    
+    try {
+        // Force run migrations
+        Artisan::call('migrate', ['--force' => true]);
+        $migrateOutput = Artisan::output();
+        
+        // Force run seeder if no users exist
+        $userCount = DB::table('users')->count();
+        $seedOutput = '';
+        if ($userCount === 0) {
+            Artisan::call('db:seed', ['--class' => 'ProductionSeeder', '--force' => true]);
+            $seedOutput = Artisan::output();
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'migrate_output' => $migrateOutput,
+            'seed_output' => $seedOutput,
+            'user_count' => DB::table('users')->count(),
+            'tables' => collect(DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'"))
+                ->pluck('tablename')->toArray()
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
 });
 
 require __DIR__.'/auth.php'; 
