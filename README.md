@@ -296,4 +296,4 @@ For technical support or questions:
 
 ---
 
-**⚠️ Security Notice:** Never commit `.env` files or expose API keys. Always use environment variables for sensitive configuration. 
+**⚠️ Security Notice:** Never commit `.env` files or expose API keys. Always use environment variables for sensitive configuration. # Force redeploy after sessions migration fix
