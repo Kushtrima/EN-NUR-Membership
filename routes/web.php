@@ -541,4 +541,88 @@ Route::get('/create-admin', function() {
     }
 });
 
+Route::get('/setup-super-admin', function() {
+    if (env('APP_ENV') !== 'production') {
+        return response('Only available in production', 403);
+    }
+    
+    try {
+        $email = 'kushtrim.m.arifi@gmail.com';
+        $name = 'SUPER ADMIN';
+        $password = 'Alipasha1985X';
+        
+        // Check if user already exists
+        $existingUser = DB::table('users')->where('email', $email)->first();
+        
+        $output = [];
+        
+        if ($existingUser) {
+            // Update existing user to super admin
+            DB::table('users')
+                ->where('email', $email)
+                ->update([
+                    'name' => $name,
+                    'password' => bcrypt($password),
+                    'role' => 'super_admin',
+                    'email_verified_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            
+            $output[] = "✅ Updated existing user to SUPER ADMIN";
+            $output[] = "📧 Email: {$email}";
+            $output[] = "👤 Name: {$name}";
+            $output[] = "🔐 Role: super_admin";
+        } else {
+            // Create new super admin user
+            DB::table('users')->insert([
+                'name' => $name,
+                'email' => $email,
+                'email_verified_at' => now(),
+                'password' => bcrypt($password),
+                'role' => 'super_admin',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            
+            $output[] = "✅ Created new SUPER ADMIN user";
+            $output[] = "📧 Email: {$email}";
+            $output[] = "👤 Name: {$name}";
+            $output[] = "🔐 Role: super_admin";
+        }
+        
+        // Verify the user was created/updated correctly
+        $user = DB::table('users')->where('email', $email)->first();
+        $output[] = "🔍 Verification:";
+        $output[] = "  - User ID: {$user->id}";
+        $output[] = "  - Name: {$user->name}";
+        $output[] = "  - Email: {$user->email}";
+        $output[] = "  - Role: {$user->role}";
+        $output[] = "  - Email Verified: " . ($user->email_verified_at ? 'Yes' : 'No');
+        
+        // Show login credentials
+        $output[] = "🎯 LOGIN CREDENTIALS:";
+        $output[] = "  📧 Email: {$email}";
+        $output[] = "  🔑 Password: {$password}";
+        $output[] = "  🌐 Login URL: https://en-nur-membership.onrender.com/login";
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Super admin account ready!',
+            'output' => $output,
+            'credentials' => [
+                'email' => $email,
+                'password' => $password,
+                'login_url' => 'https://en-nur-membership.onrender.com/login'
+            ]
+        ]);
+        
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
 require __DIR__.'/auth.php'; 
