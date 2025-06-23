@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# EN NUR Membership - Robust Docker Startup Script
+# EN NUR Membership - Ultra-Robust Docker Startup Script
 set -e
 
-echo "🚀 Starting EN NUR Membership System..."
+echo "🚀 Starting EN NUR Membership System - Ultra-Robust Mode..."
 
 # Set permissions first (critical for Laravel)
 echo "🔧 Setting proper permissions..."
@@ -25,115 +25,165 @@ timeout=120
 counter=0
 until php -r "
 try { 
-    \$pdo = new PDO('pgsql:host='.getenv('DB_HOST').';port='.getenv('DB_PORT').';dbname='.getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD')); 
-    echo 'Connected successfully'; 
-    exit(0); 
-} catch(PDOException \$e) { 
-    echo 'Connection failed: ' . \$e->getMessage(); 
-    exit(1); 
+    \$pdo = new PDO('pgsql:host='.getenv('DB_HOST').';port='.getenv('DB_PORT').';dbname='.getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD'));
+    echo 'Database connected successfully';
+    exit(0);
+} catch (Exception \$e) { 
+    echo 'Database connection failed: ' . \$e->getMessage();
+    exit(1);
 }" 2>/dev/null || [ $counter -eq $timeout ]; do
     echo "⏳ Database not ready yet, waiting... ($counter/$timeout)"
-    echo "   DB_HOST: $DB_HOST"
-    echo "   DB_PORT: $DB_PORT" 
-    echo "   DB_DATABASE: $DB_DATABASE"
-    echo "   DB_USERNAME: $DB_USERNAME"
-    sleep 3
-    counter=$((counter + 3))
+    sleep 2
+    counter=$((counter + 1))
 done
 
-if [ $counter -ge $timeout ]; then
-    echo "❌ Database connection timeout after $timeout seconds"
-    echo "Environment check:"
-    echo "DB_HOST: $DB_HOST"
-    echo "DB_PORT: $DB_PORT"
-    echo "DB_DATABASE: $DB_DATABASE"
-    echo "DB_USERNAME: $DB_USERNAME"
-    echo "Attempting to continue anyway..."
-else
-    echo "✅ Database connection established!"
+if [ $counter -eq $timeout ]; then
+    echo "❌ Database timeout after $timeout seconds. Trying to continue anyway..."
 fi
 
-# Clear any existing caches that might interfere
-echo "🧹 Clearing existing caches..."
-php artisan config:clear || true
-php artisan cache:clear || true
-php artisan route:clear || true
-php artisan view:clear || true
+# Clear all caches to ensure fresh start
+echo "🧹 Clearing all caches..."
+php artisan config:clear || echo "Config clear failed - continuing..."
+php artisan cache:clear || echo "Cache clear failed - continuing..."
+php artisan route:clear || echo "Route clear failed - continuing..."
+php artisan view:clear || echo "View clear failed - continuing..."
 
-# Run database migrations with verbose output
-echo "🔄 Running database migrations (with debug info)..."
-echo "Available migrations:"
-ls -la database/migrations/ || echo "No migrations directory found"
-
-# Run migrations with verbose output
-php artisan migrate --force --verbose || {
-    echo "❌ Migrations failed! Let's debug..."
-    echo "Database connection test:"
-    php artisan tinker --execute="
-        try {
-            \$connection = DB::connection();
-            \$pdo = \$connection->getPdo();
-            echo 'PDO connection successful\n';
-            \$tables = \$pdo->query('SELECT tablename FROM pg_tables WHERE schemaname = \'public\'')->fetchAll();
-            echo 'Existing tables: ' . count(\$tables) . '\n';
-            foreach(\$tables as \$table) {
-                echo '  - ' . \$table['tablename'] . '\n';
-            }
-        } catch (\Exception \$e) {
-            echo 'Database error: ' . \$e->getMessage() . '\n';
-        }
-    " || echo "Failed to run database diagnostics"
+# Check if database is completely empty or has conflicts
+echo "🔍 Checking database state..."
+DB_STATE=$(php -r "
+try {
+    \$pdo = new PDO('pgsql:host='.getenv('DB_HOST').';port='.getenv('DB_PORT').';dbname='.getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD'));
     
-    echo "Attempting to continue anyway..."
-}
-
-# List tables after migration
-echo "📋 Checking created tables..."
-php artisan tinker --execute="
-try {
-    \$tables = DB::select('SELECT tablename FROM pg_tables WHERE schemaname = \'public\'');
-    echo 'Tables in database: ' . count(\$tables) . '\n';
-    foreach(\$tables as \$table) {
-        echo '  ✓ ' . \$table->tablename . '\n';
+    // Check if migrations table exists
+    \$result = \$pdo->query(\"SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'migrations'\");
+    \$migrationsExists = \$result->fetchColumn() > 0;
+    
+    if (!\$migrationsExists) {
+        echo 'FRESH';
+        exit(0);
     }
-} catch (\Exception \$e) {
-    echo 'Could not list tables: ' . \$e->getMessage() . '\n';
+    
+    // Check if any user tables exist
+    \$result = \$pdo->query(\"SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'users'\");
+    \$usersExists = \$result->fetchColumn() > 0;
+    
+    if (!\$usersExists) {
+        echo 'PARTIAL';
+        exit(0);
+    }
+    
+    // Check if users table has data
+    \$result = \$pdo->query(\"SELECT COUNT(*) FROM users\");
+    \$userCount = \$result->fetchColumn();
+    
+    if (\$userCount == 0) {
+        echo 'EMPTY';
+    } else {
+        echo 'POPULATED';
+    }
+    
+} catch (Exception \$e) {
+    echo 'ERROR';
 }
-" || echo "Could not check tables"
+" 2>/dev/null)
 
-# Seed database if needed
-echo "👤 Checking for existing users..."
-USER_COUNT=$(php artisan tinker --execute="
+echo "📋 Database state: $DB_STATE"
+
+# Handle different database states
+case $DB_STATE in
+    "FRESH")
+        echo "🆕 Fresh database - running initial migrations..."
+        php artisan migrate --force
+        ;;
+    "PARTIAL"|"ERROR")
+        echo "🔄 Partial/corrupted database - resetting and migrating..."
+        php artisan migrate:reset --force 2>/dev/null || echo "Reset failed - continuing..."
+        php artisan migrate --force
+        ;;
+    "EMPTY")
+        echo "📝 Empty database - running migrations..."
+        php artisan migrate --force
+        ;;
+    "POPULATED")
+        echo "✅ Database already populated - running any pending migrations..."
+        php artisan migrate --force
+        ;;
+esac
+
+# Verify critical tables exist
+echo "🔍 Verifying critical tables exist..."
+TABLES_CHECK=$(php -r "
 try {
-    echo App\\Models\\User::count();
-} catch (\Exception \$e) {
+    \$pdo = new PDO('pgsql:host='.getenv('DB_HOST').';port='.getenv('DB_PORT').';dbname='.getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD'));
+    
+    \$required = ['users', 'sessions', 'cache', 'payments', 'membership_renewals'];
+    \$missing = [];
+    
+    foreach (\$required as \$table) {
+        \$result = \$pdo->query(\"SELECT COUNT(*) FROM information_schema.tables WHERE table_name = '\$table'\");
+        if (\$result->fetchColumn() == 0) {
+            \$missing[] = \$table;
+        }
+    }
+    
+    if (empty(\$missing)) {
+        echo 'ALL_GOOD';
+    } else {
+        echo 'MISSING:' . implode(',', \$missing);
+    }
+    
+} catch (Exception \$e) {
+    echo 'ERROR:' . \$e->getMessage();
+}
+" 2>/dev/null)
+
+echo "📊 Tables check: $TABLES_CHECK"
+
+# If tables are missing, force a complete reset
+if [[ $TABLES_CHECK == MISSING:* ]]; then
+    echo "🔄 Critical tables missing - forcing complete reset..."
+    php artisan migrate:reset --force 2>/dev/null || echo "Reset failed - continuing..."
+    php artisan migrate --force
+fi
+
+# Check if users exist, if not run seeder
+USER_COUNT=$(php -r "
+try {
+    \$pdo = new PDO('pgsql:host='.getenv('DB_HOST').';port='.getenv('DB_PORT').';dbname='.getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD'));
+    \$result = \$pdo->query('SELECT COUNT(*) FROM users');
+    echo \$result->fetchColumn();
+} catch (Exception \$e) {
     echo '0';
 }
-" 2>/dev/null || echo "0")
+" 2>/dev/null)
 
-echo "Found $USER_COUNT existing users"
+echo "👥 User count: $USER_COUNT"
 
-if [ "$USER_COUNT" = "0" ]; then
-    echo "👤 Setting up initial admin user..."
-    php artisan db:seed --class=ProductionSeeder --force || {
-        echo "⚠️ Seeding failed, but continuing..."
-    }
+if [ "$USER_COUNT" -eq 0 ]; then
+    echo "🌱 No users found - running seeder..."
+    php artisan db:seed --class=ProductionSeeder --force
 else
-    echo "👥 Users already exist ($USER_COUNT users), skipping seeding"
+    echo "✅ Users already exist - skipping seeder"
 fi
 
-# Optimize application (with error handling)
-echo "🔧 Optimizing application..."
-php artisan config:cache || echo "⚠️ Config cache failed, continuing..."
+# Optimize application
+echo "⚡ Optimizing application..."
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
 
-echo "✅ System ready! Starting Apache..."
+# Set final permissions
+echo "🔒 Setting final permissions..."
+chown -R www-data:www-data /var/www/html/storage
+chown -R www-data:www-data /var/www/html/bootstrap/cache
+chmod -R 755 /var/www/html/storage
+chmod -R 755 /var/www/html/bootstrap/cache
 
-# Ensure proper Apache configuration
-export APACHE_RUN_USER=www-data
-export APACHE_RUN_GROUP=www-data
-export APACHE_LOG_DIR=/var/log/apache2
-export APACHE_LOCK_DIR=/var/lock/apache2
-export APACHE_RUN_DIR=/var/run/apache2
+echo "🎉 EN NUR Membership System startup completed successfully!"
+echo "📊 Database: $DB_STATE"
+echo "📋 Tables: $TABLES_CHECK"
+echo "👥 Users: $USER_COUNT"
 
-# Start Apache in foreground
+# Start Apache
+echo "🌐 Starting Apache server..."
 exec apache2-foreground 

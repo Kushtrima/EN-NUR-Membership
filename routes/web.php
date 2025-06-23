@@ -262,4 +262,118 @@ Route::get('/force-migrate', function() {
     }
 });
 
+Route::get('/db-status', function() {
+    if (env('APP_ENV') !== 'production') {
+        return response('Only available in production', 403);
+    }
+    
+    try {
+        // Check database connection
+        $dbConnected = true;
+        $connectionError = null;
+        try {
+            DB::connection()->getPdo();
+        } catch (Exception $e) {
+            $dbConnected = false;
+            $connectionError = $e->getMessage();
+        }
+        
+        // Get existing tables
+        $tables = [];
+        $tablesError = null;
+        try {
+            $tables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
+            $tables = array_map(function($table) { return $table->tablename; }, $tables);
+        } catch (Exception $e) {
+            $tablesError = $e->getMessage();
+        }
+        
+        // Check migration status
+        $migrationStatus = 'unknown';
+        $migrationError = null;
+        try {
+            $migrationStatus = 'migrations_table_exists';
+            $migrations = DB::table('migrations')->pluck('migration')->toArray();
+        } catch (Exception $e) {
+            $migrationStatus = 'no_migrations_table';
+            $migrationError = $e->getMessage();
+            $migrations = [];
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'database_connected' => $dbConnected,
+            'connection_error' => $connectionError,
+            'existing_tables' => $tables,
+            'tables_error' => $tablesError,
+            'migration_status' => $migrationStatus,
+            'migration_error' => $migrationError,
+            'ran_migrations' => $migrations ?? [],
+            'app_env' => env('APP_ENV'),
+            'db_connection' => env('DB_CONNECTION'),
+            'db_host' => env('DB_HOST'),
+            'db_database' => env('DB_DATABASE'),
+        ]);
+        
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
+Route::get('/reset-migrations', function() {
+    if (env('APP_ENV') !== 'production') {
+        return response('Only available in production', 403);
+    }
+    
+    try {
+        // Drop all tables except migrations
+        $tables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename != 'migrations'");
+        $dropOutput = [];
+        
+        foreach ($tables as $table) {
+            $tableName = $table->tablename;
+            try {
+                DB::statement("DROP TABLE IF EXISTS {$tableName} CASCADE");
+                $dropOutput[] = "Dropped: {$tableName}";
+            } catch (Exception $e) {
+                $dropOutput[] = "Failed to drop {$tableName}: " . $e->getMessage();
+            }
+        }
+        
+        // Clear migration records for dropped tables
+        try {
+            DB::table('migrations')->delete();
+            $dropOutput[] = "Cleared migration records";
+        } catch (Exception $e) {
+            $dropOutput[] = "Failed to clear migrations: " . $e->getMessage();
+        }
+        
+        // Run fresh migrations
+        Artisan::call('migrate', ['--force' => true]);
+        $migrateOutput = Artisan::output();
+        
+        // Run seeder
+        Artisan::call('db:seed', ['--class' => 'ProductionSeeder', '--force' => true]);
+        $seedOutput = Artisan::output();
+        
+        return response()->json([
+            'status' => 'success',
+            'drop_output' => $dropOutput,
+            'migrate_output' => $migrateOutput,
+            'seed_output' => $seedOutput
+        ]);
+        
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
 require __DIR__.'/auth.php'; 
