@@ -2,8 +2,11 @@ services:
   - type: web
     name: en-nur-membership
     env: php
+    runtime: php
     plan: free
     region: oregon
+    dockerCommand: null
+    dockerfilePath: null
     buildCommand: |
       echo "=== STARTING BUILD PROCESS ==="
       
