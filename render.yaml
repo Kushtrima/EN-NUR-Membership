@@ -30,15 +30,25 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        sync: false
+        fromDatabase:
+          name: en-nur-membership-db
+          property: host
       - key: DB_PORT
-        value: "5432"
+        fromDatabase:
+          name: en-nur-membership-db
+          property: port
       - key: DB_DATABASE
-        sync: false
+        fromDatabase:
+          name: en-nur-membership-db
+          property: database
       - key: DB_USERNAME
-        sync: false
+        fromDatabase:
+          name: en-nur-membership-db
+          property: user
       - key: DB_PASSWORD
-        sync: false
+        fromDatabase:
+          name: en-nur-membership-db
+          property: password
       - key: STRIPE_KEY
         sync: false
       - key: STRIPE_SECRET
