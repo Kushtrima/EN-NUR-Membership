@@ -93,8 +93,6 @@ services:
         value: stderr
       - key: LOG_LEVEL
         value: info
-      - key: LOG_DEPRECATIONS_CHANNEL
-        value: "null"
       - key: LOG_STACK
         value: single
       
@@ -105,12 +103,6 @@ services:
         value: localhost
       - key: MAIL_PORT
         value: "2525"
-      - key: MAIL_USERNAME
-        value: "null"
-      - key: MAIL_PASSWORD
-        value: "null"
-      - key: MAIL_ENCRYPTION
-        value: "null"
       - key: MAIL_FROM_ADDRESS
         value: noreply@en-nur-membership.onrender.com
       - key: MAIL_FROM_NAME
