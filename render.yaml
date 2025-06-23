@@ -77,6 +77,12 @@ services:
         value: /
       - key: SESSION_DOMAIN
         value: .onrender.com
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: SESSION_HTTP_ONLY
+        value: "true"
+      - key: SESSION_SAME_SITE
+        value: "lax"
       
       # Cache Configuration
       - key: CACHE_DRIVER
@@ -130,6 +136,12 @@ services:
       # Security Configuration
       - key: BCRYPT_ROUNDS
         value: "12"
+      - key: FORCE_HTTPS
+        value: "true"
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: "en-nur-membership.onrender.com"
       
       # PDF Configuration
       - key: DOMPDF_ENABLE_REMOTE
