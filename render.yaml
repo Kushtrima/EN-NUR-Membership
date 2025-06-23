@@ -1,140 +1,92 @@
 services:
   - type: web
     name: en-nur-membership
-    env: php
-    runtime: php
-    plan: free
-    region: oregon
-    dockerCommand: null
-    dockerfilePath: null
-    buildCommand: |
-      echo "=== STARTING BUILD PROCESS ==="
-      
-      # 1. Install dependencies with verbose output
-      echo "Installing Composer dependencies..."
-      composer install --no-dev --optimize-autoloader --no-interaction --verbose
-      
-      # 2. Verify PHP extensions required for Laravel 11
-      echo "Checking PHP extensions..."
-      php -m | grep -E "(pdo_pgsql|mbstring|openssl|tokenizer|xml|ctype|json|bcmath|curl|fileinfo|filter)"
-      
-      # Check critical extensions individually
-      echo "Detailed extension check..."
-      MISSING_EXTENSIONS=""
-      for ext in pdo_pgsql mbstring openssl tokenizer xml ctype json bcmath curl fileinfo filter; do
-        if php -m | grep -q "^$ext$"; then
-          echo "✅ $ext: LOADED"
-        else
-          echo "❌ $ext: MISSING"
-          MISSING_EXTENSIONS="$MISSING_EXTENSIONS $ext"
-        fi
-      done
-      
-      # Check optional extensions for PDF generation
-      echo "Optional extensions for PDF generation..."
-      for ext in gd dom libxml; do
-        if php -m | grep -q "^$ext$"; then
-          echo "✅ $ext: LOADED (PDF generation available)"
-        else
-          echo "⚠️  $ext: MISSING (PDF generation will be disabled)"
-        fi
-      done
-      
-      if [ ! -z "$MISSING_EXTENSIONS" ]; then
-        echo "⚠️  WARNING: Missing critical extensions:$MISSING_EXTENSIONS"
-        echo "Application will attempt to continue with fallbacks..."
-      fi
-      
-      # 3. Create necessary directories with proper permissions
-      echo "Setting up storage directories..."
-      mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views
-      chmod -R 755 storage bootstrap/cache
-      
-      # 4. Generate application key FIRST (before any artisan commands that need it)
-      echo "Generating application key..."
-      php artisan key:generate --force --no-interaction
-      
-      # 5. Test basic Laravel functionality
-      echo "Testing Laravel bootstrap..."
-      php artisan --version
-      
-      # 6. Clear caches (now that we have a valid key)
-      echo "Clearing application caches..."
-      php artisan config:clear --no-interaction
-      php artisan cache:clear --no-interaction
-      php artisan route:clear --no-interaction
-      php artisan view:clear --no-interaction
-      
-      # 7. Test database connection with timeout and proper error handling
-      echo "Testing database connection..."
-      timeout 60 php -r "
-        try {
-          \$pdo = new PDO(
-            'pgsql:host=' . getenv('DB_HOST') . ';port=' . getenv('DB_PORT') . ';dbname=' . getenv('DB_DATABASE'),
-            getenv('DB_USERNAME'),
-            getenv('DB_PASSWORD'),
-            [
-              PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-              PDO::ATTR_TIMEOUT => 30,
-              PDO::ATTR_PERSISTENT => false
-            ]
-          );
-          echo 'Direct PDO connection: SUCCESS' . PHP_EOL;
-          \$pdo = null;
-        } catch (Exception \$e) {
-          echo 'Direct PDO connection FAILED: ' . \$e->getMessage() . PHP_EOL;
-          exit(1);
-        }
-      "
-      
-      # 8. Test Laravel database connection
-      echo "Testing Laravel database connection..."
-      timeout 60 php artisan tinker --execute="
-        try {
-          DB::connection()->getPdo();
-          echo 'Laravel DB connection: SUCCESS';
-        } catch (Exception \$e) {
-          echo 'Laravel DB connection FAILED: ' . \$e->getMessage();
-          exit(1);
-        }
-      "
-      
-      # 9. Run migrations with proper error handling
-      echo "Running database migrations..."
-      php artisan migrate --force --no-interaction --verbose
-      
-      # 10. Optimize for production
-      echo "Optimizing for production..."
-      php artisan config:cache --no-interaction
-      php artisan route:cache --no-interaction
-      php artisan view:cache --no-interaction
-      
-      # 11. Final verification
-      echo "Final system check..."
-      php artisan about --only=environment,cache,database
-      
-      echo "=== BUILD COMPLETED SUCCESSFULLY ==="
-      
-    startCommand: |
-      echo "Starting application server..."
-      php artisan serve --host=0.0.0.0 --port=$PORT --no-reload
-      
+    runtime: docker
+    repo: https://github.com/Kushtrima/EN-NUR-Membership.git
+    branch: main
+    
+    # Docker-specific settings
+    dockerCommand: apache2-foreground
+    
+    # Health check
+    healthCheckPath: /health
+    
+    # Auto-deploy
+    autoDeploy: true
+    
+    # Environment variables
     envVars:
       # Application Configuration
       - key: APP_NAME
-        value: "EN NUR - MEMBERSHIP"
+        value: "EN NUR Membership"
       - key: APP_ENV
         value: production
-      - key: APP_DEBUG
-        value: false
-      - key: APP_URL
-        value: https://en-nur-membership.onrender.com
       - key: APP_KEY
         generateValue: true
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        value: https://en-nur-membership.onrender.com
       - key: APP_TIMEZONE
-        value: "Europe/Zurich"
-      - key: APP_LOCALE
-        value: "en"
+        value: Europe/Zurich
+      
+      # Database Configuration (PostgreSQL)
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: en-nur-membership-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: en-nur-membership-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: en-nur-membership-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: en-nur-membership-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: en-nur-membership-db
+          property: password
+      - key: DATABASE_URL
+        fromDatabase:
+          name: en-nur-membership-db
+          property: connectionString
+      
+      # Database Connection Settings
+      - key: DB_SSLMODE
+        value: require
+      - key: DB_CONNECT_TIMEOUT
+        value: "10"
+      - key: DB_QUERY_TIMEOUT
+        value: "30"
+      
+      # Session Configuration
+      - key: SESSION_DRIVER
+        value: file
+      - key: SESSION_LIFETIME
+        value: "120"
+      - key: SESSION_ENCRYPT
+        value: "false"
+      - key: SESSION_PATH
+        value: /
+      - key: SESSION_DOMAIN
+        value: .onrender.com
+      
+      # Cache Configuration
+      - key: CACHE_DRIVER
+        value: file
+      - key: CACHE_PREFIX
+        value: en_nur_membership
+      
+      # Queue Configuration
+      - key: QUEUE_CONNECTION
+        value: database
       
       # Logging Configuration
       - key: LOG_CHANNEL
@@ -142,71 +94,58 @@ services:
       - key: LOG_LEVEL
         value: info
       - key: LOG_DEPRECATIONS_CHANNEL
-        value: null
+        value: "null"
+      - key: LOG_STACK
+        value: single
       
-      # Database Configuration (PostgreSQL)
-      - key: DB_CONNECTION
-        value: pgsql
-      - key: DB_HOST
-        value: dpg-d1c6oqqdbo4c73ckh2e0-a
-      - key: DB_PORT
-        value: "5432"
-      - key: DB_DATABASE
-        value: en_nur_membership
-      - key: DB_USERNAME
-        value: en_nur_user
-      - key: DB_PASSWORD
-        value: naCuMdU4wCOnsyJ0S6xC1ZO9tRFZfmkn
-      - key: DATABASE_URL
-        value: postgresql://en_nur_user:naCuMdU4wCOnsyJ0S6xC1ZO9tRFZfmkn@dpg-d1c6oqqdbo4c73ckh2e0-a/en_nur_membership
-      
-      # Session & Cache Configuration
-      - key: SESSION_DRIVER
-        value: file
-      - key: SESSION_LIFETIME
-        value: "120"
-      - key: CACHE_DRIVER
-        value: file
-      - key: QUEUE_CONNECTION
-        value: sync
-      
-      # Mail Configuration (Required for payment confirmations)
+      # Mail Configuration (Demo - Replace with real values)
       - key: MAIL_MAILER
         value: log
+      - key: MAIL_HOST
+        value: localhost
+      - key: MAIL_PORT
+        value: "2525"
+      - key: MAIL_USERNAME
+        value: "null"
+      - key: MAIL_PASSWORD
+        value: "null"
+      - key: MAIL_ENCRYPTION
+        value: "null"
       - key: MAIL_FROM_ADDRESS
-        value: "noreply@en-nur-membership.onrender.com"
+        value: noreply@en-nur-membership.onrender.com
       - key: MAIL_FROM_NAME
-        value: "EN NUR - MEMBERSHIP"
+        value: "EN NUR Membership"
       
-      # Payment Configuration (Demo/Test Mode)
+      # Payment Configuration (Demo Keys - Replace with real ones)
       - key: STRIPE_KEY
-        value: "pk_test_demo_key_for_testing"
+        value: pk_test_demo_key_replace_with_real
       - key: STRIPE_SECRET
-        value: "sk_test_demo_key_for_testing"
-      - key: PAYPAL_CLIENT_ID
-        value: "demo_paypal_client_id"
-      - key: PAYPAL_CLIENT_SECRET
-        value: "demo_paypal_client_secret"
-      - key: PAYPAL_MODE
-        value: "sandbox"
+        value: sk_test_demo_key_replace_with_real
+      - key: STRIPE_WEBHOOK_SECRET
+        value: whsec_demo_replace_with_real
       
-      # Application Specific Configuration
-      - key: MEMBERSHIP_AMOUNT
-        value: "35000"
-      - key: MEMBERSHIP_DURATION_DAYS
-        value: "365"
-      - key: MAX_DONATION_AMOUNT
-        value: "1000000"
-      - key: MIN_DONATION_AMOUNT
-        value: "500"
+      - key: PAYPAL_MODE
+        value: sandbox
+      - key: PAYPAL_CLIENT_ID
+        value: demo_client_id_replace_with_real
+      - key: PAYPAL_CLIENT_SECRET
+        value: demo_client_secret_replace_with_real
+      
+      # File System Configuration
+      - key: FILESYSTEM_DISK
+        value: local
       
       # Security Configuration
       - key: BCRYPT_ROUNDS
         value: "12"
       
-      # File System Configuration
-      - key: FILESYSTEM_DISK
-        value: "local"
+      # PDF Configuration
+      - key: DOMPDF_ENABLE_REMOTE
+        value: "true"
+      - key: DOMPDF_ENABLE_CSS_FLOAT
+        value: "true"
+      - key: DOMPDF_ENABLE_HTML5_PARSER
+        value: "true"
 
 databases:
   - name: en-nur-membership-db
