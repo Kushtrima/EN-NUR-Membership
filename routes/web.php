@@ -480,4 +480,65 @@ Route::get('/fix-database', function() {
     }
 });
 
+Route::get('/create-admin', function() {
+    if (env('APP_ENV') !== 'production') {
+        return response('Only available in production', 403);
+    }
+    
+    try {
+        // Check current users
+        $userCount = DB::table('users')->count();
+        $existingAdmin = DB::table('users')->where('email', 'admin@ennur.ch')->first();
+        
+        $output = [];
+        $output[] = "👥 Current user count: {$userCount}";
+        
+        if ($existingAdmin) {
+            $output[] = "✅ Admin user exists: " . $existingAdmin->email;
+            $output[] = "📧 Email verified: " . ($existingAdmin->email_verified_at ? 'Yes' : 'No');
+            $output[] = "🔐 Role: " . ($existingAdmin->role ?? 'Not set');
+        } else {
+            $output[] = "❌ Admin user does NOT exist";
+            
+            // Create admin user
+            DB::table('users')->insert([
+                'name' => 'EN NUR Admin',
+                'email' => 'admin@ennur.ch',
+                'email_verified_at' => now(),
+                'password' => bcrypt('ENnur2025!Admin'),
+                'role' => 'super_admin',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            
+            $output[] = "✅ Admin user created successfully!";
+        }
+        
+        // List all users
+        $users = DB::table('users')->select('id', 'name', 'email', 'role', 'email_verified_at')->get();
+        $output[] = "📋 All users in database:";
+        foreach ($users as $user) {
+            $verified = $user->email_verified_at ? '✅' : '❌';
+            $output[] = "  - {$user->name} ({$user->email}) - Role: {$user->role} - Verified: {$verified}";
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'output' => $output,
+            'user_count' => $userCount,
+            'admin_credentials' => [
+                'email' => 'admin@ennur.ch',
+                'password' => 'ENnur2025!Admin'
+            ]
+        ]);
+        
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
 require __DIR__.'/auth.php'; 
