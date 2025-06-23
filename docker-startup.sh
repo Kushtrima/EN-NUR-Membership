@@ -7,6 +7,10 @@ set -e
 
 echo "🚀 Starting EN NUR Membership System..."
 
+# Run composer scripts that were skipped during build
+echo "🔧 Running composer post-install tasks..."
+php artisan package:discover --ansi || echo "⚠️ Package discovery failed, continuing..."
+
 # Generate APP_KEY if not set (for Docker environments)
 if [ -z "$APP_KEY" ]; then
     echo "🔑 Generating application key..."

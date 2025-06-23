@@ -46,8 +46,8 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install PHP dependencies (skip scripts that contain artisan commands)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Configure Apache with enhanced security
 RUN a2enmod rewrite headers deflate expires
