@@ -5,28 +5,14 @@ services:
     repo: https://github.com/Kushtrima/EN-NUR-Membership.git
     branch: main
     
-    # Docker-specific settings
-    dockerCommand: |
-      php artisan migrate --force && 
-      php artisan db:seed --class=ProductionSeeder --force &&
-      apache2-foreground
+    # Docker-specific settings - Let Docker handle the startup
+    dockerCommand: apache2-foreground
     
     # Health check
     healthCheckPath: /health
     
     # Auto-deploy
     autoDeploy: true
-    
-    # Startup script for database initialization
-    startCommand: |
-      echo "🚀 Starting EN NUR Membership System..."
-      echo "📊 Checking database connection..."
-      php artisan tinker --execute="DB::connection()->getPdo(); echo 'Database connected successfully';"
-      echo "🔄 Running migrations..."
-      php artisan migrate --force
-      echo "👤 Setting up admin user..."
-      php artisan db:seed --class=ProductionSeeder --force
-      echo "✅ System ready!"
     
     # Environment variables
     envVars:
