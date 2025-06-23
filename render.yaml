@@ -2,29 +2,43 @@ services:
   - type: web
     name: en-nur-membership
     env: php
+    plan: free
     buildCommand: |
-      composer install --no-dev --optimize-autoloader
-      php artisan key:generate
+      # Install Composer dependencies
+      composer install --no-dev --optimize-autoloader --no-interaction
+      
+      # Clear all caches before generating key
       php artisan config:clear
       php artisan cache:clear
       php artisan route:clear
       php artisan view:clear
+      
+      # Generate application key if not set
+      if [ -z "$APP_KEY" ]; then
+        php artisan key:generate --force
+      fi
+      
+      # Test database connection before migrations
+      timeout 30 php artisan tinker --execute="try { DB::connection()->getPdo(); echo 'Database connection successful'; } catch (Exception \$e) { echo 'Database connection failed: ' . \$e->getMessage(); exit(1); }"
+      
+      # Run migrations
       php artisan migrate --force
+      
     startCommand: |
       php artisan serve --host=0.0.0.0 --port=$PORT
     envVars:
       - key: APP_NAME
         value: "EN NUR - MEMBERSHIP"
       - key: APP_ENV
-        value: local
+        value: production
       - key: APP_DEBUG
-        value: true
+        value: false
       - key: LOG_CHANNEL
         value: stderr
       - key: LOG_LEVEL
-        value: debug
+        value: error
       - key: APP_URL
-        sync: false
+        value: https://en-nur-membership.onrender.com
       - key: APP_KEY
         generateValue: true
       - key: DB_CONNECTION
@@ -43,6 +57,10 @@ services:
         value: postgresql://en_nur_user:naCuMdU4wCOnsyJ0S6xC1ZO9tRFZfmkn@dpg-d1c6oqqdbo4c73ckh2e0-a/en_nur_membership
       - key: SESSION_DRIVER
         value: file
+      - key: CACHE_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
       - key: STRIPE_KEY
         sync: false
       - key: STRIPE_SECRET
@@ -68,10 +86,8 @@ services:
       - key: MAIL_FROM_NAME
         value: "EN NUR - MEMBERSHIP"
 
-  - type: pserv
-    name: en-nur-membership-db
-    env: postgres
-    plan: free
-    databases:
-      - name: en_nur_membership
-        user: en_nur_user 
+databases:
+  - name: en-nur-membership-db
+    databaseName: en_nur_membership
+    user: en_nur_user
+    plan: free 
