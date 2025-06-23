@@ -30,9 +30,7 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DATABASE_URL
-        fromDatabase:
-          name: en-nur-membership-db
-          property: connectionString
+        value: postgresql://en_nur_user:naCuMdU4wCOnsyJ0S6xC1ZO9tRFZfmkn@dpg-d1c6oqqdbo4c73ckh2e0-a.oregon-postgres.render.com/en_nur_membership
       - key: STRIPE_KEY
         sync: false
       - key: STRIPE_SECRET
