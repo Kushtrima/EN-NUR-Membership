@@ -376,4 +376,98 @@ Route::get('/reset-migrations', function() {
     }
 });
 
+Route::get('/fix-database', function() {
+    if (env('APP_ENV') !== 'production') {
+        return response('Only available in production', 403);
+    }
+    
+    try {
+        // Get current database state
+        $existingTables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
+        $tableNames = array_map(function($table) { return $table->tablename; }, $existingTables);
+        
+        $output = [];
+        $output[] = "🔍 Found existing tables: " . implode(', ', $tableNames);
+        
+        // Drop ALL tables to ensure clean state
+        $output[] = "🧹 Dropping all existing tables...";
+        foreach ($tableNames as $tableName) {
+            try {
+                DB::statement("DROP TABLE IF EXISTS {$tableName} CASCADE");
+                $output[] = "✅ Dropped: {$tableName}";
+            } catch (Exception $e) {
+                $output[] = "⚠️ Failed to drop {$tableName}: " . $e->getMessage();
+            }
+        }
+        
+        // Verify all tables are gone
+        $remainingTables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
+        $output[] = "📊 Remaining tables after cleanup: " . count($remainingTables);
+        
+        // Run fresh migrations
+        $output[] = "🔄 Running fresh migrations...";
+        Artisan::call('migrate', ['--force' => true]);
+        $migrateOutput = trim(Artisan::output());
+        $output[] = "Migration output: " . $migrateOutput;
+        
+        // Verify all required tables exist
+        $requiredTables = ['migrations', 'users', 'sessions', 'cache', 'payments', 'membership_renewals', 'jobs'];
+        $finalTables = DB::select("SELECT tablename FROM pg_tables WHERE schemaname = 'public'");
+        $finalTableNames = array_map(function($table) { return $table->tablename; }, $finalTables);
+        
+        $missing = array_diff($requiredTables, $finalTableNames);
+        $output[] = "📋 Required tables status:";
+        foreach ($requiredTables as $table) {
+            $status = in_array($table, $finalTableNames) ? '✅' : '❌';
+            $output[] = "  {$status} {$table}";
+        }
+        
+        if (empty($missing)) {
+            // Run seeder if no users exist
+            $userCount = DB::table('users')->count();
+            $output[] = "👥 Current user count: {$userCount}";
+            
+            if ($userCount === 0) {
+                $output[] = "🌱 Running seeder...";
+                Artisan::call('db:seed', ['--class' => 'ProductionSeeder', '--force' => true]);
+                $seedOutput = trim(Artisan::output());
+                $output[] = "Seed output: " . $seedOutput;
+                
+                $newUserCount = DB::table('users')->count();
+                $output[] = "👥 User count after seeding: {$newUserCount}";
+            }
+            
+            // Clear and rebuild caches
+            $output[] = "⚡ Rebuilding caches...";
+            Artisan::call('config:clear');
+            Artisan::call('cache:clear');
+            Artisan::call('route:clear');
+            Artisan::call('view:clear');
+            Artisan::call('config:cache');
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Database completely reset and rebuilt successfully!',
+                'output' => $output,
+                'final_tables' => $finalTableNames,
+                'user_count' => DB::table('users')->count()
+            ]);
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Some required tables are still missing: ' . implode(', ', $missing),
+                'output' => $output,
+                'missing_tables' => $missing
+            ]);
+        }
+        
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
 require __DIR__.'/auth.php'; 
