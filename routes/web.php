@@ -12,6 +12,15 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/test-route', function () {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Laravel is working!',
+        'timestamp' => now(),
+        'php_version' => phpversion()
+    ]);
+});
+
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
