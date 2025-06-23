@@ -68,7 +68,7 @@ services:
       
       # Session Configuration
       - key: SESSION_DRIVER
-        value: database
+        value: file
       - key: SESSION_LIFETIME
         value: "120"
       - key: SESSION_ENCRYPT
