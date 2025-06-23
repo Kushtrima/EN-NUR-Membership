@@ -7,6 +7,7 @@ use App\Http\Controllers\PaymentExportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MembershipRenewalController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 
 Route::get('/debug-info', function() {
     $info = [
@@ -85,6 +86,50 @@ Route::get('/', function () {
 
 Route::get('/health', function () {
     return response('OK', 200);
+});
+
+Route::get('/health/detailed', function () {
+    $checks = [
+        'status' => 'OK',
+        'timestamp' => now()->toISOString(),
+        'environment' => app()->environment(),
+        'php_version' => phpversion(),
+        'laravel_version' => app()->version(),
+        'checks' => []
+    ];
+    
+    // Database check
+    try {
+        DB::connection()->getPdo();
+        $checks['checks']['database'] = 'CONNECTED';
+    } catch (Exception $e) {
+        $checks['checks']['database'] = 'FAILED: ' . $e->getMessage();
+        $checks['status'] = 'ERROR';
+    }
+    
+    // Storage check
+    $checks['checks']['storage_writable'] = is_writable(storage_path()) ? 'WRITABLE' : 'NOT_WRITABLE';
+    $checks['checks']['cache_writable'] = is_writable(bootstrap_path('cache')) ? 'WRITABLE' : 'NOT_WRITABLE';
+    
+    // Extensions check
+    $required_extensions = ['pdo_pgsql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'json'];
+    $missing_extensions = [];
+    foreach ($required_extensions as $ext) {
+        if (!extension_loaded($ext)) {
+            $missing_extensions[] = $ext;
+        }
+    }
+    $checks['checks']['php_extensions'] = empty($missing_extensions) ? 'ALL_LOADED' : 'MISSING: ' . implode(', ', $missing_extensions);
+    
+    // Configuration check
+    $checks['checks']['app_key'] = config('app.key') ? 'SET' : 'NOT_SET';
+    $checks['checks']['database_url'] = env('DATABASE_URL') ? 'SET' : 'NOT_SET';
+    
+    if (!empty($missing_extensions) || !config('app.key') || !env('DATABASE_URL')) {
+        $checks['status'] = 'ERROR';
+    }
+    
+    return response()->json($checks, $checks['status'] === 'OK' ? 200 : 500);
 });
 
 Route::get('/test-route', function () {

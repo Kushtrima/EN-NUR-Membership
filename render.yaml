@@ -3,44 +3,118 @@ services:
     name: en-nur-membership
     env: php
     plan: free
+    region: oregon
     buildCommand: |
-      # Install Composer dependencies
-      composer install --no-dev --optimize-autoloader --no-interaction
+      echo "=== STARTING BUILD PROCESS ==="
       
-      # Clear all caches before generating key
-      php artisan config:clear
-      php artisan cache:clear
-      php artisan route:clear
-      php artisan view:clear
+      # 1. Install dependencies with verbose output
+      echo "Installing Composer dependencies..."
+      composer install --no-dev --optimize-autoloader --no-interaction --verbose
       
-      # Generate application key if not set
-      if [ -z "$APP_KEY" ]; then
-        php artisan key:generate --force
-      fi
+      # 2. Verify PHP extensions required for Laravel 11
+      echo "Checking PHP extensions..."
+      php -m | grep -E "(pdo_pgsql|mbstring|openssl|tokenizer|xml|ctype|json|bcmath|curl|fileinfo|filter)"
       
-      # Test database connection before migrations
-      timeout 30 php artisan tinker --execute="try { DB::connection()->getPdo(); echo 'Database connection successful'; } catch (Exception \$e) { echo 'Database connection failed: ' . \$e->getMessage(); exit(1); }"
+      # 3. Create necessary directories with proper permissions
+      echo "Setting up storage directories..."
+      mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views
+      chmod -R 755 storage bootstrap/cache
       
-      # Run migrations
-      php artisan migrate --force
+      # 4. Generate application key FIRST (before any artisan commands that need it)
+      echo "Generating application key..."
+      php artisan key:generate --force --no-interaction
+      
+      # 5. Test basic Laravel functionality
+      echo "Testing Laravel bootstrap..."
+      php artisan --version
+      
+      # 6. Clear caches (now that we have a valid key)
+      echo "Clearing application caches..."
+      php artisan config:clear --no-interaction
+      php artisan cache:clear --no-interaction
+      php artisan route:clear --no-interaction
+      php artisan view:clear --no-interaction
+      
+      # 7. Test database connection with timeout and proper error handling
+      echo "Testing database connection..."
+      timeout 60 php -r "
+        try {
+          \$pdo = new PDO(
+            'pgsql:host=' . getenv('DB_HOST') . ';port=' . getenv('DB_PORT') . ';dbname=' . getenv('DB_DATABASE'),
+            getenv('DB_USERNAME'),
+            getenv('DB_PASSWORD'),
+            [
+              PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+              PDO::ATTR_TIMEOUT => 30,
+              PDO::ATTR_PERSISTENT => false
+            ]
+          );
+          echo 'Direct PDO connection: SUCCESS' . PHP_EOL;
+          \$pdo = null;
+        } catch (Exception \$e) {
+          echo 'Direct PDO connection FAILED: ' . \$e->getMessage() . PHP_EOL;
+          exit(1);
+        }
+      "
+      
+      # 8. Test Laravel database connection
+      echo "Testing Laravel database connection..."
+      timeout 60 php artisan tinker --execute="
+        try {
+          DB::connection()->getPdo();
+          echo 'Laravel DB connection: SUCCESS';
+        } catch (Exception \$e) {
+          echo 'Laravel DB connection FAILED: ' . \$e->getMessage();
+          exit(1);
+        }
+      "
+      
+      # 9. Run migrations with proper error handling
+      echo "Running database migrations..."
+      php artisan migrate --force --no-interaction --verbose
+      
+      # 10. Optimize for production
+      echo "Optimizing for production..."
+      php artisan config:cache --no-interaction
+      php artisan route:cache --no-interaction
+      php artisan view:cache --no-interaction
+      
+      # 11. Final verification
+      echo "Final system check..."
+      php artisan about --only=environment,cache,database
+      
+      echo "=== BUILD COMPLETED SUCCESSFULLY ==="
       
     startCommand: |
-      php artisan serve --host=0.0.0.0 --port=$PORT
+      echo "Starting application server..."
+      php artisan serve --host=0.0.0.0 --port=$PORT --no-reload
+      
     envVars:
+      # Application Configuration
       - key: APP_NAME
         value: "EN NUR - MEMBERSHIP"
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: false
-      - key: LOG_CHANNEL
-        value: stderr
-      - key: LOG_LEVEL
-        value: error
       - key: APP_URL
         value: https://en-nur-membership.onrender.com
       - key: APP_KEY
         generateValue: true
+      - key: APP_TIMEZONE
+        value: "Europe/Zurich"
+      - key: APP_LOCALE
+        value: "en"
+      
+      # Logging Configuration
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_DEPRECATIONS_CHANNEL
+        value: null
+      
+      # Database Configuration (PostgreSQL)
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
@@ -55,36 +129,54 @@ services:
         value: naCuMdU4wCOnsyJ0S6xC1ZO9tRFZfmkn
       - key: DATABASE_URL
         value: postgresql://en_nur_user:naCuMdU4wCOnsyJ0S6xC1ZO9tRFZfmkn@dpg-d1c6oqqdbo4c73ckh2e0-a/en_nur_membership
+      
+      # Session & Cache Configuration
       - key: SESSION_DRIVER
         value: file
+      - key: SESSION_LIFETIME
+        value: "120"
       - key: CACHE_DRIVER
         value: file
       - key: QUEUE_CONNECTION
         value: sync
-      - key: STRIPE_KEY
-        sync: false
-      - key: STRIPE_SECRET
-        sync: false
-      - key: PAYPAL_CLIENT_ID
-        sync: false
-      - key: PAYPAL_CLIENT_SECRET
-        sync: false
+      
+      # Mail Configuration (Required for payment confirmations)
       - key: MAIL_MAILER
-        value: smtp
-      - key: MAIL_HOST
-        sync: false
-      - key: MAIL_PORT
-        value: "587"
-      - key: MAIL_USERNAME
-        sync: false
-      - key: MAIL_PASSWORD
-        sync: false
-      - key: MAIL_ENCRYPTION
-        value: tls
+        value: log
       - key: MAIL_FROM_ADDRESS
-        sync: false
+        value: "noreply@en-nur-membership.onrender.com"
       - key: MAIL_FROM_NAME
         value: "EN NUR - MEMBERSHIP"
+      
+      # Payment Configuration (Demo/Test Mode)
+      - key: STRIPE_KEY
+        value: "pk_test_demo_key_for_testing"
+      - key: STRIPE_SECRET
+        value: "sk_test_demo_key_for_testing"
+      - key: PAYPAL_CLIENT_ID
+        value: "demo_paypal_client_id"
+      - key: PAYPAL_CLIENT_SECRET
+        value: "demo_paypal_client_secret"
+      - key: PAYPAL_MODE
+        value: "sandbox"
+      
+      # Application Specific Configuration
+      - key: MEMBERSHIP_AMOUNT
+        value: "35000"
+      - key: MEMBERSHIP_DURATION_DAYS
+        value: "365"
+      - key: MAX_DONATION_AMOUNT
+        value: "1000000"
+      - key: MIN_DONATION_AMOUNT
+        value: "500"
+      
+      # Security Configuration
+      - key: BCRYPT_ROUNDS
+        value: "12"
+      
+      # File System Configuration
+      - key: FILESYSTEM_DISK
+        value: "local"
 
 databases:
   - name: en-nur-membership-db
