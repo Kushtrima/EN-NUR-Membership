@@ -57,5 +57,12 @@ fi
 
 echo "✅ System ready! Starting Apache..."
 
+# Ensure Apache binds to 0.0.0.0 and correct port for Render
+export APACHE_RUN_USER=www-data
+export APACHE_RUN_GROUP=www-data
+export APACHE_LOG_DIR=/var/log/apache2
+export APACHE_LOCK_DIR=/var/lock/apache2
+export APACHE_RUN_DIR=/var/run/apache2
+
 # Start Apache in foreground
 exec apache2-foreground 

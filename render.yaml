@@ -5,8 +5,8 @@ services:
     repo: https://github.com/Kushtrima/EN-NUR-Membership.git
     branch: main
     
-    # Docker-specific settings - Let Docker handle the startup
-    dockerCommand: apache2-foreground
+    # Docker-specific settings - Use our startup script
+    dockerCommand: /usr/local/bin/startup
     
     # Health check
     healthCheckPath: /health
