@@ -6,13 +6,27 @@ services:
     branch: main
     
     # Docker-specific settings
-    dockerCommand: apache2-foreground
+    dockerCommand: |
+      php artisan migrate --force && 
+      php artisan db:seed --class=ProductionSeeder --force &&
+      apache2-foreground
     
     # Health check
     healthCheckPath: /health
     
     # Auto-deploy
     autoDeploy: true
+    
+    # Startup script for database initialization
+    startCommand: |
+      echo "🚀 Starting EN NUR Membership System..."
+      echo "📊 Checking database connection..."
+      php artisan tinker --execute="DB::connection()->getPdo(); echo 'Database connected successfully';"
+      echo "🔄 Running migrations..."
+      php artisan migrate --force
+      echo "👤 Setting up admin user..."
+      php artisan db:seed --class=ProductionSeeder --force
+      echo "✅ System ready!"
     
     # Environment variables
     envVars:
@@ -68,7 +82,7 @@ services:
       
       # Session Configuration
       - key: SESSION_DRIVER
-        value: file
+        value: database
       - key: SESSION_LIFETIME
         value: "120"
       - key: SESSION_ENCRYPT
@@ -80,7 +94,7 @@ services:
       
       # Cache Configuration
       - key: CACHE_DRIVER
-        value: file
+        value: database
       - key: CACHE_PREFIX
         value: en_nur_membership
       
@@ -146,6 +160,14 @@ services:
         value: "true"
       - key: DOMPDF_ENABLE_HTML5_PARSER
         value: "true"
+      
+      # Performance Configuration
+      - key: OPCACHE_ENABLE
+        value: "1"
+      - key: OPCACHE_MEMORY_CONSUMPTION
+        value: "128"
+      - key: OPCACHE_MAX_ACCELERATED_FILES
+        value: "4000"
 
 databases:
   - name: en-nur-membership-db
