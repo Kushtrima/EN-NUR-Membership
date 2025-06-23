@@ -558,34 +558,38 @@ Route::get('/setup-super-admin', function() {
         $output = [];
         
         if ($existingUser) {
-            // Update existing user to super admin
+            // Update existing user to super admin with FRESH password hash
+            $freshHash = Hash::make($password);
             DB::table('users')
                 ->where('email', $email)
                 ->update([
                     'name' => $name,
-                    'password' => bcrypt($password),
+                    'password' => $freshHash,
                     'role' => 'super_admin',
                     'email_verified_at' => now(),
                     'updated_at' => now(),
                 ]);
             
             $output[] = "✅ Updated existing user to SUPER ADMIN";
+            $output[] = "🔄 Generated FRESH password hash";
             $output[] = "📧 Email: {$email}";
             $output[] = "👤 Name: {$name}";
             $output[] = "🔐 Role: super_admin";
         } else {
-            // Create new super admin user
+            // Create new super admin user with FRESH password hash
+            $freshHash = Hash::make($password);
             DB::table('users')->insert([
                 'name' => $name,
                 'email' => $email,
                 'email_verified_at' => now(),
-                'password' => bcrypt($password),
+                'password' => $freshHash,
                 'role' => 'super_admin',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
             
             $output[] = "✅ Created new SUPER ADMIN user";
+            $output[] = "🔄 Generated FRESH password hash";
             $output[] = "📧 Email: {$email}";
             $output[] = "👤 Name: {$name}";
             $output[] = "🔐 Role: super_admin";
