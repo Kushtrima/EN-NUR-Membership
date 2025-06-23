@@ -80,7 +80,7 @@ services:
       
       # Cache Configuration
       - key: CACHE_DRIVER
-        value: database
+        value: file
       - key: CACHE_PREFIX
         value: en_nur_membership
       
