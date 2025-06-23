@@ -152,9 +152,9 @@ Route::get('/test-route', function () {
     ]);
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -195,7 +195,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::post('/webhook/stripe', [PaymentController::class, 'stripeWebhook'])->name('webhook.stripe');
 
 // Admin routes
-Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/payments', [AdminController::class, 'payments'])->name('payments');
