@@ -7,6 +7,14 @@ set -e
 
 echo "🚀 Starting EN NUR Membership System..."
 
+# Generate APP_KEY if not set (for Docker environments)
+if [ -z "$APP_KEY" ]; then
+    echo "🔑 Generating application key..."
+    php artisan key:generate --force --no-interaction
+else
+    echo "🔑 Application key already set"
+fi
+
 # Wait for database to be ready
 echo "📊 Waiting for database connection..."
 until php artisan tinker --execute="DB::connection()->getPdo(); echo 'Database connected';" 2>/dev/null; do
@@ -29,12 +37,23 @@ else
     echo "👥 Users already exist, skipping seeding"
 fi
 
-# Clear and optimize caches
+# Clear and optimize caches (with better error handling)
 echo "🔧 Optimizing application..."
-php artisan config:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan config:clear || echo "⚠️ Config clear failed, continuing..."
+php artisan config:cache || echo "⚠️ Config cache failed, continuing..."
+
+# Only cache routes and views if no errors
+if php artisan route:list >/dev/null 2>&1; then
+    php artisan route:cache || echo "⚠️ Route cache failed, continuing..."
+else
+    echo "⚠️ Skipping route cache due to route errors"
+fi
+
+if php artisan view:clear >/dev/null 2>&1; then
+    php artisan view:cache || echo "⚠️ View cache failed, continuing..."
+else
+    echo "⚠️ Skipping view cache due to view errors"
+fi
 
 echo "✅ System ready! Starting Apache..."
 
