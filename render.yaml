@@ -29,26 +29,10 @@ services:
         generateValue: true
       - key: DB_CONNECTION
         value: pgsql
-      - key: DB_HOST
+      - key: DATABASE_URL
         fromDatabase:
           name: en-nur-membership-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: en-nur-membership-db
-          property: port
-      - key: DB_DATABASE
-        fromDatabase:
-          name: en-nur-membership-db
-          property: database
-      - key: DB_USERNAME
-        fromDatabase:
-          name: en-nur-membership-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: en-nur-membership-db
-          property: password
+          property: connectionString
       - key: STRIPE_KEY
         sync: false
       - key: STRIPE_SECRET
