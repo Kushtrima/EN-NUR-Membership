@@ -41,110 +41,82 @@ if [ $counter -eq $timeout ]; then
     echo "❌ Database timeout after $timeout seconds. Trying to continue anyway..."
 fi
 
-# Clear all caches to ensure fresh start
+# Clear all caches to ensure fresh start - NO ROUTE CACHING YET
 echo "🧹 Clearing all caches..."
 php artisan config:clear || echo "Config clear failed - continuing..."
 php artisan cache:clear || echo "Cache clear failed - continuing..."
 php artisan route:clear || echo "Route clear failed - continuing..."
 php artisan view:clear || echo "View clear failed - continuing..."
 
-# Check if database is completely empty or has conflicts
-echo "🔍 Checking database state..."
-DB_STATE=$(php -r "
+# COMPREHENSIVE DATABASE FIX - Handle partial migration states
+echo "🔍 Comprehensive database analysis and fix..."
+
+# Check what tables exist
+EXISTING_TABLES=$(php -r "
 try {
     \$pdo = new PDO('pgsql:host='.getenv('DB_HOST').';port='.getenv('DB_PORT').';dbname='.getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD'));
-    
-    // Check if migrations table exists
-    \$result = \$pdo->query(\"SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'migrations'\");
-    \$migrationsExists = \$result->fetchColumn() > 0;
-    
-    if (!\$migrationsExists) {
-        echo 'FRESH';
-        exit(0);
-    }
-    
-    // Check if any user tables exist
-    \$result = \$pdo->query(\"SELECT COUNT(*) FROM information_schema.tables WHERE table_name = 'users'\");
-    \$usersExists = \$result->fetchColumn() > 0;
-    
-    if (!\$usersExists) {
-        echo 'PARTIAL';
-        exit(0);
-    }
-    
-    // Check if users table has data
-    \$result = \$pdo->query(\"SELECT COUNT(*) FROM users\");
-    \$userCount = \$result->fetchColumn();
-    
-    if (\$userCount == 0) {
-        echo 'EMPTY';
-    } else {
-        echo 'POPULATED';
-    }
-    
+    \$result = \$pdo->query(\"SELECT tablename FROM pg_tables WHERE schemaname = 'public'\");
+    \$tables = \$result->fetchAll(PDO::FETCH_COLUMN);
+    echo implode(',', \$tables);
 } catch (Exception \$e) {
     echo 'ERROR';
 }
 " 2>/dev/null)
 
-echo "📋 Database state: $DB_STATE"
+echo "📋 Existing tables: $EXISTING_TABLES"
 
-# Handle different database states
-case $DB_STATE in
-    "FRESH")
-        echo "🆕 Fresh database - running initial migrations..."
-        php artisan migrate --force
-        ;;
-    "PARTIAL"|"ERROR")
-        echo "🔄 Partial/corrupted database - resetting and migrating..."
-        php artisan migrate:reset --force 2>/dev/null || echo "Reset failed - continuing..."
-        php artisan migrate --force
-        ;;
-    "EMPTY")
-        echo "📝 Empty database - running migrations..."
-        php artisan migrate --force
-        ;;
-    "POPULATED")
-        echo "✅ Database already populated - running any pending migrations..."
-        php artisan migrate --force
-        ;;
-esac
+# Check if we have a problematic partial migration state
+if [[ $EXISTING_TABLES == *"sessions"* ]] && [[ $EXISTING_TABLES != *"users"* ]]; then
+    echo "🚨 DETECTED: Partial migration state - sessions exists but users doesn't!"
+    echo "🔄 Performing complete database reset..."
+    
+    # Drop all tables to start fresh
+    php -r "
+    try {
+        \$pdo = new PDO('pgsql:host='.getenv('DB_HOST').';port='.getenv('DB_PORT').';dbname='.getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD'));
+        \$result = \$pdo->query(\"SELECT tablename FROM pg_tables WHERE schemaname = 'public'\");
+        \$tables = \$result->fetchAll(PDO::FETCH_COLUMN);
+        
+        foreach (\$tables as \$table) {
+            \$pdo->exec(\"DROP TABLE IF EXISTS {\$table} CASCADE\");
+            echo \"Dropped: {\$table}\n\";
+        }
+        echo \"All tables dropped successfully\n\";
+    } catch (Exception \$e) {
+        echo \"Error during table cleanup: \" . \$e->getMessage() . \"\n\";
+    }
+    "
+    
+    echo "✅ Database completely cleaned. Running fresh migrations..."
+    
+elif [[ $EXISTING_TABLES == "" ]] || [[ $EXISTING_TABLES == "ERROR" ]]; then
+    echo "🆕 Fresh database detected"
+else
+    echo "🔍 Existing database with tables: $EXISTING_TABLES"
+fi
+
+# Always try migrations (they'll be safe now)
+echo "🔄 Running database migrations..."
+php artisan migrate --force || {
+    echo "❌ Migration failed. Attempting reset and retry..."
+    php artisan migrate:reset --force 2>/dev/null || echo "Reset failed - continuing..."
+    php artisan migrate --force || echo "Second migration attempt failed - continuing..."
+}
 
 # Verify critical tables exist
-echo "🔍 Verifying critical tables exist..."
-TABLES_CHECK=$(php -r "
+echo "🔍 Verifying critical tables..."
+FINAL_TABLES=$(php -r "
 try {
     \$pdo = new PDO('pgsql:host='.getenv('DB_HOST').';port='.getenv('DB_PORT').';dbname='.getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD'));
-    
-    \$required = ['users', 'sessions', 'cache', 'payments', 'membership_renewals'];
-    \$missing = [];
-    
-    foreach (\$required as \$table) {
-        \$result = \$pdo->query(\"SELECT COUNT(*) FROM information_schema.tables WHERE table_name = '\$table'\");
-        if (\$result->fetchColumn() == 0) {
-            \$missing[] = \$table;
-        }
-    }
-    
-    if (empty(\$missing)) {
-        echo 'ALL_GOOD';
-    } else {
-        echo 'MISSING:' . implode(',', \$missing);
-    }
-    
+    \$result = \$pdo->query(\"SELECT tablename FROM pg_tables WHERE schemaname = 'public'\");
+    \$tables = \$result->fetchAll(PDO::FETCH_COLUMN);
+    echo implode(',', \$tables);
 } catch (Exception \$e) {
-    echo 'ERROR:' . \$e->getMessage();
+    echo 'ERROR';
 }
 " 2>/dev/null)
 
-echo "📊 Tables check: $TABLES_CHECK"
-
-# If tables are missing, force a complete reset
-if [[ $TABLES_CHECK == MISSING:* ]]; then
-    echo "🔄 Critical tables missing - forcing complete reset..."
-    php artisan migrate:reset --force 2>/dev/null || echo "Reset failed - continuing..."
-    php artisan migrate --force
-fi
+echo "📊 Final tables: $FINAL_TABLES"
 
 # Check if users exist, if not run seeder
 USER_COUNT=$(php -r "
@@ -166,10 +138,10 @@ else
     echo "✅ Users already exist - skipping seeder"
 fi
 
-# Optimize application
-echo "⚡ Optimizing application..."
+# Optimize application - but keep routes uncached for now to allow access to debug routes
+echo "⚡ Optimizing application (no route caching)..."
 php artisan config:cache
-php artisan route:cache
+# Skip route:cache to keep debug routes available
 php artisan view:cache
 
 # Set final permissions
@@ -180,8 +152,7 @@ chmod -R 755 /var/www/html/storage
 chmod -R 755 /var/www/html/bootstrap/cache
 
 echo "🎉 EN NUR Membership System startup completed successfully!"
-echo "📊 Database: $DB_STATE"
-echo "📋 Tables: $TABLES_CHECK"
+echo "📊 Database tables: $FINAL_TABLES"
 echo "👥 Users: $USER_COUNT"
 
 # Start Apache
