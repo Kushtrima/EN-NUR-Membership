@@ -46,18 +46,14 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install PHP dependencies (skip scripts that contain artisan commands)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Configure Apache with enhanced security
 RUN a2enmod rewrite headers deflate expires
 COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
 
-# Generate application key and optimize
-RUN php artisan key:generate --force \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+# All Laravel configuration and optimization happens at runtime via startup script
 
 # Copy startup and health check scripts
 COPY docker-startup.sh /usr/local/bin/startup

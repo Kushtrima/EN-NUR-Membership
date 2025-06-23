@@ -1,0 +1,34 @@
+# Minimal test Dockerfile to verify composer install fix
+FROM php:8.2-cli
+
+# Install basic dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpq-dev \
+    zip \
+    unzip \
+    && docker-php-ext-install pdo_pgsql \
+    && apt-get clean
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Copy only necessary files for testing
+COPY composer.json composer.lock ./
+COPY app/ ./app/
+COPY config/ ./config/
+COPY routes/ ./routes/
+COPY database/ ./database/
+COPY resources/ ./resources/
+
+# Create minimal Laravel directories
+RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views storage/app/public bootstrap/cache
+
+# THE CRITICAL TEST: Install dependencies with --no-scripts
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+# If this succeeds, the fix works!
+RUN echo "✅ SUCCESS: Composer install completed without artisan command errors!"
+
+CMD ["php", "-v"] 
