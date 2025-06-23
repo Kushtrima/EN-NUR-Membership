@@ -30,7 +30,7 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        value: dpg-d1c6oqqdbo4c73ckh2e0-a.oregon-postgres.render.com
+        value: dpg-d1c6oqqdbo4c73ckh2e0-a
       - key: DB_PORT
         value: "5432"
       - key: DB_DATABASE
@@ -40,7 +40,9 @@ services:
       - key: DB_PASSWORD
         value: naCuMdU4wCOnsyJ0S6xC1ZO9tRFZfmkn
       - key: DATABASE_URL
-        value: postgresql://en_nur_user:naCuMdU4wCOnsyJ0S6xC1ZO9tRFZfmkn@dpg-d1c6oqqdbo4c73ckh2e0-a.oregon-postgres.render.com/en_nur_membership
+        value: postgresql://en_nur_user:naCuMdU4wCOnsyJ0S6xC1ZO9tRFZfmkn@dpg-d1c6oqqdbo4c73ckh2e0-a/en_nur_membership
+      - key: SESSION_DRIVER
+        value: file
       - key: STRIPE_KEY
         sync: false
       - key: STRIPE_SECRET
