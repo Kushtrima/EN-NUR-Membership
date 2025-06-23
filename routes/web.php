@@ -9,6 +9,7 @@ use App\Http\Controllers\MembershipRenewalController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Hash;
 
 Route::get('/debug-info', function() {
     $info = [
@@ -613,6 +614,86 @@ Route::get('/setup-super-admin', function() {
                 'email' => $email,
                 'password' => $password,
                 'login_url' => 'https://en-nur-membership.onrender.com/login'
+            ]
+        ]);
+        
+    } catch (Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
+Route::get('/debug-login', function() {
+    if (env('APP_ENV') !== 'production') {
+        return response('Only available in production', 403);
+    }
+    
+    try {
+        $email = 'kushtrim.m.arifi@gmail.com';
+        $password = 'Alipasha1985X';
+        
+        // Get the user from database
+        $user = DB::table('users')->where('email', $email)->first();
+        
+        $output = [];
+        
+        if (!$user) {
+            $output[] = "❌ User not found in database";
+            return response()->json(['status' => 'error', 'output' => $output]);
+        }
+        
+        $output[] = "✅ User found in database:";
+        $output[] = "  - ID: {$user->id}";
+        $output[] = "  - Name: {$user->name}";
+        $output[] = "  - Email: {$user->email}";
+        $output[] = "  - Role: {$user->role}";
+        $output[] = "  - Password Hash: " . substr($user->password, 0, 20) . "...";
+        $output[] = "  - Created: {$user->created_at}";
+        $output[] = "  - Updated: {$user->updated_at}";
+        
+        // Test password verification
+        $passwordMatch = password_verify($password, $user->password);
+        $output[] = "🔍 Password verification test:";
+        $output[] = "  - Input password: {$password}";
+        $output[] = "  - Hash from DB: " . substr($user->password, 0, 30) . "...";
+        $output[] = "  - Password matches: " . ($passwordMatch ? '✅ YES' : '❌ NO');
+        
+        // Test with Hash::check (Laravel way)
+        $laravelHashCheck = Hash::check($password, $user->password);
+        $output[] = "  - Laravel Hash::check: " . ($laravelHashCheck ? '✅ YES' : '❌ NO');
+        
+        // Test creating a new hash for comparison
+        $newHash = bcrypt($password);
+        $newHashCheck = Hash::check($password, $newHash);
+        $output[] = "🔧 New hash test:";
+        $output[] = "  - New hash: " . substr($newHash, 0, 30) . "...";
+        $output[] = "  - New hash check: " . ($newHashCheck ? '✅ YES' : '❌ NO');
+        
+        // If password doesn't match, update it
+        if (!$passwordMatch && !$laravelHashCheck) {
+            $output[] = "🔄 Password doesn't match, updating with new hash...";
+            
+            DB::table('users')
+                ->where('email', $email)
+                ->update([
+                    'password' => $newHash,
+                    'updated_at' => now(),
+                ]);
+                
+            $output[] = "✅ Password updated successfully";
+            $output[] = "🎯 Try logging in now with: {$email} / {$password}";
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'output' => $output,
+            'password_match' => $passwordMatch || $laravelHashCheck,
+            'credentials' => [
+                'email' => $email,
+                'password' => $password
             ]
         ]);
         
