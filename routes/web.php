@@ -722,17 +722,33 @@ Route::get('/setup-super-admin', function () {
     }
 })->name('setup.super.admin');
 
+// Diagnostic route to check dashboard state
+Route::get('/admin-diagnose', function () {
+    if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+        abort(403, 'Unauthorized - Super Admin Only');
+    }
+    
+    try {
+        Artisan::call('admin:diagnose');
+        $output = Artisan::output();
+        
+        return response('<pre>' . $output . '</pre><br><a href="/admin">Go to Admin Dashboard</a><br><a href="/create-expired-test-users">Create Test Users</a>');
+    } catch (\Exception $e) {
+        return response('Error: ' . $e->getMessage(), 500);
+    }
+})->name('admin.diagnose');
+
 // Test route to create expired users (remove after testing)
 Route::get('/create-expired-test-users', function () {
     if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
-        abort(403, 'Unauthorized');
+        abort(403, 'Unauthorized - Super Admin Only');
     }
     
     try {
         Artisan::call('test:create-expired-users');
         $output = Artisan::output();
         
-        return response('<pre>' . $output . '</pre><br><a href="/admin">Go to Admin Dashboard</a>');
+        return response('<pre>' . $output . '</pre><br><a href="/admin">Go to Admin Dashboard</a><br><a href="/admin-diagnose">Run Diagnostics</a>');
     } catch (\Exception $e) {
         return response('Error: ' . $e->getMessage(), 500);
     }

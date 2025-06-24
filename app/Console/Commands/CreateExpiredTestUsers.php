@@ -16,7 +16,7 @@ class CreateExpiredTestUsers extends Command
      *
      * @var string
      */
-    protected $signature = 'test:create-expired-users';
+    protected $signature = 'test:create-expired-users {--clean : Clean existing test users first}';
 
     /**
      * The console command description.
@@ -30,6 +30,9 @@ class CreateExpiredTestUsers extends Command
      */
     public function handle()
     {
+        // Clean up existing test users first
+        $this->cleanupExistingTestUsers();
+
         $this->info('Creating three test users with expired memberships...');
 
         // Test users data
@@ -112,5 +115,33 @@ class CreateExpiredTestUsers extends Command
         $this->info('Login credentials for all test users: Password is "TestPassword123!"');
         
         return 0;
+    }
+
+    /**
+     * Clean up existing test users.
+     */
+    private function cleanupExistingTestUsers()
+    {
+        $this->info('Cleaning up existing test users...');
+
+        $testEmails = [
+            'expired17@test.com',
+            'expired20@test.com',
+            'justexpired@test.com'
+        ];
+
+        foreach ($testEmails as $email) {
+            $user = User::where('email', $email)->first();
+            if ($user) {
+                $this->info("- Removing existing user: {$user->name} ({$user->email})");
+                // Delete related data first
+                $user->membershipRenewals()->delete();
+                $user->payments()->delete();
+                $user->delete();
+            }
+        }
+
+        $this->info('Cleanup completed.');
+        $this->info('');
     }
 } 
