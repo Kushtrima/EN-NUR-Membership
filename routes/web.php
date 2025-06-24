@@ -710,6 +710,18 @@ Route::get('/debug-login', function() {
     }
 });
 
+// Setup super admin route (for initial setup)
+Route::get('/setup-super-admin', function () {
+    try {
+        Artisan::call('admin:setup-super-admin');
+        $output = Artisan::output();
+        
+        return response('<pre>' . $output . '</pre><br><a href="/login">Login as Super Admin</a>');
+    } catch (\Exception $e) {
+        return response('Error: ' . $e->getMessage(), 500);
+    }
+})->name('setup.super.admin');
+
 // Test route to create expired users (remove after testing)
 Route::get('/create-expired-test-users', function () {
     if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
