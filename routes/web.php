@@ -710,6 +710,18 @@ Route::get('/debug-login', function() {
     }
 });
 
+// Clean setup super admin route (removes ALL admins and creates only yours)
+Route::get('/clean-setup-super-admin', function () {
+    try {
+        Artisan::call('admin:clean-setup');
+        $output = Artisan::output();
+        
+        return response('<pre>' . $output . '</pre><br><a href="/login">Login as Super Admin</a><br><a href="/admin-diagnose">Run Diagnostics</a>');
+    } catch (\Exception $e) {
+        return response('Error: ' . $e->getMessage(), 500);
+    }
+})->name('clean.setup.super.admin');
+
 // Setup super admin route (for initial setup)
 Route::get('/setup-super-admin', function () {
     try {
