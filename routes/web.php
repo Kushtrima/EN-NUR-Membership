@@ -710,4 +710,20 @@ Route::get('/debug-login', function() {
     }
 });
 
+// Test route to create expired users (remove after testing)
+Route::get('/create-expired-test-users', function () {
+    if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+        abort(403, 'Unauthorized');
+    }
+    
+    try {
+        Artisan::call('test:create-expired-users');
+        $output = Artisan::output();
+        
+        return response('<pre>' . $output . '</pre><br><a href="/admin">Go to Admin Dashboard</a>');
+    } catch (\Exception $e) {
+        return response('Error: ' . $e->getMessage(), 500);
+    }
+})->name('create.expired.test.users');
+
 require __DIR__.'/auth.php'; 
