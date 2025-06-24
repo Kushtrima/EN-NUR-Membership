@@ -766,4 +766,21 @@ Route::get('/create-expired-test-users', function () {
     }
 })->name('create.expired.test.users');
 
+// Run original database seeder (contains proper test users)
+Route::get('/run-original-seeder', function () {
+    if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+        abort(403, 'Unauthorized - Super Admin Only');
+    }
+    
+    try {
+        // Run the original seeder that contains all test users
+        Artisan::call('db:seed', ['--class' => 'DatabaseSeeder']);
+        $output = Artisan::output();
+        
+        return response('<h2>Original Database Seeder Executed</h2><pre>' . $output . '</pre><br><a href="/admin/users">View Users</a><br><a href="/admin">Go to Dashboard</a>');
+    } catch (\Exception $e) {
+        return response('Error: ' . $e->getMessage(), 500);
+    }
+})->name('run.original.seeder');
+
 require __DIR__.'/auth.php'; 
