@@ -102,19 +102,19 @@ services:
       - key: LOG_STACK
         value: single
       
-      # Mail Configuration (Custom Domain - Professional Email)
+      # Mail Configuration (Custom Domain - TLS Alternative)
       - key: MAIL_MAILER
         value: smtp
       - key: MAIL_HOST
         value: mail.xhamia-en-nur.ch
       - key: MAIL_PORT
-        value: "465"
+        value: "587"
       - key: MAIL_USERNAME
         value: info@xhamia-en-nur.ch
       - key: MAIL_PASSWORD
         value: "##~(nWoL-Bi;&&gJBMmb<>g#2#@"
       - key: MAIL_ENCRYPTION
-        value: ssl
+        value: tls
       - key: MAIL_FROM_ADDRESS
         value: info@xhamia-en-nur.ch
       - key: MAIL_FROM_NAME

@@ -1333,6 +1333,113 @@ EN NUR - MEMBERSHIP Team
     });
 });
 
+// Comprehensive email debug for custom domain
+Route::get('/debug-custom-email', function () {
+    $output = [];
+    $output[] = "🔧 Custom Email Debug - xhamia-en-nur.ch";
+    $output[] = "Timestamp: " . now()->toDateTimeString();
+    $output[] = "";
+    
+    $email = 'info@xhamia-en-nur.ch';
+    $password = '##~(nWoL-Bi;&&gJBMmb<>g#2#@';
+    
+    $output[] = "📧 Testing Email Account: {$email}";
+    $output[] = "Password Length: " . strlen($password) . " characters";
+    $output[] = "";
+    
+    // Test different SMTP configurations
+    $configs = [
+        'SSL_465' => [
+            'host' => 'mail.xhamia-en-nur.ch',
+            'port' => 465,
+            'encryption' => 'ssl'
+        ],
+        'TLS_587' => [
+            'host' => 'mail.xhamia-en-nur.ch',
+            'port' => 587,
+            'encryption' => 'tls'
+        ],
+        'TLS_25' => [
+            'host' => 'mail.xhamia-en-nur.ch',
+            'port' => 25,
+            'encryption' => 'tls'
+        ]
+    ];
+    
+    foreach ($configs as $name => $config) {
+        $output[] = "🔌 Testing {$name} Configuration:";
+        $output[] = "Host: {$config['host']}";
+        $output[] = "Port: {$config['port']}";
+        $output[] = "Encryption: {$config['encryption']}";
+        
+        try {
+            $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
+                $config['host'],
+                $config['port'],
+                $config['encryption'] === 'ssl'
+            );
+            
+            if ($config['encryption'] === 'tls') {
+                $transport->setUsername($email);
+                $transport->setPassword($password);
+            } else {
+                $transport->setUsername($email);
+                $transport->setPassword($password);
+            }
+            
+            $transport->start();
+            $output[] = "✅ {$name}: CONNECTION SUCCESS";
+            $transport->stop();
+            
+            // Try sending test email with this config
+            $output[] = "📤 Testing email send with {$name}...";
+            
+            // Temporarily override mail config
+            config(['mail.mailers.smtp.host' => $config['host']]);
+            config(['mail.mailers.smtp.port' => $config['port']]);
+            config(['mail.mailers.smtp.encryption' => $config['encryption']]);
+            config(['mail.mailers.smtp.username' => $email]);
+            config(['mail.mailers.smtp.password' => $password]);
+            config(['mail.from.address' => $email]);
+            config(['mail.from.name' => 'EN NUR - Test']);
+            
+            Mail::raw("Test email from {$name} configuration.\n\nTimestamp: " . now()->toDateTimeString(), function ($message) use ($email) {
+                $message->to($email) // Send to self for testing
+                        ->subject('SMTP Test - ' . now()->toDateTimeString())
+                        ->from(config('mail.from.address'), config('mail.from.name'));
+            });
+            
+            $output[] = "✅ {$name}: EMAIL SEND SUCCESS";
+            $output[] = "📧 Test email sent to {$email}";
+            break; // Stop on first success
+            
+        } catch (\Exception $e) {
+            $output[] = "❌ {$name}: FAILED";
+            $output[] = "Error: " . $e->getMessage();
+            
+            if (strpos($e->getMessage(), '550 5.7.1') !== false) {
+                $output[] = "🔍 Authentication/Relay issue detected";
+            } elseif (strpos($e->getMessage(), 'Connection refused') !== false) {
+                $output[] = "🔍 Port/Host connection issue";
+            } elseif (strpos($e->getMessage(), 'timeout') !== false) {
+                $output[] = "🔍 Timeout - server might be slow/blocked";
+            }
+        }
+        
+        $output[] = "";
+    }
+    
+    $output[] = "🎯 RECOMMENDATIONS:";
+    $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+    $output[] = "1. Check if email account is active and accessible";
+    $output[] = "2. Verify password is correct";
+    $output[] = "3. Check if SMTP is enabled for this email account";
+    $output[] = "4. Contact hosting provider if all configs fail";
+    $output[] = "5. Consider using a transactional email service (Mailgun/SendGrid)";
+    
+    return response('<h2>Custom Email Debug Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin">Go to Dashboard</a>');
+});
+
 // Test simple admin access (no auth required)
 Route::get('/admin-test', function () {
     return response('<h1>✅ Admin Routes Working!</h1><p>Timestamp: ' . now() . '</p><p>If you see this, the routing is working correctly.</p><br><a href="/login">Go to Login</a><br><a href="/admin/dashboard">Try Admin Dashboard</a>');
