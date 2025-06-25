@@ -103,8 +103,10 @@ services:
         value: single
       
       # Mail Configuration (Log Driver - Working Solution)
-      - key: MAIL_MAILER
-        value: log
+        - key: MAIL_MAILER
+    value: log
+  - key: MAIL_DRIVER
+    value: log
       - key: MAIL_FROM_ADDRESS
         value: info@xhamia-en-nur.ch
       - key: MAIL_FROM_NAME

@@ -22,15 +22,27 @@ class AdminController extends Controller
     public function dashboard()
     {
         // Optimize with a single aggregation query for all payment statistics
-        $paymentStats = Payment::selectRaw('
-            COUNT(*) as total_payments,
-            SUM(CASE WHEN status = "completed" THEN amount ELSE 0 END) as total_revenue,
-            SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending_payments,
-            SUM(CASE WHEN status = "completed" AND payment_type = "membership" THEN amount ELSE 0 END) as membership_revenue,
-            SUM(CASE WHEN status = "completed" AND payment_type = "donation" THEN amount ELSE 0 END) as donation_revenue,
-            SUM(CASE WHEN status = "completed" AND payment_type = "membership" THEN 1 ELSE 0 END) as membership_count,
-            SUM(CASE WHEN status = "completed" AND payment_type = "donation" THEN 1 ELSE 0 END) as donation_count
-        ')->first();
+        // Use Laravel query builder instead of raw SQL for PostgreSQL compatibility
+        $totalPayments = Payment::count();
+        $completedPayments = Payment::where('status', Payment::STATUS_COMPLETED);
+        $pendingPayments = Payment::where('status', Payment::STATUS_PENDING)->count();
+        
+        $totalRevenue = $completedPayments->sum('amount');
+        $membershipRevenue = $completedPayments->where('payment_type', Payment::TYPE_MEMBERSHIP)->sum('amount');
+        $donationRevenue = $completedPayments->where('payment_type', Payment::TYPE_DONATION)->sum('amount');
+        $membershipCount = $completedPayments->where('payment_type', Payment::TYPE_MEMBERSHIP)->count();
+        $donationCount = $completedPayments->where('payment_type', Payment::TYPE_DONATION)->count();
+        
+        // Create stats object for compatibility
+        $paymentStats = (object) [
+            'total_payments' => $totalPayments,
+            'total_revenue' => $totalRevenue,
+            'pending_payments' => $pendingPayments,
+            'membership_revenue' => $membershipRevenue,
+            'donation_revenue' => $donationRevenue,
+            'membership_count' => $membershipCount,
+            'donation_count' => $donationCount,
+        ];
 
         $totalUsers = User::count();
         $totalPayments = $paymentStats->total_payments;
@@ -343,6 +355,10 @@ class AdminController extends Controller
     public function sendPaymentNotification(Payment $payment)
     {
         try {
+            // Force log driver to avoid SMTP relay issues
+            config(['mail.default' => 'log']);
+            config(['mail.mailers.log.driver' => 'log']);
+            
             // Create a simple notification email
             $user = $payment->user;
             $subject = 'Payment ' . ucfirst($payment->status) . ' - ' . config('app.name');
