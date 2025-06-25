@@ -84,7 +84,7 @@ git status
    php artisan test:create-expired-users
    
    # Diagnose dashboard
-   php artisan diagnose:dashboard
+   php artisan admin:diagnose
    ```
 
 ## 🔍 **VISUAL FEATURES SUMMARY**
