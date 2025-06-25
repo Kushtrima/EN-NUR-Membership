@@ -824,8 +824,16 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
             // Test the MembershipService color logic
             $output[] = "\n🎨 Testing Color Logic:";
             $membershipService = app(\App\Services\MembershipService::class);
-            $colors = $membershipService->getUserColors();
-            $output[] = "Color mapping loaded: " . (count($colors) > 0 ? 'Yes' : 'No');
+            if ($user) {
+                $membershipStatus = $membershipService->getUserMembershipStatus($user);
+                if ($membershipStatus) {
+                    $output[] = "Border Color: {$membershipStatus['border_color']}";
+                    $output[] = "Status Badge: {$membershipStatus['status_badge']['text']}";
+                    $output[] = "Display Class: {$membershipStatus['display_class']}";
+                } else {
+                    $output[] = "No membership status found";
+                }
+            }
             
             return response('<h2>Latest Deployment Test Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin/users">View Users</a><br><a href="/admin">Go to Dashboard</a>');
             
