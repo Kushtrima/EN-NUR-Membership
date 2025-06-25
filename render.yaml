@@ -102,15 +102,9 @@ services:
       - key: LOG_STACK
         value: single
       
-      # Mail Configuration (Temporary: Log driver to avoid SMTP issues)
+      # Mail Configuration (Gmail SMTP - Fixed Format)
       - key: MAIL_MAILER
-        value: log
-      - key: MAIL_FROM_ADDRESS
-        value: kushtrim.m.arifi@gmail.com
-      - key: MAIL_FROM_NAME
-        value: "EN NUR Membership"
-      
-      # Gmail SMTP settings (for future use when fixed)
+        value: smtp
       - key: MAIL_HOST
         value: smtp.gmail.com
       - key: MAIL_PORT
@@ -121,6 +115,10 @@ services:
         value: bdxxrrhhjbbmzamo
       - key: MAIL_ENCRYPTION
         value: tls
+      - key: MAIL_FROM_ADDRESS
+        value: kushtrim.m.arifi@gmail.com
+      - key: MAIL_FROM_NAME
+        value: "EN NUR Membership"
       
       # Payment Configuration (Demo Keys - Replace with real ones)
       - key: STRIPE_KEY

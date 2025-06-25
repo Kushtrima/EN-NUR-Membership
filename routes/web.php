@@ -1333,4 +1333,14 @@ EN NUR - MEMBERSHIP Team
     });
 });
 
+// Test simple admin access (no auth required)
+Route::get('/admin-test', function () {
+    return response('<h1>✅ Admin Routes Working!</h1><p>Timestamp: ' . now() . '</p><p>If you see this, the routing is working correctly.</p><br><a href="/login">Go to Login</a><br><a href="/admin/dashboard">Try Admin Dashboard</a>');
+});
+
+// Simple redirect for /admin to /admin/dashboard
+Route::get('/admin', function () {
+    return redirect('/admin/dashboard');
+});
+
 require __DIR__.'/auth.php'; 
