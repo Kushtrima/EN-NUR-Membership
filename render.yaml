@@ -158,6 +158,12 @@ services:
         value: "128"
       - key: OPCACHE_MAX_ACCELERATED_FILES
         value: "4000"
+      
+      # Admin Configuration (Set these in Render dashboard)
+      - key: ADMIN_EMAIL
+        value: kushtrim.m.arifi@gmail.com
+      - key: ADMIN_NAME
+        value: "SUPER ADMIN"
 
 databases:
   - name: en-nur-membership-db

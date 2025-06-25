@@ -144,6 +144,12 @@ php artisan config:cache
 # Skip route:cache to keep debug routes available
 php artisan view:cache
 
+# Setup production admin if specified
+if [ ! -z "$ADMIN_EMAIL" ]; then
+    echo "👤 Setting up production admin..."
+    php artisan admin:setup-production "$ADMIN_EMAIL" "${ADMIN_NAME:-SUPER ADMIN}" || echo "Admin setup failed - continuing..."
+fi
+
 # Set final permissions
 echo "🔒 Setting final permissions..."
 chown -R www-data:www-data /var/www/html/storage
