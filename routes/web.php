@@ -320,6 +320,102 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         
         return response('<h2>Gmail Credentials Check</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/test-gmail-auth">Test Gmail Auth</a><br><a href="/admin">Go to Dashboard</a>');
     });
+
+    // Debug Gmail Password Format Issue
+    Route::get('/debug-gmail-password', function () {
+        $output = [];
+        $output[] = "🔍 Gmail Password Format Debug";
+        $output[] = "Timestamp: " . now()->toDateTimeString();
+        $output[] = "";
+        
+        $currentPassword = config('mail.mailers.smtp.password');
+        $output[] = "CURRENT PASSWORD ANALYSIS:";
+        $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+        $output[] = "Raw password: '" . $currentPassword . "'";
+        $output[] = "Length: " . strlen($currentPassword) . " characters";
+        $output[] = "Contains spaces: " . (strpos($currentPassword, ' ') !== false ? 'YES ❌' : 'NO ✅');
+        $output[] = "";
+        
+        if (strpos($currentPassword, ' ') !== false) {
+            $fixedPassword = str_replace(' ', '', $currentPassword);
+            $output[] = "🔧 PROBLEM IDENTIFIED: Gmail app password contains spaces!";
+            $output[] = "";
+            $output[] = "SOLUTION:";
+            $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+            $output[] = "Current (WRONG): '" . $currentPassword . "'";
+            $output[] = "Should be (CORRECT): '" . $fixedPassword . "'";
+            $output[] = "";
+            $output[] = "STEPS TO FIX:";
+            $output[] = "1. Go to Render Dashboard → Your Service → Environment";
+            $output[] = "2. Find MAIL_PASSWORD variable";
+            $output[] = "3. Change from: " . $currentPassword;
+            $output[] = "4. Change to: " . $fixedPassword;
+            $output[] = "5. Deploy the changes";
+            $output[] = "";
+            $output[] = "⚠️ Gmail app passwords should NEVER contain spaces in SMTP config!";
+            $output[] = "The spaces are only for display when Google shows you the password.";
+        } else {
+            $output[] = "✅ Password format looks correct (no spaces found)";
+            $output[] = "";
+            $output[] = "Other possible issues:";
+            $output[] = "- App password might be expired/revoked";
+            $output[] = "- 2FA might not be enabled on Gmail";
+            $output[] = "- Gmail account might have security restrictions";
+        }
+        
+        $output[] = "";
+        $output[] = "TESTING SMTP CONNECTION WITH CURRENT PASSWORD:";
+        $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+        
+        try {
+            // Test SMTP connection
+            $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
+                config('mail.mailers.smtp.host'),
+                config('mail.mailers.smtp.port'),
+                config('mail.mailers.smtp.encryption') === 'tls'
+            );
+            $transport->setUsername(config('mail.mailers.smtp.username'));
+            $transport->setPassword($currentPassword);
+            
+            $transport->start();
+            $output[] = "✅ SMTP Connection: SUCCESS";
+            $transport->stop();
+            
+            // If connection works, try sending email
+            $output[] = "";
+            $output[] = "TESTING EMAIL SEND:";
+            $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+            
+            Mail::raw("Test email to verify Gmail SMTP is working.\n\nTimestamp: " . now()->toDateTimeString(), function ($message) {
+                $message->to(config('mail.from.address'))
+                        ->subject('Gmail SMTP Test - ' . now()->format('H:i:s'))
+                        ->from(config('mail.from.address'), config('mail.from.name'));
+            });
+            
+            $output[] = "✅ Email sent successfully!";
+            $output[] = "Check inbox for: " . config('mail.from.address');
+            
+        } catch (\Exception $e) {
+            $output[] = "❌ SMTP Connection/Email FAILED";
+            $output[] = "Error: " . $e->getMessage();
+            $output[] = "Class: " . get_class($e);
+            
+            if (strpos($e->getMessage(), '550 5.7.1') !== false) {
+                $output[] = "";
+                $output[] = "🎯 THIS IS THE RELAYING DENIED ERROR!";
+                if (strpos($currentPassword, ' ') !== false) {
+                    $output[] = "Most likely cause: Password format (spaces in password)";
+                } else {
+                    $output[] = "Other possible causes:";
+                    $output[] = "- App password expired/invalid";
+                    $output[] = "- Gmail security settings";
+                    $output[] = "- Rate limiting";
+                }
+            }
+        }
+        
+        return response('<h2>Gmail Password Debug Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin">Go to Dashboard</a>');
+    });
 });
 
 Route::get('/force-migrate', function() {
@@ -970,6 +1066,83 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
         }
     });
     
+    // Debug SMTP Configuration
+    Route::get('/debug-smtp', function () {
+        $output = [];
+        $output[] = "🔧 SMTP Configuration Debug";
+        $output[] = "Timestamp: " . now()->toDateTimeString();
+        $output[] = "";
+        $output[] = "CURRENT MAIL CONFIGURATION:";
+        $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+        $output[] = "Mailer: " . config('mail.default');
+        $output[] = "Host: " . config('mail.mailers.smtp.host');
+        $output[] = "Port: " . config('mail.mailers.smtp.port');
+        $output[] = "Username: " . config('mail.mailers.smtp.username');
+        $output[] = "Password: " . (config('mail.mailers.smtp.password') ? '[CONFIGURED - Length: ' . strlen(config('mail.mailers.smtp.password')) . ']' : '[NOT SET]');
+        $output[] = "Encryption: " . config('mail.mailers.smtp.encryption');
+        $output[] = "From Address: " . config('mail.from.address');
+        $output[] = "From Name: " . config('mail.from.name');
+        $output[] = "";
+        
+        // Test SMTP connection
+        $output[] = "TESTING SMTP CONNECTION:";
+        $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━";
+        
+        try {
+            $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
+                config('mail.mailers.smtp.host'),
+                config('mail.mailers.smtp.port'),
+                config('mail.mailers.smtp.encryption') === 'tls'
+            );
+            $transport->setUsername(config('mail.mailers.smtp.username'));
+            $transport->setPassword(config('mail.mailers.smtp.password'));
+            
+            // Try to start transport
+            $transport->start();
+            $output[] = "✅ SMTP Connection: SUCCESS";
+            $transport->stop();
+        } catch (\Exception $e) {
+            $output[] = "❌ SMTP Connection: FAILED";
+            $output[] = "Error: " . $e->getMessage();
+            $output[] = "Class: " . get_class($e);
+        }
+        
+        $output[] = "";
+        $output[] = "TESTING SIMPLE EMAIL SEND:";
+        $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+        
+        try {
+            $testEmail = config('mail.from.address'); // Send to self for testing
+            
+            Mail::raw("This is a test email to verify SMTP configuration.\n\nTimestamp: " . now()->toDateTimeString(), function ($message) use ($testEmail) {
+                $message->to($testEmail)
+                        ->subject('SMTP Test - ' . now()->toDateTimeString())
+                        ->from(config('mail.from.address'), config('mail.from.name'));
+            });
+            
+            $output[] = "✅ Email sent successfully to: {$testEmail}";
+            $output[] = "Check your inbox to confirm delivery.";
+            
+        } catch (\Exception $e) {
+            $output[] = "❌ Email send failed:";
+            $output[] = "Error: " . $e->getMessage();
+            $output[] = "Class: " . get_class($e);
+            $output[] = "File: " . $e->getFile() . ":" . $e->getLine();
+            
+            // Check for specific Gmail errors
+            if (strpos($e->getMessage(), '550 5.7.1') !== false) {
+                $output[] = "";
+                $output[] = "🔍 GMAIL RELAYING DENIED - POSSIBLE SOLUTIONS:";
+                $output[] = "1. Verify 2-Factor Authentication is enabled on Gmail";
+                $output[] = "2. Generate new App Password: https://myaccount.google.com/apppasswords";
+                $output[] = "3. Update MAIL_PASSWORD in Render environment variables";
+                $output[] = "4. Consider using transactional email service (Mailgun, SendGrid)";
+            }
+        }
+        
+        return response('<h2>SMTP Debug Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin">Go to Dashboard</a>');
+    });
+
     // Test notification system
     Route::get('/test-notification', function () {
         try {
