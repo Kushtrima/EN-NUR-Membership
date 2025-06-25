@@ -83,7 +83,7 @@ class CreateExpiredTestUsers extends Command
             // Calculate membership dates
             $membershipStartDate = Carbon::now()->subYear(); // Started a year ago
             $membershipEndDate = Carbon::now()->subDays($userData['expired_days_ago']); // Expired X days ago
-            $daysUntilExpiry = Carbon::now()->diffInDays($membershipEndDate, false); // Negative for expired
+            $daysUntilExpiry = (int) Carbon::now()->diffInDays($membershipEndDate, false); // Negative for expired (cast to int)
 
             // Create membership renewal record
             $membershipRenewal = MembershipRenewal::create([
