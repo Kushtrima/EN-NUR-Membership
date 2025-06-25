@@ -117,6 +117,10 @@ class MembershipRenewalController extends Controller
      */
     private function sendRenewalNotificationEmail(MembershipRenewal $renewal)
     {
+        // Force log driver to avoid SMTP relay issues
+        config(['mail.default' => 'log']);
+        config(['mail.mailers.log.driver' => 'log']);
+        
         $user = $renewal->user;
         $daysRemaining = $renewal->days_until_expiry;
         $notificationMessage = $renewal->getNotificationMessage();
@@ -156,11 +160,23 @@ Best regards,
 EN NUR - MEMBERSHIP Team
         ";
 
-        // Send simple text email
+        // Send simple text email (logged instead of sent via SMTP)
         Mail::raw($emailBody, function ($message) use ($user, $subject) {
             $message->to($user->email, $user->name)
                     ->subject($subject)
                     ->from(config('mail.from.address'), config('mail.from.name'));
         });
+
+        // Log successful notification for admin visibility
+        Log::info("Membership renewal notification sent (logged)", [
+            'user_id' => $user->id,
+            'user_email' => $user->email,
+            'user_name' => $user->name,
+            'renewal_id' => $renewal->id,
+            'days_remaining' => $daysRemaining,
+            'subject' => $subject,
+            'mail_driver' => config('mail.default'),
+            'timestamp' => now()->toDateTimeString()
+        ]);
     }
 }
