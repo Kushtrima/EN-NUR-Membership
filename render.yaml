@@ -102,19 +102,19 @@ services:
       - key: LOG_STACK
         value: single
       
-      # Mail Configuration (Custom Domain - TLS Alternative)
+      # Mail Configuration (Namecheap Private Email - Correct Server)
       - key: MAIL_MAILER
         value: smtp
       - key: MAIL_HOST
-        value: mail.xhamia-en-nur.ch
+        value: mail.privateemail.com
       - key: MAIL_PORT
-        value: "587"
+        value: "465"
       - key: MAIL_USERNAME
         value: info@xhamia-en-nur.ch
       - key: MAIL_PASSWORD
         value: "##~(nWoL-Bi;&&gJBMmb<>g#2#@"
       - key: MAIL_ENCRYPTION
-        value: tls
+        value: ssl
       - key: MAIL_FROM_ADDRESS
         value: info@xhamia-en-nur.ch
       - key: MAIL_FROM_NAME

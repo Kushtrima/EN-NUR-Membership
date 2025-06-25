@@ -1347,22 +1347,32 @@ Route::get('/debug-custom-email', function () {
     $output[] = "Password Length: " . strlen($password) . " characters";
     $output[] = "";
     
-    // Test different SMTP configurations
+    // Test different SMTP configurations (Namecheap servers)
     $configs = [
-        'SSL_465' => [
-            'host' => 'mail.xhamia-en-nur.ch',
+        'NAMECHEAP_SSL_465' => [
+            'host' => 'mail.privateemail.com',
             'port' => 465,
             'encryption' => 'ssl'
         ],
-        'TLS_587' => [
-            'host' => 'mail.xhamia-en-nur.ch',
+        'NAMECHEAP_TLS_587' => [
+            'host' => 'mail.privateemail.com',
             'port' => 587,
             'encryption' => 'tls'
         ],
-        'TLS_25' => [
-            'host' => 'mail.xhamia-en-nur.ch',
-            'port' => 25,
+        'ALT_SMTP_SSL_465' => [
+            'host' => 'smtp.privateemail.com',
+            'port' => 465,
+            'encryption' => 'ssl'
+        ],
+        'ALT_SMTP_TLS_587' => [
+            'host' => 'smtp.privateemail.com',
+            'port' => 587,
             'encryption' => 'tls'
+        ],
+        'WEBHOSTING_SSL_465' => [
+            'host' => 'mail.web-hosting.com',
+            'port' => 465,
+            'encryption' => 'ssl'
         ]
     ];
     
