@@ -236,6 +236,90 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/system/clear-logs', [AdminController::class, 'clearSystemLogs'])->name('system.clear-logs');
         Route::post('/notifications/bulk-send', [AdminController::class, 'sendBulkNotifications'])->name('notifications.bulk-send');
     });
+    
+    // Test Gmail authentication specifically
+    Route::get('/test-gmail-auth', function () {
+        try {
+            $output = [];
+            $output[] = "🔐 Testing Gmail Authentication";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "";
+            
+            $output[] = "📋 Current Gmail Settings:";
+            $output[] = "- MAIL_HOST: " . env('MAIL_HOST');
+            $output[] = "- MAIL_PORT: " . env('MAIL_PORT');
+            $output[] = "- MAIL_USERNAME: " . env('MAIL_USERNAME');
+            $output[] = "- MAIL_PASSWORD: " . (env('MAIL_PASSWORD') ? str_repeat('*', strlen(env('MAIL_PASSWORD'))) : 'NOT SET');
+            $output[] = "- MAIL_ENCRYPTION: " . env('MAIL_ENCRYPTION');
+            $output[] = "- MAIL_FROM_ADDRESS: " . env('MAIL_FROM_ADDRESS');
+            $output[] = "";
+            
+            // Try to create SMTP transport and test connection
+            $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
+                env('MAIL_HOST'),
+                (int) env('MAIL_PORT'),
+                env('MAIL_ENCRYPTION') === 'tls'
+            );
+            
+            $transport->setUsername(env('MAIL_USERNAME'));
+            $transport->setPassword(env('MAIL_PASSWORD'));
+            
+            $output[] = "🔌 Testing SMTP connection...";
+            
+            // This will throw an exception if connection fails
+            $transport->start();
+            
+            $output[] = "✅ SMTP connection successful!";
+            $transport->stop();
+            
+            return response('<h2>Gmail Authentication Test Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin">Go to Dashboard</a>');
+            
+        } catch (\Exception $e) {
+            $errorMsg = 'Error: ' . $e->getMessage() . "\n\nClass: " . get_class($e) . "\n\nThis confirms the Gmail authentication issue. You need to:\n1. Generate a new Gmail App Password\n2. Update MAIL_PASSWORD in Render environment variables\n3. Make sure 2FA is enabled on Gmail account";
+            return response('<h2>Gmail Authentication Failed</h2><pre>' . $errorMsg . '</pre><br><a href="/admin">Go to Dashboard</a>');
+        }
+    });
+    
+    // Simple Gmail credentials check
+    Route::get('/check-gmail-credentials', function () {
+        $output = [];
+        $output[] = "🔍 Gmail Credentials Check";
+        $output[] = "Timestamp: " . now()->toDateTimeString();
+        $output[] = "";
+        
+        $output[] = "📋 Environment Variables:";
+        $output[] = "- MAIL_MAILER: " . (env('MAIL_MAILER') ?: 'NOT SET');
+        $output[] = "- MAIL_HOST: " . (env('MAIL_HOST') ?: 'NOT SET');
+        $output[] = "- MAIL_PORT: " . (env('MAIL_PORT') ?: 'NOT SET');
+        $output[] = "- MAIL_USERNAME: " . (env('MAIL_USERNAME') ?: 'NOT SET');
+        $output[] = "- MAIL_PASSWORD: " . (env('MAIL_PASSWORD') ? 'SET (' . strlen(env('MAIL_PASSWORD')) . ' chars)' : 'NOT SET');
+        $output[] = "- MAIL_ENCRYPTION: " . (env('MAIL_ENCRYPTION') ?: 'NOT SET');
+        $output[] = "- MAIL_FROM_ADDRESS: " . (env('MAIL_FROM_ADDRESS') ?: 'NOT SET');
+        $output[] = "- MAIL_FROM_NAME: " . (env('MAIL_FROM_NAME') ?: 'NOT SET');
+        $output[] = "";
+        
+        $output[] = "📋 Config Values:";
+        $output[] = "- mail.default: " . config('mail.default');
+        $output[] = "- mail.mailers.smtp.host: " . config('mail.mailers.smtp.host');
+        $output[] = "- mail.mailers.smtp.port: " . config('mail.mailers.smtp.port');
+        $output[] = "- mail.mailers.smtp.username: " . config('mail.mailers.smtp.username');
+        $output[] = "- mail.mailers.smtp.password: " . (config('mail.mailers.smtp.password') ? 'SET' : 'NOT SET');
+        $output[] = "- mail.mailers.smtp.encryption: " . config('mail.mailers.smtp.encryption');
+        $output[] = "- mail.from.address: " . config('mail.from.address');
+        $output[] = "- mail.from.name: " . config('mail.from.name');
+        $output[] = "";
+        
+        // Check if password looks like a Gmail App Password
+        $password = env('MAIL_PASSWORD');
+        if ($password) {
+            $output[] = "🔐 Password Analysis:";
+            $output[] = "- Length: " . strlen($password) . " characters";
+            $output[] = "- Format check: " . (preg_match('/^[a-z]{4}\s[a-z]{4}\s[a-z]{4}\s[a-z]{4}$/', $password) ? 'Looks like Gmail App Password' : 'Does NOT look like Gmail App Password');
+            $output[] = "- Expected format: 'abcd efgh ijkl mnop' (16 chars with spaces)";
+        }
+        
+        return response('<h2>Gmail Credentials Check</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/test-gmail-auth">Test Gmail Auth</a><br><a href="/admin">Go to Dashboard</a>');
+    });
 });
 
 Route::get('/force-migrate', function() {
@@ -983,49 +1067,6 @@ EN NUR - MEMBERSHIP Team
             
         } catch (\Exception $e) {
             return response('<h2>Notification Test Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nClass: " . get_class($e) . "\nFile: " . $e->getFile() . "\nLine: " . $e->getLine() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
-        }
-    });
-    
-    // Test Gmail authentication specifically
-    Route::get('/test-gmail-auth', function () {
-        try {
-            $output = [];
-            $output[] = "🔐 Testing Gmail Authentication";
-            $output[] = "Timestamp: " . now()->toDateTimeString();
-            $output[] = "";
-            
-            $output[] = "📋 Current Gmail Settings:";
-            $output[] = "- MAIL_HOST: " . env('MAIL_HOST');
-            $output[] = "- MAIL_PORT: " . env('MAIL_PORT');
-            $output[] = "- MAIL_USERNAME: " . env('MAIL_USERNAME');
-            $output[] = "- MAIL_PASSWORD: " . (env('MAIL_PASSWORD') ? str_repeat('*', strlen(env('MAIL_PASSWORD'))) : 'NOT SET');
-            $output[] = "- MAIL_ENCRYPTION: " . env('MAIL_ENCRYPTION');
-            $output[] = "- MAIL_FROM_ADDRESS: " . env('MAIL_FROM_ADDRESS');
-            $output[] = "";
-            
-            // Try to create SMTP transport and test connection
-            $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
-                env('MAIL_HOST'),
-                env('MAIL_PORT'),
-                env('MAIL_ENCRYPTION') === 'tls'
-            );
-            
-            $transport->setUsername(env('MAIL_USERNAME'));
-            $transport->setPassword(env('MAIL_PASSWORD'));
-            
-            $output[] = "🔌 Testing SMTP connection...";
-            
-            // This will throw an exception if connection fails
-            $transport->start();
-            
-            $output[] = "✅ SMTP connection successful!";
-            $transport->stop();
-            
-            return response('<h2>Gmail Authentication Test Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin">Go to Dashboard</a>');
-            
-        } catch (\Exception $e) {
-            $errorMsg = 'Error: ' . $e->getMessage() . "\n\nClass: " . get_class($e) . "\n\nThis confirms the Gmail authentication issue. You need to:\n1. Generate a new Gmail App Password\n2. Update MAIL_PASSWORD in Render environment variables\n3. Make sure 2FA is enabled on Gmail account";
-            return response('<h2>Gmail Authentication Failed</h2><pre>' . $errorMsg . '</pre><br><a href="/admin">Go to Dashboard</a>');
         }
     });
 });
