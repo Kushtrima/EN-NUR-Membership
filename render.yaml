@@ -112,7 +112,7 @@ services:
       - key: MAIL_USERNAME
         value: kushtrim.m.arifi@gmail.com
       - key: MAIL_PASSWORD
-        value: your_gmail_app_password_here
+        value: kuak qwly bpqk qclb
       - key: MAIL_ENCRYPTION
         value: tls
       - key: MAIL_FROM_ADDRESS
