@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 Route::get('/debug-info', function() {
     $info = [
@@ -839,6 +840,49 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
             
         } catch (\Exception $e) {
             return response('<h2>Error Testing Deployment</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
+        }
+    });
+    
+    // Email test route
+    Route::get('/test-email', function () {
+        try {
+            $output = [];
+            $output[] = "📧 Testing Email Configuration";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "";
+            
+            // Test email configuration
+            $output[] = "📋 Email Settings:";
+            $output[] = "- MAIL_MAILER: " . config('mail.default');
+            $output[] = "- MAIL_HOST: " . config('mail.mailers.smtp.host');
+            $output[] = "- MAIL_PORT: " . config('mail.mailers.smtp.port');
+            $output[] = "- MAIL_USERNAME: " . config('mail.mailers.smtp.username');
+            $output[] = "- MAIL_ENCRYPTION: " . config('mail.mailers.smtp.encryption');
+            $output[] = "- MAIL_FROM_ADDRESS: " . config('mail.from.address');
+            $output[] = "- MAIL_FROM_NAME: " . config('mail.from.name');
+            $output[] = "";
+            
+            // Send test email
+            $testEmail = 'infinitdizzajn@gmail.com';
+            $subject = 'Test Email from EN NUR Membership System';
+            $message = "Hello!\n\nThis is a test email to verify that the email system is working correctly.\n\nSent at: " . now()->toDateTimeString() . "\n\nBest regards,\nEN NUR Membership Team";
+            
+            $output[] = "📤 Sending test email to: {$testEmail}";
+            
+            Mail::raw($message, function ($mail) use ($testEmail, $subject) {
+                $mail->to($testEmail)
+                     ->subject($subject)
+                     ->from(config('mail.from.address'), config('mail.from.name'));
+            });
+            
+            $output[] = "✅ Email sent successfully!";
+            $output[] = "Check the inbox for {$testEmail}";
+            $output[] = "Subject: {$subject}";
+            
+            return response('<h2>Email Test Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin">Go to Dashboard</a>');
+            
+        } catch (\Exception $e) {
+            return response('<h2>Email Test Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
         }
     });
 });
