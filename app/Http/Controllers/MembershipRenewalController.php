@@ -34,8 +34,20 @@ class MembershipRenewalController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Failed to send renewal notification: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to send notification'], 500);
+            Log::error('Failed to send renewal notification', [
+                'renewal_id' => $renewal->id,
+                'user_id' => $renewal->user_id,
+                'user_email' => $renewal->user->email ?? 'unknown',
+                'error_message' => $e->getMessage(),
+                'error_class' => get_class($e),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'error' => 'Failed to send notification: ' . $e->getMessage(),
+                'details' => get_class($e) . ' in ' . $e->getFile() . ':' . $e->getLine()
+            ], 500);
         }
     }
 
@@ -147,7 +159,8 @@ EN NUR - MEMBERSHIP Team
         // Send simple text email
         Mail::raw($emailBody, function ($message) use ($user, $subject) {
             $message->to($user->email, $user->name)
-                    ->subject($subject);
+                    ->subject($subject)
+                    ->from(config('mail.from.address'), config('mail.from.name'));
         });
     }
 }

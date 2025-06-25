@@ -885,6 +885,106 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
             return response('<h2>Email Test Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
         }
     });
+    
+    // Test notification system
+    Route::get('/test-notification', function () {
+        try {
+            $output = [];
+            $output[] = "🔔 Testing Notification System";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "";
+            
+            // Find the infinitdizzajn user
+            $user = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+            if (!$user) {
+                $output[] = "❌ User infinitdizzajn@gmail.com not found";
+                return response('<h2>Notification Test Failed</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin">Go to Dashboard</a>');
+            }
+            
+            $output[] = "✅ User found: {$user->name} ({$user->email})";
+            
+            // Find the membership renewal
+            $renewal = \App\Models\MembershipRenewal::where('user_id', $user->id)
+                ->where('is_renewed', false)
+                ->first();
+                
+            if (!$renewal) {
+                $output[] = "❌ No active membership renewal found for user";
+                return response('<h2>Notification Test Failed</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin">Go to Dashboard</a>');
+            }
+            
+            $output[] = "✅ Renewal found: ID {$renewal->id}";
+            $output[] = "- Days until expiry: {$renewal->days_until_expiry}";
+            $output[] = "- Membership end: {$renewal->membership_end_date}";
+            $output[] = "- Is hidden: " . ($renewal->is_hidden ? 'Yes' : 'No');
+            $output[] = "";
+            
+            // Test the notification email manually
+            $output[] = "📧 Testing notification email...";
+            
+            $daysRemaining = $renewal->days_until_expiry;
+            $notificationMessage = $renewal->getNotificationMessage();
+            
+            // Email subject based on urgency
+            if ($daysRemaining <= 0) {
+                $subject = 'Membership Expired - Immediate Renewal Required';
+            } elseif ($daysRemaining <= 1) {
+                $subject = 'Membership Expires Tomorrow - Urgent Renewal Required';
+            } elseif ($daysRemaining <= 7) {
+                $subject = "Membership Expires in {$daysRemaining} Days - Renewal Required";
+            } else {
+                $subject = "Membership Renewal Reminder - {$daysRemaining} Days Remaining";
+            }
+            
+            // Create email content
+            $renewalUrl = route('payment.create');
+            $membershipStart = $renewal->membership_start_date ? $renewal->membership_start_date->format('M d, Y') : 'N/A';
+            $membershipEnd = $renewal->membership_end_date ? $renewal->membership_end_date->format('M d, Y') : 'N/A';
+            
+            $emailBody = "
+Hello {$user->name},
+
+{$notificationMessage}
+
+Your Membership Details:
+- Membership Start: {$membershipStart}
+- Membership End: {$membershipEnd}
+- Days Remaining: " . ($daysRemaining > 0 ? $daysRemaining : 'EXPIRED') . "
+
+To renew your membership, please visit:
+{$renewalUrl}
+
+If you have any questions, please contact our support team.
+
+Best regards,
+EN NUR - MEMBERSHIP Team
+            ";
+            
+            $output[] = "Subject: {$subject}";
+            $output[] = "To: {$user->email}";
+            $output[] = "From: " . config('mail.from.address');
+            $output[] = "";
+            
+            // Send the email
+            Mail::raw($emailBody, function ($message) use ($user, $subject) {
+                $message->to($user->email, $user->name)
+                        ->subject($subject)
+                        ->from(config('mail.from.address'), config('mail.from.name'));
+            });
+            
+            $output[] = "✅ Notification email sent successfully!";
+            $output[] = "Check the inbox for {$user->email}";
+            
+            // Mark notification as sent
+            $renewal->markNotificationSent($renewal->days_until_expiry);
+            $output[] = "✅ Notification marked as sent in database";
+            
+            return response('<h2>Notification Test Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin/users">View Users</a><br><a href="/admin">Go to Dashboard</a>');
+            
+        } catch (\Exception $e) {
+            return response('<h2>Notification Test Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nClass: " . get_class($e) . "\nFile: " . $e->getFile() . "\nLine: " . $e->getLine() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
+        }
+    });
 });
 
 require __DIR__.'/auth.php'; 
