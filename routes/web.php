@@ -985,6 +985,49 @@ EN NUR - MEMBERSHIP Team
             return response('<h2>Notification Test Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nClass: " . get_class($e) . "\nFile: " . $e->getFile() . "\nLine: " . $e->getLine() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
         }
     });
+    
+    // Test Gmail authentication specifically
+    Route::get('/test-gmail-auth', function () {
+        try {
+            $output = [];
+            $output[] = "🔐 Testing Gmail Authentication";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "";
+            
+            $output[] = "📋 Current Gmail Settings:";
+            $output[] = "- MAIL_HOST: " . env('MAIL_HOST');
+            $output[] = "- MAIL_PORT: " . env('MAIL_PORT');
+            $output[] = "- MAIL_USERNAME: " . env('MAIL_USERNAME');
+            $output[] = "- MAIL_PASSWORD: " . (env('MAIL_PASSWORD') ? str_repeat('*', strlen(env('MAIL_PASSWORD'))) : 'NOT SET');
+            $output[] = "- MAIL_ENCRYPTION: " . env('MAIL_ENCRYPTION');
+            $output[] = "- MAIL_FROM_ADDRESS: " . env('MAIL_FROM_ADDRESS');
+            $output[] = "";
+            
+            // Try to create SMTP transport and test connection
+            $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
+                env('MAIL_HOST'),
+                env('MAIL_PORT'),
+                env('MAIL_ENCRYPTION') === 'tls'
+            );
+            
+            $transport->setUsername(env('MAIL_USERNAME'));
+            $transport->setPassword(env('MAIL_PASSWORD'));
+            
+            $output[] = "🔌 Testing SMTP connection...";
+            
+            // This will throw an exception if connection fails
+            $transport->start();
+            
+            $output[] = "✅ SMTP connection successful!";
+            $transport->stop();
+            
+            return response('<h2>Gmail Authentication Test Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin">Go to Dashboard</a>');
+            
+        } catch (\Exception $e) {
+            $errorMsg = 'Error: ' . $e->getMessage() . "\n\nClass: " . get_class($e) . "\n\nThis confirms the Gmail authentication issue. You need to:\n1. Generate a new Gmail App Password\n2. Update MAIL_PASSWORD in Render environment variables\n3. Make sure 2FA is enabled on Gmail account";
+            return response('<h2>Gmail Authentication Failed</h2><pre>' . $errorMsg . '</pre><br><a href="/admin">Go to Dashboard</a>');
+        }
+    });
 });
 
 require __DIR__.'/auth.php'; 
