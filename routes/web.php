@@ -783,51 +783,11 @@ Route::get('/run-original-seeder', function () {
     }
 })->name('run.original.seeder');
 
-// Production setup routes (remove after setup)
-Route::get('/setup-production-data', function () {
-    // Only allow super admins
-    if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
-        return redirect('/login')->with('error', 'Access denied');
-    }
-    
-    try {
-        // Run the test users command
-        Artisan::call('test:create-expired-users', ['--clean' => true]);
-        $output1 = Artisan::output();
-        
-        // Run diagnostic
-        Artisan::call('admin:diagnose');
-        $output2 = Artisan::output();
-        
-        return response('<h1>Production Data Setup Complete!</h1>
-        <h2>Test Users Created:</h2>
-        <pre>' . htmlspecialchars($output1) . '</pre>
-        <h2>System Diagnostic:</h2>
-        <pre>' . htmlspecialchars($output2) . '</pre>
-        <br><a href="/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Go to Dashboard</a>
-        <br><br><a href="/admin/users" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Users with Color Indicators</a>
-        ');
-        
-    } catch (\Exception $e) {
-        return response('<h1>Error:</h1><pre>' . htmlspecialchars($e->getMessage()) . '</pre>');
-    }
-})->name('setup.production.data');
-
-Route::get('/verify-production-data', function () {
-    // Only allow super admins
-    if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
-        return redirect('/login')->with('error', 'Access denied');
-    }
-    
-    // Run diagnostic
-    Artisan::call('admin:diagnose');
-    $output = Artisan::output();
-    
-    return response('<h1>Production Data Verification</h1>
-    <pre>' . htmlspecialchars($output) . '</pre>
-    <br><a href="/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Go to Dashboard</a>
-    <br><br><a href="/setup-production-data" style="background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Setup Production Data</a>
-    ');
-})->name('verify.production.data');
+// Production setup routes (Super Admin only)
+Route::middleware(['auth', 'super_admin'])->group(function () {
+    Route::get('/verify-production-data', [AdminController::class, 'verifyProductionData']);
+    Route::get('/setup-production-data', [AdminController::class, 'setupProductionData']);
+    Route::get('/setup-production-email', [AdminController::class, 'setupProductionEmail']);
+});
 
 require __DIR__.'/auth.php'; 

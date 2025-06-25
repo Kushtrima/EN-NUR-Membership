@@ -102,15 +102,21 @@ services:
       - key: LOG_STACK
         value: single
       
-      # Mail Configuration (Demo - Replace with real values)
+      # Mail Configuration (Production SMTP)
       - key: MAIL_MAILER
-        value: log
+        value: smtp
       - key: MAIL_HOST
-        value: localhost
+        value: smtp.gmail.com
       - key: MAIL_PORT
-        value: "2525"
+        value: "587"
+      - key: MAIL_USERNAME
+        value: kushtrim.m.arifi@gmail.com
+      - key: MAIL_PASSWORD
+        value: your_gmail_app_password_here
+      - key: MAIL_ENCRYPTION
+        value: tls
       - key: MAIL_FROM_ADDRESS
-        value: noreply@en-nur-membership.onrender.com
+        value: kushtrim.m.arifi@gmail.com
       - key: MAIL_FROM_NAME
         value: "EN NUR Membership"
       

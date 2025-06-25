@@ -713,4 +713,192 @@ class AdminController extends Controller
             'background' => '#28a745'
         ];
     }
+
+    /**
+     * Verify production data setup.
+     */
+    public function verifyProductionData()
+    {
+        try {
+            // Run diagnostic
+            Artisan::call('admin:diagnose');
+            $output = Artisan::output();
+            
+            return response('<h1>Production Data Verification</h1>
+            <pre>' . htmlspecialchars($output) . '</pre>
+            <br><a href="/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Go to Dashboard</a>
+            <br><br><a href="/setup-production-data" style="background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Setup Production Data</a>
+            <br><br><a href="/setup-production-email" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Setup Production Email</a>
+            ');
+        } catch (\Exception $e) {
+            return response('<h1>Error:</h1><pre>' . htmlspecialchars($e->getMessage()) . '</pre>');
+        }
+    }
+
+    /**
+     * Setup production data with expired users.
+     */
+    public function setupProductionData()
+    {
+        try {
+            // Run the test users command
+            Artisan::call('test:create-expired-users', ['--clean' => true]);
+            $output1 = Artisan::output();
+            
+            // Run diagnostic
+            Artisan::call('admin:diagnose');
+            $output2 = Artisan::output();
+            
+            return response('<h1>Production Data Setup Complete!</h1>
+            <h2>Test Users Created:</h2>
+            <pre>' . htmlspecialchars($output1) . '</pre>
+            <h2>System Diagnostic:</h2>
+            <pre>' . htmlspecialchars($output2) . '</pre>
+            <br><a href="/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Go to Dashboard</a>
+            <br><br><a href="/admin/users" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Users with Color Indicators</a>
+            ');
+            
+        } catch (\Exception $e) {
+            return response('<h1>Error:</h1><pre>' . htmlspecialchars($e->getMessage()) . '</pre>');
+        }
+    }
+
+    /**
+     * Setup production email configuration and test notifications.
+     */
+    public function setupProductionEmail()
+    {
+        try {
+            $superAdmin = User::where('email', 'kushtrim.m.arifi@gmail.com')->first();
+            
+            if (!$superAdmin) {
+                return response('<h1>❌ Error: Super Admin Not Found</h1>
+                <p>Could not find super admin with email: kushtrim.m.arifi@gmail.com</p>
+                <br><a href="/verify-production-data" style="background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Back to Verification</a>
+                ');
+            }
+
+            // Check current mail configuration
+            $mailConfig = [
+                'MAIL_MAILER' => config('mail.default'),
+                'MAIL_HOST' => config('mail.mailers.smtp.host'),
+                'MAIL_PORT' => config('mail.mailers.smtp.port'),
+                'MAIL_FROM_ADDRESS' => config('mail.from.address'),
+                'MAIL_FROM_NAME' => config('mail.from.name'),
+                'ADMIN_EMAIL' => env('ADMIN_EMAIL', 'Not set'),
+            ];
+
+            // Test notification preparation
+            $testMessage = "🎉 Production Email Setup Successful!\n\n";
+            $testMessage .= "This is a test notification from your EN NUR Membership system.\n\n";
+            $testMessage .= "SUPER ADMIN DETAILS:\n";
+            $testMessage .= "━━━━━━━━━━━━━━━━━━━━\n";
+            $testMessage .= "• Name: {$superAdmin->name}\n";
+            $testMessage .= "• Email: {$superAdmin->email}\n";
+            $testMessage .= "• Role: {$superAdmin->role}\n";
+            $testMessage .= "• Verified: " . ($superAdmin->email_verified_at ? 'Yes' : 'No') . "\n";
+            $testMessage .= "• Created: " . $superAdmin->created_at->format('M d, Y H:i') . "\n\n";
+            
+            $testMessage .= "EMAIL CONFIGURATION:\n";
+            $testMessage .= "━━━━━━━━━━━━━━━━━━━━\n";
+            foreach ($mailConfig as $key => $value) {
+                $testMessage .= "• {$key}: {$value}\n";
+            }
+            $testMessage .= "\n";
+            
+            $testMessage .= "🚀 Your email notifications are now ready!\n\n";
+            $testMessage .= "You can now:\n";
+            $testMessage .= "• Send membership renewal notifications\n";
+            $testMessage .= "• Receive payment confirmations\n";
+            $testMessage .= "• Get system alerts and reports\n\n";
+            
+            $testMessage .= "Best regards,\n";
+            $testMessage .= "EN NUR Membership System\n";
+            $testMessage .= config('app.url');
+
+            // Try to send test email
+            $emailSent = false;
+            $emailError = null;
+            
+            try {
+                Mail::raw($testMessage, function ($mail) use ($superAdmin) {
+                    $mail->to($superAdmin->email, $superAdmin->name)
+                         ->subject('🎉 Production Email Setup Complete - EN NUR Membership')
+                         ->from(config('mail.from.address'), config('mail.from.name'));
+                });
+                $emailSent = true;
+                
+                Log::info('Production email setup test sent successfully', [
+                    'admin_email' => $superAdmin->email,
+                    'mail_config' => $mailConfig
+                ]);
+                
+            } catch (\Exception $e) {
+                $emailError = $e->getMessage();
+                Log::warning('Production email test failed', [
+                    'admin_email' => $superAdmin->email,
+                    'error' => $emailError,
+                    'mail_config' => $mailConfig
+                ]);
+            }
+
+            $html = '<h1>📧 Production Email Configuration</h1>';
+            
+            $html .= '<h2>✅ Super Admin Found</h2>';
+            $html .= '<div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0;">';
+            $html .= '<strong>Name:</strong> ' . htmlspecialchars($superAdmin->name) . '<br>';
+            $html .= '<strong>Email:</strong> ' . htmlspecialchars($superAdmin->email) . '<br>';
+            $html .= '<strong>Role:</strong> ' . htmlspecialchars($superAdmin->role) . '<br>';
+            $html .= '<strong>Verified:</strong> ' . ($superAdmin->email_verified_at ? '✅ Yes' : '❌ No') . '<br>';
+            $html .= '<strong>Created:</strong> ' . $superAdmin->created_at->format('M d, Y H:i');
+            $html .= '</div>';
+
+            $html .= '<h2>⚙️ Current Mail Configuration</h2>';
+            $html .= '<div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">';
+            foreach ($mailConfig as $key => $value) {
+                $html .= '<strong>' . htmlspecialchars($key) . ':</strong> ' . htmlspecialchars($value) . '<br>';
+            }
+            $html .= '</div>';
+
+            if ($emailSent) {
+                $html .= '<h2>✅ Test Email Sent Successfully</h2>';
+                $html .= '<div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0;">';
+                $html .= 'A test email has been sent to <strong>' . htmlspecialchars($superAdmin->email) . '</strong><br>';
+                $html .= 'Please check your inbox (and spam folder) for the test message.';
+                $html .= '</div>';
+            } else {
+                $html .= '<h2>⚠️ Test Email Failed</h2>';
+                $html .= '<div style="background: #f8d7da; padding: 15px; border-radius: 5px; margin: 10px 0;">';
+                $html .= '<strong>Error:</strong> ' . htmlspecialchars($emailError) . '<br><br>';
+                $html .= '<strong>Note:</strong> This might be expected if mail is set to "log" mode in production.<br>';
+                $html .= 'Check your render.yaml configuration to enable SMTP for real email sending.';
+                $html .= '</div>';
+            }
+
+            $html .= '<h2>📋 Next Steps for Production</h2>';
+            $html .= '<div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 10px 0;">';
+            $html .= '<ol>';
+            $html .= '<li><strong>Update render.yaml:</strong> Change MAIL_MAILER from "log" to "smtp"</li>';
+            $html .= '<li><strong>Add SMTP credentials:</strong> Set up Gmail App Password or SMTP service</li>';
+            $html .= '<li><strong>Update environment variables:</strong> Configure MAIL_USERNAME and MAIL_PASSWORD</li>';
+            $html .= '<li><strong>Test notifications:</strong> Send renewal reminders to users</li>';
+            $html .= '</ol>';
+            $html .= '</div>';
+
+            $html .= '<div style="margin: 20px 0;">';
+            $html .= '<a href="/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px;">Go to Dashboard</a>';
+            $html .= '<a href="/admin/users" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px;">View Users</a>';
+            $html .= '<a href="/verify-production-data" style="background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Back to Verification</a>';
+            $html .= '</div>';
+
+            return response($html);
+            
+        } catch (\Exception $e) {
+            Log::error('Production email setup failed: ' . $e->getMessage());
+            return response('<h1>❌ Error Setting Up Production Email</h1>
+            <pre>' . htmlspecialchars($e->getMessage()) . '</pre>
+            <br><a href="/verify-production-data" style="background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Back to Verification</a>
+            ');
+        }
+    }
 } 
