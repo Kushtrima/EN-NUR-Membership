@@ -16,7 +16,7 @@ class CreateExpiredTestUsers extends Command
      *
      * @var string
      */
-    protected $signature = 'test:create-expired-users {--clean : Clean existing test users first} {--specific-user= : Create a specific test user} {--days= : Days until expiry for the specific test user}';
+    protected $signature = 'test:create-expired-users {--clean : Clean existing test users first} {--specific-user= : Create a specific test user} {--days= : Days until expiry for the specific test user} {--infinit : Create infinitdizzajn test scenario}';
 
     /**
      * The console command description.
@@ -32,6 +32,10 @@ class CreateExpiredTestUsers extends Command
     {
         if ($this->option('clean')) {
             $this->cleanupExistingTestUsers();
+        }
+
+        if ($this->option('infinit')) {
+            return $this->createInfinitTest();
         }
 
         if ($this->option('specific-user')) {
@@ -100,18 +104,23 @@ class CreateExpiredTestUsers extends Command
         
         $this->info("💳 Created payment: CHF 350.00 (ID: {$payment->id})");
         
-        // Create membership renewal record
+        // Create membership renewal record first
         $renewal = MembershipRenewal::create([
             'user_id' => $user->id,
             'payment_id' => $payment->id,
             'membership_start_date' => $startDate,
             'membership_end_date' => $expiryDate,
+            'days_until_expiry' => 0, // Will be updated below
+            'is_expired' => false,
             'is_hidden' => false,
             'notifications_sent' => [],
             'last_notification_sent_at' => null,
             'created_at' => $startDate,
             'updated_at' => now()
         ]);
+        
+        // Update days until expiry using the model's method
+        $renewal->updateDaysUntilExpiry();
         
         $this->info("📅 Created renewal record (ID: {$renewal->id})");
         $this->info("   Start: {$startDate->format('Y-m-d')}");
@@ -245,6 +254,117 @@ class CreateExpiredTestUsers extends Command
         $this->info('');
         $this->info('You can now test the expired users functionality in the superadmin dashboard.');
         $this->info('Login credentials for all test users: Password is "TestPassword123!"');
+    }
+
+    /**
+     * Create infinitdizzajn test scenario.
+     */
+    private function createInfinitTest()
+    {
+        $email = 'infinitdizzajn@gmail.com';
+        $days = 15;
+        
+        $this->info("🎯 Setting up infinitdizzajn@gmail.com test scenario");
+        $this->info("Target: 15 days until expiry (ORANGE indicator)");
+        
+        // Find the user
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            $this->error("❌ User {$email} not found!");
+            $this->info("Creating the user...");
+            
+            $user = User::create([
+                'name' => 'Sara Test User',
+                'email' => $email,
+                'email_verified_at' => now(),
+                'password' => Hash::make('TestPassword123!'),
+                'role' => 'user'
+            ]);
+            
+            $this->info("✅ Created user: {$user->name} (ID: {$user->id})");
+        } else {
+            $this->info("✅ Found user: {$user->name} (ID: {$user->id})");
+        }
+        
+        // Clean up existing records for this user
+        $deletedRenewals = MembershipRenewal::where('user_id', $user->id)->count();
+        $deletedPayments = Payment::where('user_id', $user->id)->count();
+        
+        MembershipRenewal::where('user_id', $user->id)->delete();
+        Payment::where('user_id', $user->id)->delete();
+        
+        $this->info("🗑️ Cleaned up {$deletedRenewals} renewals and {$deletedPayments} payments");
+        
+        // Calculate dates - membership expires in exactly $days from now
+        $expiryDate = now()->addDays($days)->startOfDay();
+        $startDate = $expiryDate->copy()->subYear(); // Start exactly 1 year before expiry
+        
+        // Create payment record
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'amount' => 35000, // CHF 350.00 in cents
+            'currency' => 'CHF',
+            'payment_type' => 'membership',
+            'payment_method' => 'stripe',
+            'status' => 'completed',
+            'stripe_payment_intent_id' => 'pi_test_infinit_' . time(),
+            'metadata' => [
+                'membership_start' => $startDate->toDateString(),
+                'membership_end' => $expiryDate->toDateString(),
+                'test_scenario' => '15_days_expiry_infinit',
+                'created_via' => 'console_command'
+            ],
+            'created_at' => $startDate,
+            'updated_at' => $startDate
+        ]);
+        
+        $this->info("💳 Created payment: CHF 350.00 (ID: {$payment->id})");
+        
+        // Create membership renewal record
+        $renewal = MembershipRenewal::create([
+            'user_id' => $user->id,
+            'payment_id' => $payment->id,
+            'membership_start_date' => $startDate,
+            'membership_end_date' => $expiryDate,
+            'days_until_expiry' => 0, // Will be updated below
+            'is_expired' => false,
+            'is_hidden' => false,
+            'notifications_sent' => [],
+            'last_notification_sent_at' => null,
+            'created_at' => $startDate,
+            'updated_at' => now()
+        ]);
+        
+        // Update days until expiry using the model's method
+        $renewal->updateDaysUntilExpiry();
+        $renewal->refresh(); // Refresh to get updated values
+        
+        $this->info("📅 Created renewal record (ID: {$renewal->id})");
+        $this->info("   Start: {$startDate->format('Y-m-d')}");
+        $this->info("   End: {$expiryDate->format('Y-m-d')}");
+        
+        // Calculate and show the result
+        $daysUntilExpiry = (int) $renewal->days_until_expiry;
+        $this->info("   Days until expiry: {$daysUntilExpiry}");
+        
+        // Show color that will be displayed
+        if ($daysUntilExpiry <= 0) {
+            $color = '🔴 RED (Expired)';
+        } elseif ($daysUntilExpiry <= 30) {
+            $color = '🟠 ORANGE (Expiring within 30 days)';
+        } else {
+            $color = '🟢 GREEN (Active)';
+        }
+        
+        $this->info("");
+        $this->info("🎨 Color indicator: {$color}");
+        $this->info("🎉 infinitdizzajn@gmail.com test setup complete!");
+        $this->info("");
+        $this->info("📧 To test email notifications:");
+        $this->info("   Visit: /admin/renewals/{$renewal->id}/notify");
+        $this->info("   Or use the dashboard notification buttons");
+        
+        return Command::SUCCESS;
     }
 
     private function displayResults()
