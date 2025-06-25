@@ -102,23 +102,23 @@ services:
       - key: LOG_STACK
         value: single
       
-      # Mail Configuration (Gmail SMTP - Fixed Format)
+      # Mail Configuration (Custom Domain - Professional Email)
       - key: MAIL_MAILER
         value: smtp
       - key: MAIL_HOST
-        value: smtp.gmail.com
+        value: mail.xhamia-en-nur.ch
       - key: MAIL_PORT
-        value: "587"
+        value: "465"
       - key: MAIL_USERNAME
-        value: kushtrim.m.arifi@gmail.com
+        value: info@xhamia-en-nur.ch
       - key: MAIL_PASSWORD
-        value: bdxxrrhhjbbmzamo
+        value: "##~(nWoL-Bi;&&gJBMmb<>g#2#@"
       - key: MAIL_ENCRYPTION
-        value: tls
+        value: ssl
       - key: MAIL_FROM_ADDRESS
-        value: kushtrim.m.arifi@gmail.com
+        value: info@xhamia-en-nur.ch
       - key: MAIL_FROM_NAME
-        value: "EN NUR Membership"
+        value: "EN NUR - Xhamia"
       
       # Payment Configuration (Demo Keys - Replace with real ones)
       - key: STRIPE_KEY
