@@ -16,7 +16,7 @@ class CreateExpiredTestUsers extends Command
      *
      * @var string
      */
-    protected $signature = 'test:create-expired-users {--clean : Clean existing test users first}';
+    protected $signature = 'test:create-expired-users {--clean : Clean existing test users first} {--specific-user= : Create a specific test user} {--days= : Days until expiry for the specific test user}';
 
     /**
      * The console command description.
@@ -30,9 +30,141 @@ class CreateExpiredTestUsers extends Command
      */
     public function handle()
     {
-        // Clean up existing test users first
-        $this->cleanupExistingTestUsers();
+        if ($this->option('clean')) {
+            $this->cleanupExistingTestUsers();
+        }
 
+        if ($this->option('specific-user')) {
+            return $this->createSpecificTestUser();
+        }
+
+        $this->createExpiredTestUsers();
+        $this->displayResults();
+
+        return Command::SUCCESS;
+    }
+
+    /**
+     * Create a specific test user scenario.
+     */
+    private function createSpecificTestUser()
+    {
+        $email = $this->option('specific-user');
+        $days = (int) $this->option('days', 15);
+        
+        $this->info("🎯 Setting up specific test user: {$email}");
+        $this->info("Days until expiry: {$days}");
+        
+        // Find the user
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            $this->error("❌ User {$email} not found!");
+            return Command::FAILURE;
+        }
+        
+        $this->info("✅ Found user: {$user->name} (ID: {$user->id})");
+        
+        // Clean up existing records for this user
+        MembershipRenewal::where('user_id', $user->id)->delete();
+        Payment::where('user_id', $user->id)->delete();
+        $this->info("🗑️ Cleaned up existing records");
+        
+        // Calculate dates
+        if ($days > 0) {
+            $expiryDate = now()->addDays($days)->startOfDay();
+            $status = 'expiring';
+        } else {
+            $expiryDate = now()->subDays(abs($days))->startOfDay();
+            $status = 'expired';
+        }
+        
+        $startDate = $expiryDate->copy()->subYear();
+        
+        // Create payment record
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'amount' => 35000, // CHF 350.00 in cents
+            'currency' => 'CHF',
+            'payment_type' => 'membership',
+            'payment_method' => 'stripe',
+            'status' => 'completed',
+            'stripe_payment_intent_id' => 'pi_test_' . $status . '_' . $user->id,
+            'metadata' => [
+                'membership_start' => $startDate->toDateString(),
+                'membership_end' => $expiryDate->toDateString(),
+                'test_scenario' => $days . '_days_to_expiry'
+            ],
+            'created_at' => $startDate,
+            'updated_at' => $startDate
+        ]);
+        
+        $this->info("💳 Created payment: CHF 350.00 (ID: {$payment->id})");
+        
+        // Create membership renewal record
+        $renewal = MembershipRenewal::create([
+            'user_id' => $user->id,
+            'payment_id' => $payment->id,
+            'membership_start_date' => $startDate,
+            'membership_end_date' => $expiryDate,
+            'is_hidden' => false,
+            'notifications_sent' => [],
+            'last_notification_sent_at' => null,
+            'created_at' => $startDate,
+            'updated_at' => now()
+        ]);
+        
+        $this->info("📅 Created renewal record (ID: {$renewal->id})");
+        $this->info("   Start: {$startDate->format('Y-m-d')}");
+        $this->info("   End: {$expiryDate->format('Y-m-d')}");
+        $this->info("   Days until expiry: " . (int) $renewal->days_until_expiry);
+        
+        // Show color that will be displayed
+        $daysUntilExpiry = (int) $renewal->days_until_expiry;
+        if ($daysUntilExpiry <= 0) {
+            $color = '🔴 RED (Expired)';
+        } elseif ($daysUntilExpiry <= 30) {
+            $color = '🟠 ORANGE (Expiring within 30 days)';
+        } else {
+            $color = '🟢 GREEN (Active)';
+        }
+        
+        $this->info("");
+        $this->info("🎨 Color indicator: {$color}");
+        $this->info("🎉 Test setup complete for {$email}!");
+        
+        return Command::SUCCESS;
+    }
+
+    /**
+     * Clean up existing test users.
+     */
+    private function cleanupExistingTestUsers()
+    {
+        $this->info('Cleaning up existing test users...');
+
+        $testEmails = [
+            'expired17@test.com',
+            'expired20@test.com',
+            'justexpired@test.com'
+        ];
+
+        foreach ($testEmails as $email) {
+            $user = User::where('email', $email)->first();
+            if ($user) {
+                $this->info("- Removing existing user: {$user->name} ({$user->email})");
+                // Delete related data first
+                $user->membershipRenewals()->delete();
+                $user->payments()->delete();
+                $user->delete();
+            }
+        }
+
+        $this->info('Cleanup completed.');
+        $this->info('');
+    }
+
+    private function createExpiredTestUsers()
+    {
         $this->info('Creating three test users with expired memberships...');
 
         // Test users data
@@ -113,35 +245,10 @@ class CreateExpiredTestUsers extends Command
         $this->info('');
         $this->info('You can now test the expired users functionality in the superadmin dashboard.');
         $this->info('Login credentials for all test users: Password is "TestPassword123!"');
-        
-        return 0;
     }
 
-    /**
-     * Clean up existing test users.
-     */
-    private function cleanupExistingTestUsers()
+    private function displayResults()
     {
-        $this->info('Cleaning up existing test users...');
-
-        $testEmails = [
-            'expired17@test.com',
-            'expired20@test.com',
-            'justexpired@test.com'
-        ];
-
-        foreach ($testEmails as $email) {
-            $user = User::where('email', $email)->first();
-            if ($user) {
-                $this->info("- Removing existing user: {$user->name} ({$user->email})");
-                // Delete related data first
-                $user->membershipRenewals()->delete();
-                $user->payments()->delete();
-                $user->delete();
-            }
-        }
-
-        $this->info('Cleanup completed.');
-        $this->info('');
+        // Implementation of displayResults method
     }
 } 

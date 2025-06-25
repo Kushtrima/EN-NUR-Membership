@@ -788,6 +788,7 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
     Route::get('/verify-production-data', [AdminController::class, 'verifyProductionData']);
     Route::get('/setup-production-data', [AdminController::class, 'setupProductionData']);
     Route::get('/setup-production-email', [AdminController::class, 'setupProductionEmail']);
+    Route::get('/setup-test-expiry/{email}', [AdminController::class, 'setupTestExpiry']);
 });
 
 require __DIR__.'/auth.php'; 

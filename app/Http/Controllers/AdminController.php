@@ -729,6 +729,7 @@ class AdminController extends Controller
             <br><a href="/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Go to Dashboard</a>
             <br><br><a href="/setup-production-data" style="background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Setup Production Data</a>
             <br><br><a href="/setup-production-email" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Setup Production Email</a>
+            <br><br><a href="/setup-test-expiry/infinitdizzajn@gmail.com?days=15" style="background: #ff6c37; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🎯 Setup 15-Day Expiry Test</a>
             ');
         } catch (\Exception $e) {
             return response('<h1>Error:</h1><pre>' . htmlspecialchars($e->getMessage()) . '</pre>');
@@ -896,6 +897,200 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             Log::error('Production email setup failed: ' . $e->getMessage());
             return response('<h1>❌ Error Setting Up Production Email</h1>
+            <pre>' . htmlspecialchars($e->getMessage()) . '</pre>
+            <br><a href="/verify-production-data" style="background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Back to Verification</a>
+            ');
+        }
+    }
+
+    /**
+     * Setup test expiry scenario for an existing user.
+     */
+    public function setupTestExpiry($email)
+    {
+        try {
+            // URL decode the email
+            $email = urldecode($email);
+            $days = request()->get('days', 15); // Default to 15 days
+            
+            $html = '<h1>🎯 Setting Up Test Expiry Scenario</h1>';
+            $html .= '<p><strong>Email:</strong> ' . htmlspecialchars($email) . '</p>';
+            $html .= '<p><strong>Days until expiry:</strong> ' . $days . '</p>';
+            
+            // Find the user
+            $user = User::where('email', $email)->first();
+            if (!$user) {
+                $html .= '<div style="background: #f8d7da; padding: 15px; border-radius: 5px; margin: 10px 0;">';
+                $html .= '<h2>❌ User Not Found</h2>';
+                $html .= '<p>Could not find user with email: ' . htmlspecialchars($email) . '</p>';
+                $html .= '</div>';
+                
+                $html .= '<div style="margin: 20px 0;">';
+                $html .= '<a href="/verify-production-data" style="background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Back to Verification</a>';
+                $html .= '</div>';
+                
+                return response($html);
+            }
+            
+            $html .= '<div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0;">';
+            $html .= '<h2>✅ User Found</h2>';
+            $html .= '<p><strong>Name:</strong> ' . htmlspecialchars($user->name) . '</p>';
+            $html .= '<p><strong>Email:</strong> ' . htmlspecialchars($user->email) . '</p>';
+            $html .= '<p><strong>ID:</strong> ' . $user->id . '</p>';
+            $html .= '<p><strong>Role:</strong> ' . htmlspecialchars($user->role) . '</p>';
+            $html .= '<p><strong>Verified:</strong> ' . ($user->email_verified_at ? '✅ Yes' : '❌ No') . '</p>';
+            $html .= '</div>';
+            
+            // Clean up existing records for this user
+            $deletedRenewals = MembershipRenewal::where('user_id', $user->id)->count();
+            $deletedPayments = Payment::where('user_id', $user->id)->count();
+            
+            MembershipRenewal::where('user_id', $user->id)->delete();
+            Payment::where('user_id', $user->id)->delete();
+            
+            $html .= '<div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 10px 0;">';
+            $html .= '<h2>🗑️ Cleanup Complete</h2>';
+            $html .= '<p>Deleted ' . $deletedRenewals . ' renewal records</p>';
+            $html .= '<p>Deleted ' . $deletedPayments . ' payment records</p>';
+            $html .= '</div>';
+            
+            // Calculate dates
+            if ($days > 0) {
+                $expiryDate = now()->addDays($days)->startOfDay();
+                $status = 'expiring';
+            } else {
+                $expiryDate = now()->subDays(abs($days))->startOfDay();
+                $status = 'expired';
+            }
+            
+            $startDate = $expiryDate->copy()->subYear();
+            
+            // Create payment record
+            $payment = Payment::create([
+                'user_id' => $user->id,
+                'amount' => 35000, // CHF 350.00 in cents
+                'currency' => 'CHF',
+                'payment_type' => 'membership',
+                'payment_method' => 'stripe',
+                'status' => 'completed',
+                'stripe_payment_intent_id' => 'pi_test_' . $status . '_' . $user->id . '_' . time(),
+                'metadata' => [
+                    'membership_start' => $startDate->toDateString(),
+                    'membership_end' => $expiryDate->toDateString(),
+                    'test_scenario' => $days . '_days_to_expiry',
+                    'created_via' => 'production_test_setup'
+                ],
+                'created_at' => $startDate,
+                'updated_at' => $startDate
+            ]);
+            
+            // Create membership renewal record
+            $renewal = MembershipRenewal::create([
+                'user_id' => $user->id,
+                'payment_id' => $payment->id,
+                'membership_start_date' => $startDate,
+                'membership_end_date' => $expiryDate,
+                'is_hidden' => false,
+                'notifications_sent' => [],
+                'last_notification_sent_at' => null,
+                'created_at' => $startDate,
+                'updated_at' => now()
+            ]);
+            
+            // Determine color indicator
+            $daysUntilExpiry = (int) $renewal->days_until_expiry;
+            if ($daysUntilExpiry <= 0) {
+                $color = '🔴 RED (Expired)';
+                $colorClass = 'danger';
+            } elseif ($daysUntilExpiry <= 30) {
+                $color = '🟠 ORANGE (Expiring within 30 days)';
+                $colorClass = 'warning';
+            } else {
+                $color = '🟢 GREEN (Active)';
+                $colorClass = 'success';
+            }
+            
+            $html .= '<div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0;">';
+            $html .= '<h2>🎉 Test Scenario Created Successfully!</h2>';
+            $html .= '<p><strong>Payment ID:</strong> ' . $payment->id . ' (CHF 350.00)</p>';
+            $html .= '<p><strong>Renewal ID:</strong> ' . $renewal->id . '</p>';
+            $html .= '<p><strong>Membership Start:</strong> ' . $startDate->format('Y-m-d') . '</p>';
+            $html .= '<p><strong>Membership End:</strong> ' . $expiryDate->format('Y-m-d') . '</p>';
+            $html .= '<p><strong>Days Until Expiry:</strong> ' . $daysUntilExpiry . '</p>';
+            $html .= '<p><strong>Color Indicator:</strong> ' . $color . '</p>';
+            $html .= '</div>';
+            
+            // Email notification test
+            $html .= '<div style="background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 10px 0;">';
+            $html .= '<h2>📧 Email Notification Test</h2>';
+            
+            try {
+                $notificationMessage = "🔔 Membership Renewal Reminder\n\n";
+                $notificationMessage .= "Dear {$user->name},\n\n";
+                $notificationMessage .= "This is a test notification for your membership renewal.\n\n";
+                $notificationMessage .= "MEMBERSHIP DETAILS:\n";
+                $notificationMessage .= "━━━━━━━━━━━━━━━━━━━━\n";
+                $notificationMessage .= "• Member ID: MBR-" . str_pad($user->id, 6, '0', STR_PAD_LEFT) . "\n";
+                $notificationMessage .= "• Current Expiry: " . $expiryDate->format('M d, Y') . "\n";
+                $notificationMessage .= "• Days Remaining: {$daysUntilExpiry}\n\n";
+                
+                if ($daysUntilExpiry <= 0) {
+                    $notificationMessage .= "❌ EXPIRED: Your membership has expired!\n\n";
+                } elseif ($daysUntilExpiry <= 7) {
+                    $notificationMessage .= "⚠️ URGENT: Your membership expires very soon!\n\n";
+                } elseif ($daysUntilExpiry <= 30) {
+                    $notificationMessage .= "📅 Please consider renewing your membership soon.\n\n";
+                }
+                
+                $notificationMessage .= "TO RENEW YOUR MEMBERSHIP:\n";
+                $notificationMessage .= "━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+                $notificationMessage .= "1. Log in to your account at " . config('app.url') . "\n";
+                $notificationMessage .= "2. Click 'Make Payment'\n";
+                $notificationMessage .= "3. Select 'Membership' (CHF 350)\n";
+                $notificationMessage .= "4. Complete payment via available methods\n\n";
+                $notificationMessage .= "Best regards,\n";
+                $notificationMessage .= "EN NUR Membership Team\n";
+                $notificationMessage .= config('app.url');
+
+                // Send test email
+                Mail::raw($notificationMessage, function ($mail) use ($user, $daysUntilExpiry) {
+                    $subject = $daysUntilExpiry <= 0 
+                        ? 'Membership Expired - Immediate Renewal Required'
+                        : "Membership Renewal Reminder - {$daysUntilExpiry} Days Remaining";
+                    
+                    $mail->to($user->email, $user->name)
+                         ->subject($subject)
+                         ->from(config('mail.from.address'), config('mail.from.name'));
+                });
+                
+                $html .= '<p>✅ <strong>Email sent successfully!</strong></p>';
+                $html .= '<p>Check the inbox for <strong>' . htmlspecialchars($user->email) . '</strong></p>';
+                $html .= '<p>Subject: "Membership Renewal Reminder - ' . $daysUntilExpiry . ' Days Remaining"</p>';
+                
+                Log::info('Test renewal notification sent', [
+                    'user_email' => $user->email,
+                    'days_until_expiry' => $daysUntilExpiry,
+                    'test_scenario' => true
+                ]);
+                
+            } catch (\Exception $e) {
+                $html .= '<p>⚠️ <strong>Email failed:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>';
+                $html .= '<p>This might be expected if SMTP is not configured in production.</p>';
+            }
+            
+            $html .= '</div>';
+            
+            $html .= '<div style="margin: 20px 0;">';
+            $html .= '<a href="/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px;">Go to Dashboard</a>';
+            $html .= '<a href="/admin/users" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px;">View Users with Color Indicators</a>';
+            $html .= '<a href="/verify-production-data" style="background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Back to Verification</a>';
+            $html .= '</div>';
+            
+            return response($html);
+            
+        } catch (\Exception $e) {
+            Log::error('Test expiry setup failed: ' . $e->getMessage());
+            return response('<h1>❌ Error Setting Up Test Expiry</h1>
             <pre>' . htmlspecialchars($e->getMessage()) . '</pre>
             <br><a href="/verify-production-data" style="background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Back to Verification</a>
             ');
