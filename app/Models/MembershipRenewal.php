@@ -68,7 +68,7 @@ class MembershipRenewal extends Model
         $diffInDays = Carbon::now()->diffInDays($this->membership_end_date, false);
         
         // Return the actual difference (can be negative for expired memberships)
-        return $diffInDays;
+        return (int) $diffInDays;
     }
 
     /**
