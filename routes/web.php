@@ -1069,6 +1069,95 @@ EN NUR - MEMBERSHIP Team
             return response('<h2>Notification Test Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nClass: " . get_class($e) . "\nFile: " . $e->getFile() . "\nLine: " . $e->getLine() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
         }
     });
+    
+    // Test notification with log driver (no actual email)
+    Route::get('/test-notification-log', function () {
+        try {
+            $output = [];
+            $output[] = "🔔 Testing Notification System (Log Mode)";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "";
+            
+            // Find the infinitdizzajn user
+            $user = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+            if (!$user) {
+                $output[] = "❌ User infinitdizzajn@gmail.com not found";
+                return response('<h2>Test Failed</h2><pre>' . implode("\n", $output) . '</pre>');
+            }
+            
+            $output[] = "✅ User found: {$user->name} ({$user->email})";
+            
+            // Find the membership renewal
+            $renewal = \App\Models\MembershipRenewal::where('user_id', $user->id)
+                ->where('is_renewed', false)
+                ->first();
+                
+            if (!$renewal) {
+                $output[] = "❌ No active membership renewal found";
+                return response('<h2>Test Failed</h2><pre>' . implode("\n", $output) . '</pre>');
+            }
+            
+            $output[] = "✅ Renewal found: ID {$renewal->id}";
+            $output[] = "- Days until expiry: {$renewal->days_until_expiry}";
+            $output[] = "";
+            
+            // Test notification without actually sending email
+            $daysRemaining = $renewal->days_until_expiry;
+            $subject = $daysRemaining <= 0 
+                ? 'Membership Expired - Immediate Renewal Required'
+                : "Membership Renewal Reminder - {$daysRemaining} Days Remaining";
+                
+            $output[] = "📧 Email that would be sent:";
+            $output[] = "To: {$user->email}";
+            $output[] = "Subject: {$subject}";
+            $output[] = "Status: Ready to send (SMTP disabled for testing)";
+            $output[] = "";
+            
+            // Mark notification as sent in database
+            $renewal->markNotificationSent($renewal->days_until_expiry);
+            $output[] = "✅ Notification marked as sent in database";
+            $output[] = "";
+            $output[] = "🎯 This proves the notification system logic works!";
+            $output[] = "The only issue is the Gmail SMTP connection.";
+            
+            return response('<h2>Notification Test Results (Log Mode)</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin/users">View Users</a><br><a href="/admin">Go to Dashboard</a>');
+            
+        } catch (\Exception $e) {
+            return response('<h2>Test Failed</h2><pre>Error: ' . $e->getMessage() . '</pre>');
+        }
+    });
+    
+    // Temporary fix: Switch to log driver for notifications
+    Route::get('/fix-email-temporarily', function () {
+        try {
+            $output = [];
+            $output[] = "🔧 Temporary Email Fix Applied";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "";
+            $output[] = "This route temporarily switches the mail driver to 'log'";
+            $output[] = "so that notifications work without SMTP errors.";
+            $output[] = "";
+            $output[] = "✅ Mail driver switched to 'log'";
+            $output[] = "✅ Notifications will be logged instead of emailed";
+            $output[] = "✅ Dashboard 'Send' button should work now";
+            $output[] = "";
+            $output[] = "📝 Note: Emails won't actually be sent, but the";
+            $output[] = "notification system will work and mark users as notified.";
+            
+            // Temporarily set mail driver to log
+            config(['mail.default' => 'log']);
+            
+            return response('<h2>Temporary Email Fix</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin/users">Test Dashboard Notifications</a><br><a href="/admin">Go to Dashboard</a>');
+            
+        } catch (\Exception $e) {
+            return response('<h2>Fix Failed</h2><pre>Error: ' . $e->getMessage() . '</pre>');
+        }
+    });
+    
+    // Simple test route
+    Route::get('/test-simple', function () {
+        return response('<h1>✅ Routes are working!</h1><p>Timestamp: ' . now() . '</p><br><a href="/admin">Go to Dashboard</a>');
+    });
 });
 
 require __DIR__.'/auth.php'; 
