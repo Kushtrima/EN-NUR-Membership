@@ -789,6 +789,50 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
     Route::get('/setup-production-data', [AdminController::class, 'setupProductionData']);
     Route::get('/setup-production-email', [AdminController::class, 'setupProductionEmail']);
     Route::get('/setup-test-expiry/{email}', [AdminController::class, 'setupTestExpiry']);
+    
+    // Diagnostic route to test the latest code deployment
+    Route::get('/test-latest-deployment', function () {
+        try {
+            $output = [];
+            $output[] = "🔍 Testing Latest Code Deployment";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            
+            // Test the CreateExpiredTestUsers command with --infinit flag
+            $output[] = "\n📋 Testing CreateExpiredTestUsers command with --infinit flag...";
+            
+            // Run the command and capture output
+            Artisan::call('test:create-expired-users', ['--infinit' => true]);
+            $commandOutput = Artisan::output();
+            
+            $output[] = "Command Output:";
+            $output[] = $commandOutput;
+            
+            // Check if the user was created/updated
+            $user = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+            if ($user) {
+                $output[] = "\n✅ User Found:";
+                $output[] = "- Name: {$user->name}";
+                $output[] = "- Email: {$user->email}";
+                $output[] = "- Days Until Expiry: {$user->days_until_expiry}";
+                $output[] = "- Membership Status: {$user->membership_status}";
+                $output[] = "- Color: {$user->color}";
+                $output[] = "- Hidden: " . ($user->hidden ? 'Yes' : 'No');
+            } else {
+                $output[] = "\n❌ User not found";
+            }
+            
+            // Test the MembershipService color logic
+            $output[] = "\n🎨 Testing Color Logic:";
+            $membershipService = app(\App\Services\MembershipService::class);
+            $colors = $membershipService->getUserColors();
+            $output[] = "Color mapping loaded: " . (count($colors) > 0 ? 'Yes' : 'No');
+            
+            return response('<h2>Latest Deployment Test Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin/users">View Users</a><br><a href="/admin">Go to Dashboard</a>');
+            
+        } catch (\Exception $e) {
+            return response('<h2>Error Testing Deployment</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
+        }
+    });
 });
 
 require __DIR__.'/auth.php'; 
