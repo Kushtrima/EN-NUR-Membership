@@ -2027,4 +2027,165 @@ Route::get('/setup-test-users', function() {
     }
 })->middleware(['auth', 'super_admin']);
 
+// Modify existing subscriptions to be about to expire
+Route::get('/expire-existing-subscriptions', function() {
+    try {
+        $output = [];
+        $output[] = "🔧 MODIFYING EXISTING SUBSCRIPTIONS TO EXPIRE SOON";
+        $output[] = "Timestamp: " . now()->toDateTimeString();
+        $output[] = "=" . str_repeat("=", 60);
+        $output[] = "";
+        
+        // Find both users
+        $mardalUser = \App\Models\User::where('email', 'info@mardal.ch')->first();
+        $infinitUser = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+        
+        if (!$mardalUser) {
+            $output[] = "❌ Mardal user (info@mardal.ch) not found!";
+        }
+        if (!$infinitUser) {
+            $output[] = "❌ Infinit user (infinitdizzajn@gmail.com) not found!";
+        }
+        
+        if (!$mardalUser || !$infinitUser) {
+            return response('<h2>❌ Users Not Found</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/setup-test-users">Setup Users First</a>');
+        }
+        
+        $output[] = "✅ Found both users";
+        $output[] = "";
+        
+        // Find existing memberships for both users
+        $mardalRenewal = \App\Models\MembershipRenewal::where('user_id', $mardalUser->id)
+            ->where('is_renewed', false)
+            ->orderBy('membership_end_date', 'desc')
+            ->first();
+            
+        $infinitRenewal = \App\Models\MembershipRenewal::where('user_id', $infinitUser->id)
+            ->where('is_renewed', false)
+            ->orderBy('membership_end_date', 'desc')
+            ->first();
+        
+        $output[] = "🔍 EXISTING MEMBERSHIPS:";
+        $output[] = "";
+        
+        if ($mardalRenewal) {
+            $output[] = "📋 Mardal User Current Membership:";
+            $output[] = "   - Start: {$mardalRenewal->membership_start_date}";
+            $output[] = "   - End: {$mardalRenewal->membership_end_date}";
+            $output[] = "   - Days Until Expiry: {$mardalRenewal->days_until_expiry}";
+            $output[] = "   - Is Expired: " . ($mardalRenewal->is_expired ? 'Yes' : 'No');
+        } else {
+            $output[] = "❌ No membership found for Mardal user";
+        }
+        
+        if ($infinitRenewal) {
+            $output[] = "📋 Infinit User Current Membership:";
+            $output[] = "   - Start: {$infinitRenewal->membership_start_date}";
+            $output[] = "   - End: {$infinitRenewal->membership_end_date}";
+            $output[] = "   - Days Until Expiry: {$infinitRenewal->days_until_expiry}";
+            $output[] = "   - Is Expired: " . ($infinitRenewal->is_expired ? 'Yes' : 'No');
+        } else {
+            $output[] = "❌ No membership found for Infinit user";
+        }
+        
+        $output[] = "";
+        $output[] = "🔧 MODIFYING MEMBERSHIPS TO EXPIRE SOON:";
+        $output[] = "";
+        
+        // Modify Mardal user - make it EXPIRED (3 days ago)
+        if ($mardalRenewal) {
+            $newMardalEndDate = now()->subDays(3);
+            $newMardalStartDate = $newMardalEndDate->copy()->subYear();
+            $newMardalDays = (int) now()->diffInDays($newMardalEndDate, false); // Should be -3
+            
+            $mardalRenewal->update([
+                'membership_start_date' => $newMardalStartDate,
+                'membership_end_date' => $newMardalEndDate,
+                'days_until_expiry' => $newMardalDays,
+                'is_expired' => true,
+                'is_hidden' => false,
+                'is_renewed' => false,
+            ]);
+            
+            $output[] = "🔴 MODIFIED Mardal User:";
+            $output[] = "   - New End Date: {$newMardalEndDate->format('Y-m-d')}";
+            $output[] = "   - Days Until Expiry: {$newMardalDays} (EXPIRED)";
+            $output[] = "   - Status: RED - Should appear in admin dashboard";
+        }
+        
+        // Modify Infinit user - make it EXPIRING (7 days remaining)
+        if ($infinitRenewal) {
+            $newInfinitEndDate = now()->addDays(7);
+            $newInfinitStartDate = $newInfinitEndDate->copy()->subYear();
+            $newInfinitDays = (int) now()->diffInDays($newInfinitEndDate, false); // Should be 7
+            
+            $infinitRenewal->update([
+                'membership_start_date' => $newInfinitStartDate,
+                'membership_end_date' => $newInfinitEndDate,
+                'days_until_expiry' => $newInfinitDays,
+                'is_expired' => false,
+                'is_hidden' => false,
+                'is_renewed' => false,
+            ]);
+            
+            $output[] = "🟠 MODIFIED Infinit User:";
+            $output[] = "   - New End Date: {$newInfinitEndDate->format('Y-m-d')}";
+            $output[] = "   - Days Until Expiry: {$newInfinitDays} (EXPIRING SOON)";
+            $output[] = "   - Status: ORANGE - Should appear in admin dashboard";
+        }
+        
+        $output[] = "";
+        
+        // Verify with MembershipService
+        $membershipService = new \App\Services\MembershipService();
+        
+        if ($mardalUser && $mardalRenewal) {
+            $mardalColor = $membershipService->getUserColor($mardalUser->id);
+            $output[] = "🎨 Mardal Color: {$mardalColor} (should be #dc3545 - RED)";
+        }
+        
+        if ($infinitUser && $infinitRenewal) {
+            $infinitColor = $membershipService->getUserColor($infinitUser->id);
+            $output[] = "🎨 Infinit Color: {$infinitColor} (should be #ff6c37 - ORANGE)";
+        }
+        
+        $output[] = "";
+        
+        // Test admin dashboard logic
+        $adminDashboardRenewals = \App\Models\MembershipRenewal::with('user')
+            ->where('is_renewed', false)
+            ->where('is_hidden', false)
+            ->get()
+            ->filter(function ($renewal) {
+                $daysUntilExpiry = $renewal->calculateDaysUntilExpiry();
+                return $daysUntilExpiry <= 30 && $daysUntilExpiry > -30;
+            });
+        
+        $output[] = "🔍 ADMIN DASHBOARD VERIFICATION:";
+        $output[] = "   - Total renewals that will appear: " . $adminDashboardRenewals->count();
+        foreach ($adminDashboardRenewals as $renewal) {
+            $userName = $renewal->user ? $renewal->user->name : 'Unknown';
+            $userEmail = $renewal->user ? $renewal->user->email : 'Unknown';
+            $calculatedDays = $renewal->calculateDaysUntilExpiry();
+            $status = $calculatedDays <= 0 ? '🔴 EXPIRED' : '🟠 EXPIRING';
+            $output[] = "   - {$status} {$userName} ({$userEmail}): {$calculatedDays} days";
+        }
+        
+        $output[] = "";
+        $output[] = "🔑 LOGIN CREDENTIALS:";
+        $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+        $output[] = "👑 SUPER ADMIN: kushtrim.m.arifi@gmail.com / Alipasha1985X";
+        $output[] = "🔴 EXPIRED USER: info@mardal.ch / mardal123";
+        $output[] = "🟠 EXPIRING USER: infinitdizzajn@gmail.com / alipasha";
+        $output[] = "";
+        
+        $output[] = "✅ SUCCESS! Both users should now appear in Super Admin dashboard";
+        
+        return response('<h2>✅ Subscriptions Modified Successfully!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Check Admin Dashboard</a><br><br><a href="/admin/users" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Admin Users</a><br><br><a href="/login" style="background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🔴 Test Expired User</a>');
+        
+    } catch (\Exception $e) {
+        return response('<h2>❌ Error Modifying Subscriptions</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
+    }
+})->middleware(['auth', 'super_admin']);
+
 require __DIR__.'/auth.php'; 
