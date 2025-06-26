@@ -2202,4 +2202,118 @@ Route::get('/test-routes-working', function() {
     ]);
 });
 
+// Diagnostic route to see what's happening with users
+Route::get('/diagnose-users', function() {
+    try {
+        $output = [];
+        $output[] = "🔍 DIAGNOSING USER MEMBERSHIP ISSUES";
+        $output[] = "Timestamp: " . now()->toDateTimeString();
+        $output[] = "=" . str_repeat("=", 60);
+        $output[] = "";
+        
+        // Check if users exist
+        $mardalUser = \App\Models\User::where('email', 'info@mardal.ch')->first();
+        $infinitUser = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+        
+        $output[] = "👥 USER CHECK:";
+        $output[] = "- Mardal user (info@mardal.ch): " . ($mardalUser ? "✅ EXISTS (ID: {$mardalUser->id})" : "❌ NOT FOUND");
+        $output[] = "- Infinit user (infinitdizzajn@gmail.com): " . ($infinitUser ? "✅ EXISTS (ID: {$infinitUser->id})" : "❌ NOT FOUND");
+        $output[] = "";
+        
+        // Check all users
+        $allUsers = \App\Models\User::all();
+        $output[] = "📊 ALL USERS IN DATABASE:";
+        foreach ($allUsers as $user) {
+            $output[] = "- ID: {$user->id}, Name: '{$user->name}', Email: '{$user->email}', Role: '{$user->role}'";
+        }
+        $output[] = "";
+        
+        // Check all membership renewals
+        $allRenewals = \App\Models\MembershipRenewal::with('user')->get();
+        $output[] = "🔄 ALL MEMBERSHIP RENEWALS:";
+        if ($allRenewals->count() > 0) {
+            foreach ($allRenewals as $renewal) {
+                $userName = $renewal->user ? $renewal->user->name : 'Unknown User';
+                $userEmail = $renewal->user ? $renewal->user->email : 'Unknown Email';
+                $calculatedDays = $renewal->calculateDaysUntilExpiry();
+                $output[] = "- User: {$userName} ({$userEmail})";
+                $output[] = "  Start: {$renewal->membership_start_date}";
+                $output[] = "  End: {$renewal->membership_end_date}";
+                $output[] = "  Days Until Expiry (DB): {$renewal->days_until_expiry}";
+                $output[] = "  Days Until Expiry (Calculated): {$calculatedDays}";
+                $output[] = "  Is Expired: " . ($renewal->is_expired ? 'Yes' : 'No');
+                $output[] = "  Is Hidden: " . ($renewal->is_hidden ? 'Yes' : 'No');
+                $output[] = "  Is Renewed: " . ($renewal->is_renewed ? 'Yes' : 'No');
+                $output[] = "";
+            }
+        } else {
+            $output[] = "❌ NO MEMBERSHIP RENEWALS FOUND!";
+        }
+        $output[] = "";
+        
+        // Check all payments
+        $allPayments = \App\Models\Payment::with('user')->get();
+        $output[] = "💳 ALL PAYMENTS:";
+        if ($allPayments->count() > 0) {
+            foreach ($allPayments as $payment) {
+                $userName = $payment->user ? $payment->user->name : 'Unknown User';
+                $userEmail = $payment->user ? $payment->user->email : 'Unknown Email';
+                $output[] = "- User: {$userName} ({$userEmail})";
+                $output[] = "  Amount: {$payment->amount}, Type: {$payment->payment_type}, Status: {$payment->status}";
+                $output[] = "  Created: {$payment->created_at}";
+                $output[] = "";
+            }
+        } else {
+            $output[] = "❌ NO PAYMENTS FOUND!";
+        }
+        $output[] = "";
+        
+        // Test admin dashboard logic
+        $adminDashboardRenewals = \App\Models\MembershipRenewal::with('user')
+            ->where('is_renewed', false)
+            ->where('is_hidden', false)
+            ->get()
+            ->filter(function ($renewal) {
+                $daysUntilExpiry = $renewal->calculateDaysUntilExpiry();
+                return $daysUntilExpiry <= 30 && $daysUntilExpiry > -30;
+            });
+        
+        $output[] = "🎛️ ADMIN DASHBOARD LOGIC TEST:";
+        $output[] = "- Query: is_renewed=false AND is_hidden=false AND days_until_expiry <= 30 AND > -30";
+        $output[] = "- Total renewals matching criteria: " . $adminDashboardRenewals->count();
+        
+        if ($adminDashboardRenewals->count() > 0) {
+            foreach ($adminDashboardRenewals as $renewal) {
+                $userName = $renewal->user ? $renewal->user->name : 'Unknown';
+                $userEmail = $renewal->user ? $renewal->user->email : 'Unknown';
+                $calculatedDays = $renewal->calculateDaysUntilExpiry();
+                $status = $calculatedDays <= 0 ? '🔴 EXPIRED' : '🟠 EXPIRING';
+                $output[] = "  - {$status} {$userName} ({$userEmail}): {$calculatedDays} days";
+            }
+        } else {
+            $output[] = "❌ NO USERS WILL APPEAR IN ADMIN DASHBOARD!";
+            $output[] = "";
+            $output[] = "🔧 POSSIBLE ISSUES:";
+            $output[] = "1. No membership renewals exist";
+            $output[] = "2. All renewals are marked as renewed (is_renewed=true)";
+            $output[] = "3. All renewals are hidden (is_hidden=true)";
+            $output[] = "4. Days until expiry is outside the 30-day window";
+        }
+        
+        $output[] = "";
+        $output[] = "🛠️ NEXT STEPS:";
+        if ($allRenewals->count() === 0) {
+            $output[] = "1. Visit /setup-test-users to create memberships";
+        } else {
+            $output[] = "1. Visit /expire-existing-subscriptions to modify existing memberships";
+        }
+        $output[] = "2. Check the results above to understand why users aren't showing";
+        
+        return response('<h2>🔍 User Diagnosis Results</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/setup-test-users" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🧪 Setup Test Users</a><br><br><a href="/expire-existing-subscriptions" style="background: #ff6c37; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">⏰ Expire Existing Subscriptions</a><br><br><a href="/admin/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Admin Dashboard</a>');
+        
+    } catch (\Exception $e) {
+        return response('<h2>❌ Error During Diagnosis</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
+    }
+})->middleware(['auth', 'super_admin']);
+
 require __DIR__.'/auth.php'; 
