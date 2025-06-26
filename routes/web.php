@@ -1462,4 +1462,122 @@ Route::get('/admin', function () {
     return redirect('/admin/dashboard');
 });
 
+// Fix infinitdizzajn user password and membership status
+Route::get('/fix-infinit-user', function() {
+    try {
+        $email = 'infinitdizzajn@gmail.com';
+        $correctPassword = 'alipasha'; // User confirmed this is the correct password
+        
+        $output = [];
+        $output[] = "🔧 Fixing infinitdizzajn@gmail.com user";
+        $output[] = "Timestamp: " . now()->toDateTimeString();
+        $output[] = "";
+        
+        // Find the user
+        $user = \App\Models\User::where('email', $email)->first();
+        
+        if (!$user) {
+            $output[] = "❌ User not found! Creating new user...";
+            
+            $user = \App\Models\User::create([
+                'name' => 'kushtrim arifi',
+                'email' => $email,
+                'password' => Hash::make($correctPassword),
+                'role' => 'user',
+                'email_verified_at' => now(),
+            ]);
+            
+            $output[] = "✅ Created user: {$user->name} (ID: {$user->id})";
+        } else {
+            $output[] = "✅ User found: {$user->name} (ID: {$user->id})";
+            
+            // Update password to correct one
+            $user->update([
+                'password' => Hash::make($correctPassword),
+                'name' => 'kushtrim arifi', // Ensure correct name
+            ]);
+            
+            $output[] = "✅ Password updated to: {$correctPassword}";
+        }
+        
+        // Check membership renewal status
+        $renewal = \App\Models\MembershipRenewal::where('user_id', $user->id)
+            ->where('is_renewed', false)
+            ->first();
+            
+        if ($renewal) {
+            $output[] = "✅ Membership renewal found: ID {$renewal->id}";
+            $output[] = "- Days until expiry: {$renewal->days_until_expiry}";
+            $output[] = "- Membership end: {$renewal->membership_end_date}";
+            $output[] = "- Is hidden: " . ($renewal->is_hidden ? 'Yes' : 'No');
+            $output[] = "- Is expired: " . ($renewal->is_expired ? 'Yes' : 'No');
+            
+            // Show color that should appear
+            $days = $renewal->days_until_expiry;
+            if ($renewal->is_hidden) {
+                $color = '🔴 RED (Hidden)';
+            } elseif ($days <= 0) {
+                $color = '🔴 RED (Expired)';
+            } elseif ($days <= 30) {
+                $color = '🟠 ORANGE (Expiring within 30 days)';
+            } else {
+                $color = '🟢 GREEN (Active)';
+            }
+            
+            $output[] = "🎨 Expected color: {$color}";
+        } else {
+            $output[] = "❌ No membership renewal found!";
+            $output[] = "Creating test membership renewal...";
+            
+            // Create a payment first
+            $payment = \App\Models\Payment::create([
+                'user_id' => $user->id,
+                'amount' => 35000, // CHF 350.00
+                'currency' => 'CHF',
+                'payment_type' => 'membership',
+                'payment_method' => 'stripe',
+                'status' => 'completed',
+                'transaction_id' => 'test_infinit_' . time(),
+                'metadata' => ['test_user' => true],
+                'created_at' => now()->subYear(),
+                'updated_at' => now()->subYear(),
+            ]);
+            
+            // Create membership renewal (expires in 14 days)
+            $expiryDate = now()->addDays(14);
+            $startDate = $expiryDate->copy()->subYear();
+            
+            $renewal = \App\Models\MembershipRenewal::create([
+                'user_id' => $user->id,
+                'payment_id' => $payment->id,
+                'membership_start_date' => $startDate,
+                'membership_end_date' => $expiryDate,
+                'days_until_expiry' => 14,
+                'is_expired' => false,
+                'is_hidden' => false,
+                'is_renewed' => false,
+                'notifications_sent' => [],
+                'last_notification_sent_at' => null,
+            ]);
+            
+            $output[] = "✅ Created membership renewal (expires in 14 days)";
+            $output[] = "🟠 Expected color: ORANGE (Expiring within 30 days)";
+        }
+        
+        $output[] = "";
+        $output[] = "🎯 LOGIN CREDENTIALS:";
+        $output[] = "📧 Email: {$email}";
+        $output[] = "🔑 Password: {$correctPassword}";
+        $output[] = "🌐 Login URL: https://en-nur-membership.onrender.com/login";
+        $output[] = "";
+        $output[] = "🔍 ADMIN VIEW:";
+        $output[] = "Login as super admin and check /admin/users to see the color indicator";
+        
+        return response('<h2>✅ User Fixed Successfully!</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/login">Login as User</a><br><a href="/admin/users">View Admin Users Page</a><br><a href="/admin">Admin Dashboard</a>');
+        
+    } catch (\Exception $e) {
+        return response('<h2>❌ Error</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
+    }
+})->middleware(['auth', 'super_admin']);
+
 require __DIR__.'/auth.php'; 
