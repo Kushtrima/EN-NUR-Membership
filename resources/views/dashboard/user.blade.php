@@ -20,50 +20,89 @@
     <div class="card">
         <h2 class="card-title">Membership Status</h2>
         
-        @if($userStats['has_membership'])
+        @if($userStats['has_membership'] && $userStats['active_membership_renewal'])
             @php
-                $membershipDate = $userStats['latest_membership']->created_at;
-                $expiryDate = $membershipDate->copy()->addYear();
-                $daysLeft = now()->diffInDays($expiryDate, false);
+                $renewal = $userStats['active_membership_renewal'];
+                $daysLeft = $renewal->calculateDaysUntilExpiry();
+                $membershipStart = $renewal->membership_start_date;
+                $membershipEnd = $renewal->membership_end_date;
+                
+                // Determine status and colors
+                $isExpired = $daysLeft <= 0;
+                $isExpiringSoon = $daysLeft > 0 && $daysLeft <= 30;
+                $isActive = $daysLeft > 30;
+                
+                if ($isExpired) {
+                    $statusColor = '#dc3545'; // Red
+                    $statusText = 'Membership Expired';
+                    $statusIcon = '❌';
+                    $bgColor = 'rgba(220, 53, 69, 0.1)';
+                } elseif ($isExpiringSoon) {
+                    $statusColor = '#ff6c37'; // Orange
+                    $statusText = 'Membership Expiring Soon';
+                    $statusIcon = '⚠️';
+                    $bgColor = 'rgba(255, 108, 55, 0.1)';
+                } else {
+                    $statusColor = '#1F6E38'; // Green
+                    $statusText = 'Active Member';
+                    $statusIcon = '✓';
+                    $bgColor = 'rgba(31, 110, 56, 0.1)';
+                }
             @endphp
             
-            <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1.5rem; border-left: 4px solid #1F6E38;">
+            <div style="background: {{ $bgColor }}; border-radius: 8px; padding: 1.5rem; border-left: 4px solid {{ $statusColor }};">
                 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                    <div style="background: #1F6E38; color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-                        ✓
+                    <div style="background: {{ $statusColor }}; color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                        {{ $statusIcon }}
                     </div>
                     <div>
-                        <h3 style="margin: 0; color: #1F6E38;">Active Member</h3>
-                        <p style="margin: 0; color: #666;">Your membership is active and valid</p>
+                        <h3 style="margin: 0; color: {{ $statusColor }};">{{ $statusText }}</h3>
+                        @if($isExpired)
+                            <p style="margin: 0; color: #666;">Your membership has expired. Please renew to continue accessing services.</p>
+                        @elseif($isExpiringSoon)
+                            <p style="margin: 0; color: #666;">Your membership expires soon. Consider renewing to avoid interruption.</p>
+                        @else
+                            <p style="margin: 0; color: #666;">Your membership is active and valid</p>
+                        @endif
                     </div>
                 </div>
                 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
                     <div>
                         <strong>Member Since:</strong><br>
-                        <span style="color: #1F6E38;">{{ $membershipDate->format('F d, Y') }}</span>
+                        <span style="color: {{ $statusColor }};">{{ $membershipStart->format('F d, Y') }}</span>
                     </div>
                     <div>
                         <strong>Valid Until:</strong><br>
-                        <span style="color: #1F6E38;">{{ $expiryDate->format('F d, Y') }}</span>
+                        <span style="color: {{ $statusColor }};">{{ $membershipEnd->format('F d, Y') }}</span>
                     </div>
                     <div>
                         <strong>Days Remaining:</strong><br>
-                        <span style="color: {{ $daysLeft > 30 ? '#1F6E38' : '#dc3545' }};">
-                            {{ $daysLeft > 0 ? $daysLeft . ' days' : 'Expired' }}
+                        <span style="color: {{ $statusColor }};">
+                            {{ $daysLeft > 0 ? $daysLeft . ' days' : 'EXPIRED (' . abs($daysLeft) . ' days ago)' }}
                         </span>
                     </div>
                 </div>
                 
-                @if($daysLeft < 30 && $daysLeft > 0)
-                    <div style="margin-top: 1rem; padding: 1rem; background: #fff3cd; border-radius: 4px; border-left: 4px solid #ffc107;">
-                        <strong>⚠️ Renewal Reminder:</strong> Your membership expires in {{ $daysLeft }} days.
-                        <a href="{{ route('payment.create') }}" style="color: #856404; text-decoration: underline;">Renew now</a>
-                    </div>
-                @elseif($daysLeft <= 0)
+                @if($isExpired)
                     <div style="margin-top: 1rem; padding: 1rem; background: #f8d7da; border-radius: 4px; border-left: 4px solid #dc3545;">
-                        <strong>❌ Membership Expired:</strong> Please renew your membership to continue accessing services.
-                        <a href="{{ route('payment.create') }}" style="color: #721c24; text-decoration: underline;">Renew now</a>
+                        <strong>🚨 URGENT: Membership Expired</strong><br>
+                        Your membership expired {{ abs($daysLeft) }} days ago. Please renew immediately to restore access to all services.
+                        <div style="margin-top: 0.5rem;">
+                            <a href="{{ route('payment.create') }}" style="background: #dc3545; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block;">
+                                🔄 Renew Membership Now
+                            </a>
+                        </div>
+                    </div>
+                @elseif($isExpiringSoon)
+                    <div style="margin-top: 1rem; padding: 1rem; background: #fff3cd; border-radius: 4px; border-left: 4px solid #ffc107;">
+                        <strong>⚠️ Renewal Reminder</strong><br>
+                        Your membership expires in {{ $daysLeft }} days. Renew now to avoid any interruption in services.
+                        <div style="margin-top: 0.5rem;">
+                            <a href="{{ route('payment.create') }}" style="background: #ff6c37; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; font-weight: bold; display: inline-block;">
+                                🔄 Renew Early & Save Time
+                            </a>
+                        </div>
                     </div>
                 @endif
             </div>

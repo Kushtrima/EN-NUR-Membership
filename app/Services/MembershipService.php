@@ -122,22 +122,24 @@ class MembershipService
         $membershipPayments = $completedPayments->where('payment_type', 'membership');
         $latestMembership = $membershipPayments->latest()->first();
 
-        // Check for active membership renewal (has valid dates and not expired)
-        $activeMembershipRenewal = MembershipRenewal::where('user_id', $user->id)
+        // Check for ANY membership renewal (active OR expired)
+        $membershipRenewal = MembershipRenewal::where('user_id', $user->id)
             ->whereNotNull('membership_start_date')
             ->whereNotNull('membership_end_date')
-            ->where('membership_end_date', '>=', now())
             ->where('is_renewed', false)
             ->first();
+
+        // Determine if user has any membership (even if expired)
+        $hasMembership = $membershipRenewal !== null;
 
         return [
             'total_paid' => $completedPayments->sum('amount') / 100,
             'total_donations' => $completedPayments->where('payment_type', 'donation')->sum('amount') / 100,
             'completed_payments' => $completedPayments->count(),
             'pending_payments' => $user->payments()->where('status', 'pending')->count(),
-            'has_membership' => $activeMembershipRenewal !== null,
+            'has_membership' => $hasMembership,
             'latest_membership' => $latestMembership,
-            'active_membership_renewal' => $activeMembershipRenewal,
+            'active_membership_renewal' => $membershipRenewal, // This can be active OR expired
         ];
     }
 } 
