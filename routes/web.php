@@ -154,6 +154,188 @@ Route::get('/test-route', function () {
     ]);
 });
 
+// PUBLIC Diagnostic Routes (no authentication required)
+Route::get('/clear-routes', function () {
+    try {
+        Artisan::call('route:clear');
+        Artisan::call('config:clear');
+        Artisan::call('cache:clear');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Routes, config, and cache cleared successfully!',
+            'timestamp' => now()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to clear cache: ' . $e->getMessage(),
+            'timestamp' => now()
+        ], 500);
+    }
+});
+
+Route::get('/app-diagnostic', function() {
+    $output = [];
+    $output[] = "🔍 COMPREHENSIVE APPLICATION DIAGNOSTIC";
+    $output[] = "Timestamp: " . now()->toDateTimeString();
+    $output[] = "Laravel Version: " . app()->version();
+    $output[] = "PHP Version: " . PHP_VERSION;
+    $output[] = "=" . str_repeat("=", 60);
+    $output[] = "";
+    
+    $criticalIssues = 0;
+    $warnings = 0;
+    $suggestions = 0;
+    
+    // 1. SECURITY AUDIT
+    $output[] = "🔒 SECURITY AUDIT";
+    $output[] = str_repeat("-", 30);
+    
+    if (empty(config('app.key'))) {
+        $output[] = "❌ CRITICAL: APP_KEY not set - encryption vulnerable!";
+        $criticalIssues++;
+    } else {
+        $output[] = "✅ APP_KEY: Properly configured";
+    }
+    
+    if (config('app.env') === 'production' && config('app.debug') === true) {
+        $output[] = "❌ CRITICAL: Debug mode enabled in production!";
+        $criticalIssues++;
+    } else {
+        $output[] = "✅ Debug Mode: Properly configured";
+    }
+    
+    $output[] = "";
+    
+    // 2. DATABASE INTEGRITY
+    $output[] = "🗄️  DATABASE INTEGRITY";
+    $output[] = str_repeat("-", 30);
+    
+    try {
+        \DB::connection()->getPdo();
+        $output[] = "✅ Database Connection: Active";
+        
+        $requiredTables = ['users', 'payments', 'membership_renewals', 'sessions'];
+        foreach ($requiredTables as $table) {
+            if (\Schema::hasTable($table)) {
+                $count = \DB::table($table)->count();
+                $output[] = "✅ Table '{$table}': Exists ({$count} records)";
+            } else {
+                $output[] = "❌ CRITICAL: Table '{$table}' missing!";
+                $criticalIssues++;
+            }
+        }
+        
+    } catch (\Exception $e) {
+        $output[] = "❌ CRITICAL: Database connection failed - " . $e->getMessage();
+        $criticalIssues++;
+    }
+    
+    $output[] = "";
+    
+    // 3. USER MANAGEMENT
+    $output[] = "👥 USER MANAGEMENT";
+    $output[] = str_repeat("-", 30);
+    
+    try {
+        $duplicateEmails = \DB::table('users')
+            ->select('email', \DB::raw('COUNT(*) as count'))
+            ->groupBy('email')
+            ->having('count', '>', 1)
+            ->get();
+        
+        if ($duplicateEmails->count() > 0) {
+            $output[] = "❌ CRITICAL: Duplicate email addresses found!";
+            $criticalIssues++;
+        } else {
+            $output[] = "✅ Email Uniqueness: No duplicates";
+        }
+        
+        $superAdminCount = \App\Models\User::where('role', 'super_admin')->count();
+        if ($superAdminCount === 0) {
+            $output[] = "❌ CRITICAL: No super admin accounts!";
+            $criticalIssues++;
+        } else {
+            $output[] = "✅ Super Admin Count: {$superAdminCount}";
+        }
+        
+    } catch (\Exception $e) {
+        $output[] = "❌ ERROR: Could not check users - " . $e->getMessage();
+        $criticalIssues++;
+    }
+    
+    $output[] = "";
+    
+    // FINAL SUMMARY
+    $output[] = "=" . str_repeat("=", 60);
+    
+    if ($criticalIssues > 0) {
+        $status = "🚨 CRITICAL ISSUES FOUND";
+        $statusColor = "#dc3545";
+    } elseif ($warnings > 0) {
+        $status = "⚠️  WARNINGS DETECTED";
+        $statusColor = "#ff6c37";
+    } else {
+        $status = "🎉 APPLICATION HEALTHY";
+        $statusColor = "#28a745";
+    }
+    
+    $output[] = $status;
+    $output[] = "";
+    $output[] = "📊 DIAGNOSTIC SUMMARY:";
+    $output[] = "   🚨 Critical Issues: {$criticalIssues}";
+    $output[] = "   ⚠️  Warnings: {$warnings}";
+    $output[] = "   💡 Suggestions: {$suggestions}";
+    
+    return response("<h2 style='color: {$statusColor};'>{$status}</h2><pre>" . implode("\n", $output) . "</pre><br><br><a href='/health-check' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🩺 Health Check</a><br><br><a href='/admin/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👑 Admin Dashboard</a>");
+});
+
+Route::get('/health-check', function() {
+    $output = [];
+    $output[] = "🩺 MEMBERSHIP SYSTEM HEALTH CHECK";
+    $output[] = "Timestamp: " . now()->toDateTimeString();
+    $output[] = "=" . str_repeat("=", 50);
+    $output[] = "";
+    
+    $allGood = true;
+    
+    try {
+        \DB::connection()->getPdo();
+        $output[] = "✅ Database: CONNECTED";
+    } catch (\Exception $e) {
+        $output[] = "❌ Database: FAILED - " . $e->getMessage();
+        $allGood = false;
+    }
+    
+    try {
+        $mardalUser = \App\Models\User::where('email', 'info@mardal.ch')->first();
+        $infinitUser = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+        $superAdmin = \App\Models\User::where('email', 'kushtrim.m.arifi@gmail.com')->first();
+        
+        $output[] = "👥 Users:";
+        $output[] = "   - Super Admin: " . ($superAdmin ? "✅ EXISTS (Role: {$superAdmin->role})" : "❌ MISSING");
+        $output[] = "   - Mardal User: " . ($mardalUser ? "✅ EXISTS" : "❌ MISSING");
+        $output[] = "   - Infinit User: " . ($infinitUser ? "✅ EXISTS" : "❌ MISSING");
+        
+        if (!$superAdmin || !$mardalUser || !$infinitUser) {
+            $allGood = false;
+        }
+    } catch (\Exception $e) {
+        $output[] = "❌ User Check Failed: " . $e->getMessage();
+        $allGood = false;
+    }
+    
+    $overallStatus = $allGood ? "🎉 SYSTEM HEALTHY!" : "⚠️ ISSUES FOUND";
+    $statusColor = $allGood ? "#28a745" : "#dc3545";
+    
+    $output[] = "";
+    $output[] = "=" . str_repeat("=", 50);
+    $output[] = $overallStatus;
+    $output[] = "=" . str_repeat("=", 50);
+    
+    return response("<h2 style='color: {$statusColor};'>{$overallStatus}</h2><pre>" . implode("\n", $output) . "</pre><br><br><a href='/app-diagnostic' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🔍 Full Diagnostic</a><br><br><a href='/admin/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👑 Admin Dashboard</a>");
+});
+
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
