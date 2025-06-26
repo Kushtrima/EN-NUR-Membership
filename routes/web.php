@@ -1792,4 +1792,51 @@ Route::get('/clean-all-users', function() {
     }
 })->middleware(['auth', 'super_admin']);
 
+// Test membership renewal logic
+Route::get('/test-membership-renewal', function() {
+    $user = auth()->user();
+    if (!$user) {
+        return 'Please login first';
+    }
+    
+    // Get current membership status
+    $currentRenewal = \App\Models\MembershipRenewal::where('user_id', $user->id)
+        ->where('is_renewed', false)
+        ->orderBy('membership_end_date', 'desc')
+        ->first();
+    
+    $membershipService = new \App\Services\MembershipService();
+    $userColor = $membershipService->getUserColor($user->id);
+    $userStats = $membershipService->getUserStats($user->id);
+    
+    $output = "<h2>🧪 Membership Renewal Test</h2>";
+    $output .= "<p><strong>User:</strong> {$user->name} ({$user->email})</p>";
+    $output .= "<p><strong>Current Color:</strong> <span style='color: {$userColor}; font-weight: bold;'>{$userColor}</span></p>";
+    
+    if ($currentRenewal) {
+        $output .= "<p><strong>Current Membership:</strong></p>";
+        $output .= "<ul>";
+        $output .= "<li>Start: {$currentRenewal->membership_start_date}</li>";
+        $output .= "<li>End: {$currentRenewal->membership_end_date}</li>";
+        $output .= "<li>Days Until Expiry: {$currentRenewal->days_until_expiry}</li>";
+        $output .= "<li>Is Expired: " . ($currentRenewal->is_expired ? 'Yes' : 'No') . "</li>";
+        $output .= "<li>Is Renewed: " . ($currentRenewal->is_renewed ? 'Yes' : 'No') . "</li>";
+        $output .= "</ul>";
+    } else {
+        $output .= "<p><strong>No active membership found!</strong></p>";
+    }
+    
+    $output .= "<p><strong>User Stats:</strong></p>";
+    $output .= "<ul>";
+    $output .= "<li>Status: {$userStats['status']}</li>";
+    $output .= "<li>Days Remaining: {$userStats['days_remaining']}</li>";
+    $output .= "<li>Expires At: {$userStats['expires_at']}</li>";
+    $output .= "</ul>";
+    
+    $output .= "<p><a href='/payments/create' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🔄 Make Test Payment</a></p>";
+    $output .= "<p><a href='/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>📊 View Dashboard</a></p>";
+    
+    return $output;
+})->middleware('auth')->name('test.membership.renewal');
+
 require __DIR__.'/auth.php'; 

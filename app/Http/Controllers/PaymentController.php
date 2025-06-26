@@ -1171,23 +1171,32 @@ class PaymentController extends Controller
             // Check if user already has an active membership renewal
             $existingRenewal = \App\Models\MembershipRenewal::where('user_id', $payment->user_id)
                 ->where('is_renewed', false)
+                ->orderBy('membership_end_date', 'desc')
                 ->first();
 
+            // Determine start date for new membership
             if ($existingRenewal) {
-                // Update existing renewal to mark as renewed
+                // Mark existing renewal as renewed
                 $existingRenewal->update([
                     'is_renewed' => true,
                     'renewal_payment_id' => $payment->id,
                     'admin_notes' => 'Membership renewed with payment #' . $payment->id
                 ]);
+                
+                // New membership starts from the existing expiry date (or today if already expired)
+                $startDate = $existingRenewal->membership_end_date->isFuture() 
+                    ? $existingRenewal->membership_end_date 
+                    : now();
+            } else {
+                // First-time membership starts today
+                $startDate = now();
             }
 
-            // Create new membership renewal for 1 year from now
-            $startDate = now();
-            $endDate = now()->addYear();
-            $daysUntilExpiry = $startDate->diffInDays($endDate);
+            // Create new membership renewal for 1 year from start date
+            $endDate = $startDate->copy()->addYear();
+            $daysUntilExpiry = (int) now()->diffInDays($endDate, false); // Can be negative if expired
 
-            \App\Models\MembershipRenewal::create([
+            $newRenewal = \App\Models\MembershipRenewal::create([
                 'user_id' => $payment->user_id,
                 'payment_id' => $payment->id,
                 'membership_start_date' => $startDate,
@@ -1199,20 +1208,25 @@ class PaymentController extends Controller
                 'is_expired' => false,
                 'is_renewed' => false,
                 'renewal_payment_id' => null,
-                'admin_notes' => 'New membership created with payment #' . $payment->id
+                'admin_notes' => $existingRenewal 
+                    ? 'Membership extended with payment #' . $payment->id
+                    : 'New membership created with payment #' . $payment->id
             ]);
 
-            Log::info("Membership renewal created", [
+            Log::info("Membership renewal created/extended", [
                 'payment_id' => $payment->id,
                 'user_id' => $payment->user_id,
+                'start_date' => $startDate->format('Y-m-d'),
                 'valid_until' => $endDate->format('Y-m-d'),
-                'days_until_expiry' => $daysUntilExpiry
+                'days_until_expiry' => $daysUntilExpiry,
+                'is_extension' => $existingRenewal ? true : false
             ]);
 
         } catch (\Exception $e) {
             Log::error("Error creating membership renewal: " . $e->getMessage(), [
                 'payment_id' => $payment->id,
-                'user_id' => $payment->user_id
+                'user_id' => $payment->user_id,
+                'error_trace' => $e->getTraceAsString()
             ]);
         }
     }
