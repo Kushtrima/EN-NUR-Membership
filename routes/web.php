@@ -1839,4 +1839,168 @@ Route::get('/test-membership-renewal', function() {
     return $output;
 })->middleware('auth')->name('test.membership.renewal');
 
+// Setup test users with expired/expiring memberships
+Route::get('/setup-test-users', function() {
+    try {
+        $output = [];
+        $output[] = "🧪 SETTING UP TEST USERS";
+        $output[] = "Timestamp: " . now()->toDateTimeString();
+        $output[] = "=" . str_repeat("=", 50);
+        $output[] = "";
+        
+        // 1. Setup info@mardal.ch - EXPIRED (RED)
+        $mardalUser = \App\Models\User::where('email', 'info@mardal.ch')->first();
+        if (!$mardalUser) {
+            $mardalUser = \App\Models\User::create([
+                'name' => 'Mardal User',
+                'email' => 'info@mardal.ch',
+                'password' => Hash::make('mardal123'),
+                'role' => 'user',
+                'email_verified_at' => now(),
+            ]);
+            $output[] = "✅ Created Mardal user: info@mardal.ch";
+        } else {
+            $mardalUser->update([
+                'name' => 'Mardal User',
+                'password' => Hash::make('mardal123'),
+                'role' => 'user',
+                'email_verified_at' => now(),
+            ]);
+            $output[] = "✅ Updated Mardal user: info@mardal.ch";
+        }
+        
+        // 2. Setup infinitdizzajn@gmail.com - 15 DAYS (ORANGE)
+        $infinitUser = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+        if (!$infinitUser) {
+            $infinitUser = \App\Models\User::create([
+                'name' => 'kushtrim arifi',
+                'email' => 'infinitdizzajn@gmail.com',
+                'password' => Hash::make('alipasha'),
+                'role' => 'user',
+                'email_verified_at' => now(),
+            ]);
+            $output[] = "✅ Created Infinit user: infinitdizzajn@gmail.com";
+        } else {
+            $infinitUser->update([
+                'name' => 'kushtrim arifi',
+                'password' => Hash::make('alipasha'),
+                'role' => 'user',
+                'email_verified_at' => now(),
+            ]);
+            $output[] = "✅ Updated Infinit user: infinitdizzajn@gmail.com";
+        }
+        
+        $output[] = "";
+        $output[] = "🔧 SETTING UP MEMBERSHIPS:";
+        $output[] = "";
+        
+        // Clean existing renewals and payments for both users
+        \App\Models\MembershipRenewal::whereIn('user_id', [$mardalUser->id, $infinitUser->id])->delete();
+        \App\Models\Payment::whereIn('user_id', [$mardalUser->id, $infinitUser->id])->delete();
+        
+        // 1. MARDAL USER - EXPIRED (30 days ago)
+        $mardalPayment = \App\Models\Payment::create([
+            'user_id' => $mardalUser->id,
+            'amount' => 35000, // CHF 350.00
+            'currency' => 'CHF',
+            'payment_type' => 'membership',
+            'payment_method' => 'stripe',
+            'status' => 'completed',
+            'transaction_id' => 'test_mardal_' . time(),
+            'metadata' => ['test_setup' => 'expired'],
+            'created_at' => now()->subYear()->subDays(30),
+            'updated_at' => now()->subYear()->subDays(30),
+        ]);
+        
+        $mardalExpiryDate = now()->subDays(30); // EXPIRED 30 days ago
+        $mardalStartDate = $mardalExpiryDate->copy()->subYear();
+        
+        $mardalRenewal = \App\Models\MembershipRenewal::create([
+            'user_id' => $mardalUser->id,
+            'payment_id' => $mardalPayment->id,
+            'membership_start_date' => $mardalStartDate,
+            'membership_end_date' => $mardalExpiryDate,
+            'days_until_expiry' => (int) now()->diffInDays($mardalExpiryDate, false), // Negative = expired
+            'is_expired' => true,
+            'is_hidden' => false,
+            'is_renewed' => false,
+            'notifications_sent' => [],
+            'last_notification_sent_at' => null,
+        ]);
+        
+        $output[] = "🔴 MARDAL USER (info@mardal.ch):";
+        $output[] = "   - Status: EXPIRED (30 days ago)";
+        $output[] = "   - End Date: {$mardalExpiryDate->format('Y-m-d')}";
+        $output[] = "   - Days Until Expiry: {$mardalRenewal->days_until_expiry}";
+        $output[] = "   - Expected Color: RED 🔴";
+        $output[] = "";
+        
+        // 2. INFINIT USER - 15 DAYS REMAINING (ORANGE)
+        $infinitPayment = \App\Models\Payment::create([
+            'user_id' => $infinitUser->id,
+            'amount' => 35000, // CHF 350.00
+            'currency' => 'CHF',
+            'payment_type' => 'membership',
+            'payment_method' => 'stripe',
+            'status' => 'completed',
+            'transaction_id' => 'test_infinit_' . time(),
+            'metadata' => ['test_setup' => 'expiring_soon'],
+            'created_at' => now()->subYear()->addDays(15),
+            'updated_at' => now()->subYear()->addDays(15),
+        ]);
+        
+        $infinitExpiryDate = now()->addDays(15); // 15 days remaining
+        $infinitStartDate = $infinitExpiryDate->copy()->subYear();
+        
+        $infinitRenewal = \App\Models\MembershipRenewal::create([
+            'user_id' => $infinitUser->id,
+            'payment_id' => $infinitPayment->id,
+            'membership_start_date' => $infinitStartDate,
+            'membership_end_date' => $infinitExpiryDate,
+            'days_until_expiry' => 15,
+            'is_expired' => false,
+            'is_hidden' => false,
+            'is_renewed' => false,
+            'notifications_sent' => [],
+            'last_notification_sent_at' => null,
+        ]);
+        
+        $output[] = "🟠 INFINIT USER (infinitdizzajn@gmail.com):";
+        $output[] = "   - Status: EXPIRING SOON (15 days)";
+        $output[] = "   - End Date: {$infinitExpiryDate->format('Y-m-d')}";
+        $output[] = "   - Days Until Expiry: {$infinitRenewal->days_until_expiry}";
+        $output[] = "   - Expected Color: ORANGE 🟠";
+        $output[] = "";
+        
+        // Verify with MembershipService
+        $membershipService = new \App\Services\MembershipService();
+        
+        $mardalColor = $membershipService->getUserColor($mardalUser->id);
+        $infinitColor = $membershipService->getUserColor($infinitUser->id);
+        
+        $output[] = "🎨 COLOR VERIFICATION:";
+        $output[] = "   - Mardal Color: {$mardalColor} (should be #dc3545 - RED)";
+        $output[] = "   - Infinit Color: {$infinitColor} (should be #ff6c37 - ORANGE)";
+        $output[] = "";
+        
+        $output[] = "🔑 LOGIN CREDENTIALS:";
+        $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+        $output[] = "👑 SUPER ADMIN: kushtrim.m.arifi@gmail.com / Alipasha1985X";
+        $output[] = "🔴 EXPIRED USER: info@mardal.ch / mardal123";
+        $output[] = "🟠 EXPIRING USER: infinitdizzajn@gmail.com / alipasha";
+        $output[] = "";
+        
+        $output[] = "🧪 TESTING INSTRUCTIONS:";
+        $output[] = "1. Login to admin dashboard - should see 2 users needing attention";
+        $output[] = "2. Login as expired user - should see RED urgent renewal message";
+        $output[] = "3. Login as expiring user - should see ORANGE renewal reminder";
+        $output[] = "4. Make payments to test renewal logic works correctly";
+        
+        return response('<h2>✅ Test Users Setup Complete!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/users" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 View Admin Dashboard</a><br><br><a href="/login" style="background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🔴 Test Expired User Login</a><br><br><a href="/dashboard" style="background: #ff6c37; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🟠 Test Expiring User Dashboard</a>');
+        
+    } catch (\Exception $e) {
+        return response('<h2>❌ Error Setting Up Test Users</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
+    }
+})->middleware(['auth', 'super_admin']);
+
 require __DIR__.'/auth.php'; 
