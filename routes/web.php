@@ -160,10 +160,18 @@ Route::get('/clear-routes', function () {
         Artisan::call('route:clear');
         Artisan::call('config:clear');
         Artisan::call('cache:clear');
+        Artisan::call('view:clear');
         return response()->json([
             'status' => 'success',
-            'message' => 'Routes, config, and cache cleared successfully!',
-            'timestamp' => now()
+            'message' => 'Routes, config, cache, and views cleared successfully!',
+            'timestamp' => now(),
+            'debug_after_clear' => [
+                'APP_DEBUG_env' => env('APP_DEBUG'),
+                'APP_DEBUG_config' => config('app.debug'),
+                'APP_ENV' => env('APP_ENV'),
+                'is_debug_boolean' => is_bool(config('app.debug')),
+                'debug_type' => gettype(config('app.debug'))
+            ]
         ]);
     } catch (\Exception $e) {
         return response()->json([
@@ -198,8 +206,19 @@ Route::get('/app-diagnostic', function() {
         $output[] = "✅ APP_KEY: Properly configured";
     }
     
-    if (config('app.env') === 'production' && config('app.debug') === true) {
+    $debugMode = config('app.debug');
+    $appEnv = config('app.env');
+    $debugEnv = env('APP_DEBUG');
+    
+    $output[] = "🔍 Debug Details:";
+    $output[] = "   - APP_ENV: {$appEnv}";
+    $output[] = "   - APP_DEBUG (env): " . var_export($debugEnv, true);
+    $output[] = "   - APP_DEBUG (config): " . var_export($debugMode, true);
+    $output[] = "   - Debug type: " . gettype($debugMode);
+    
+    if ($appEnv === 'production' && $debugMode === true) {
         $output[] = "❌ CRITICAL: Debug mode enabled in production!";
+        $output[] = "   💡 Try: /clear-routes to clear config cache";
         $criticalIssues++;
     } else {
         $output[] = "✅ Debug Mode: Properly configured";
@@ -237,19 +256,22 @@ Route::get('/app-diagnostic', function() {
     $output[] = "👥 USER MANAGEMENT";
     $output[] = str_repeat("-", 30);
     
-    try {
-        $duplicateEmails = \DB::table('users')
-            ->select('email', \DB::raw('COUNT(*) as count'))
-            ->groupBy('email')
-            ->having('count', '>', 1)
-            ->get();
-        
-        if ($duplicateEmails->count() > 0) {
-            $output[] = "❌ CRITICAL: Duplicate email addresses found!";
-            $criticalIssues++;
-        } else {
-            $output[] = "✅ Email Uniqueness: No duplicates";
-        }
+         try {
+         $duplicateEmails = \DB::table('users')
+             ->select('email', \DB::raw('COUNT(*) as email_count'))
+             ->groupBy('email')
+             ->havingRaw('COUNT(*) > 1')
+             ->get();
+         
+         if ($duplicateEmails->count() > 0) {
+             $output[] = "❌ CRITICAL: Duplicate email addresses found!";
+             foreach ($duplicateEmails as $duplicate) {
+                 $output[] = "   - {$duplicate->email}: {$duplicate->email_count} accounts";
+             }
+             $criticalIssues++;
+         } else {
+             $output[] = "✅ Email Uniqueness: No duplicates";
+         }
         
         $superAdminCount = \App\Models\User::where('role', 'super_admin')->count();
         if ($superAdminCount === 0) {
