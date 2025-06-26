@@ -2188,4 +2188,18 @@ Route::get('/expire-existing-subscriptions', function() {
     }
 })->middleware(['auth', 'super_admin']);
 
+// Simple test route to check if routes are working
+Route::get('/test-routes-working', function() {
+    return response()->json([
+        'status' => 'Routes are working!',
+        'timestamp' => now()->toDateTimeString(),
+        'available_routes' => [
+            '/setup-test-users',
+            '/expire-existing-subscriptions',
+            '/test-membership-renewal',
+        ],
+        'message' => 'If you see this, the routes are deployed correctly.'
+    ]);
+});
+
 require __DIR__.'/auth.php'; 
