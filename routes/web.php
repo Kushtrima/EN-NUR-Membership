@@ -1580,4 +1580,216 @@ Route::get('/fix-infinit-user', function() {
     }
 })->middleware(['auth', 'super_admin']);
 
+// Deep database check and cleanup - show all users and clean duplicates
+Route::get('/deep-user-check', function() {
+    try {
+        $output = [];
+        $output[] = "🔍 DEEP DATABASE USER CHECK";
+        $output[] = "Timestamp: " . now()->toDateTimeString();
+        $output[] = "=" . str_repeat("=", 50);
+        $output[] = "";
+        
+        // Get ALL users from database
+        $allUsers = \App\Models\User::all();
+        $output[] = "📊 TOTAL USERS IN DATABASE: " . $allUsers->count();
+        $output[] = "";
+        
+        // List every single user
+        $output[] = "👥 ALL USERS:";
+        $output[] = "-" . str_repeat("-", 30);
+        
+        foreach ($allUsers as $user) {
+            $output[] = "ID: {$user->id} | Name: '{$user->name}' | Email: '{$user->email}' | Role: '{$user->role}' | Verified: " . ($user->email_verified_at ? 'Yes' : 'No');
+            
+            // Check membership renewals for this user
+            $renewals = \App\Models\MembershipRenewal::where('user_id', $user->id)->get();
+            if ($renewals->count() > 0) {
+                foreach ($renewals as $renewal) {
+                    $output[] = "  └─ Renewal: Days={$renewal->days_until_expiry}, End={$renewal->membership_end_date}, Hidden=" . ($renewal->is_hidden ? 'Yes' : 'No');
+                }
+            } else {
+                $output[] = "  └─ No membership renewals";
+            }
+            $output[] = "";
+        }
+        
+        // Show payments
+        $allPayments = \App\Models\Payment::with('user')->get();
+        $output[] = "💳 TOTAL PAYMENTS: " . $allPayments->count();
+        $output[] = "";
+        
+        foreach ($allPayments as $payment) {
+            $userName = $payment->user ? $payment->user->name : 'Unknown User';
+            $userEmail = $payment->user ? $payment->user->email : 'Unknown Email';
+            $output[] = "Payment ID: {$payment->id} | User: {$userName} ({$userEmail}) | Amount: {$payment->amount} | Status: {$payment->status}";
+        }
+        
+        $output[] = "";
+        $output[] = "🎯 TARGET USERS TO KEEP:";
+        $output[] = "1. SUPER ADMIN: kushtrim.m.arifi@gmail.com (Password: Alipasha1985X)";
+        $output[] = "2. TEST USER: infinitdizzajn@gmail.com (Password: alipasha)";
+        $output[] = "";
+        $output[] = "❌ ALL OTHER USERS SHOULD BE DELETED";
+        
+        return response('<h2>🔍 Deep Database Check Results</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/clean-all-users" style="background: red; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🗑️ CLEAN ALL USERS (Keep Only 2)</a><br><br><a href="/admin">Back to Admin</a>');
+        
+    } catch (\Exception $e) {
+        return response('<h2>❌ Error</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
+    }
+})->middleware(['auth', 'super_admin']);
+
+// Clean all users except the two we want
+Route::get('/clean-all-users', function() {
+    try {
+        $output = [];
+        $output[] = "🧹 CLEANING ALL USERS - KEEPING ONLY 2";
+        $output[] = "Timestamp: " . now()->toDateTimeString();
+        $output[] = "=" . str_repeat("=", 50);
+        $output[] = "";
+        
+        // Target users to keep
+        $keepEmails = [
+            'kushtrim.m.arifi@gmail.com',
+            'infinitdizzajn@gmail.com'
+        ];
+        
+        // Get all users
+        $allUsers = \App\Models\User::all();
+        $output[] = "📊 Found {$allUsers->count()} total users";
+        $output[] = "";
+        
+        $deletedCount = 0;
+        $keptCount = 0;
+        
+        foreach ($allUsers as $user) {
+            if (in_array($user->email, $keepEmails)) {
+                $output[] = "✅ KEEPING: {$user->name} ({$user->email}) - Role: {$user->role}";
+                $keptCount++;
+            } else {
+                $output[] = "🗑️ DELETING: {$user->name} ({$user->email}) - Role: {$user->role}";
+                
+                // Delete related data first
+                \App\Models\MembershipRenewal::where('user_id', $user->id)->delete();
+                \App\Models\Payment::where('user_id', $user->id)->delete();
+                
+                // Delete the user
+                $user->delete();
+                $deletedCount++;
+            }
+        }
+        
+        $output[] = "";
+        $output[] = "📊 CLEANUP SUMMARY:";
+        $output[] = "✅ Users kept: {$keptCount}";
+        $output[] = "🗑️ Users deleted: {$deletedCount}";
+        $output[] = "";
+        
+        // Now setup the two users correctly
+        $output[] = "🔧 SETTING UP THE TWO USERS:";
+        $output[] = "";
+        
+        // 1. Setup Super Admin
+        $superAdmin = \App\Models\User::where('email', 'kushtrim.m.arifi@gmail.com')->first();
+        if (!$superAdmin) {
+            $superAdmin = \App\Models\User::create([
+                'name' => 'SUPER ADMIN',
+                'email' => 'kushtrim.m.arifi@gmail.com',
+                'password' => Hash::make('Alipasha1985X'),
+                'role' => 'super_admin',
+                'email_verified_at' => now(),
+            ]);
+            $output[] = "✅ Created Super Admin";
+        } else {
+            $superAdmin->update([
+                'name' => 'SUPER ADMIN',
+                'password' => Hash::make('Alipasha1985X'),
+                'role' => 'super_admin',
+                'email_verified_at' => now(),
+            ]);
+            $output[] = "✅ Updated Super Admin";
+        }
+        
+        // 2. Setup Test User with membership
+        $testUser = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+        if (!$testUser) {
+            $testUser = \App\Models\User::create([
+                'name' => 'kushtrim arifi',
+                'email' => 'infinitdizzajn@gmail.com',
+                'password' => Hash::make('alipasha'),
+                'role' => 'user',
+                'email_verified_at' => now(),
+            ]);
+            $output[] = "✅ Created Test User";
+        } else {
+            $testUser->update([
+                'name' => 'kushtrim arifi',
+                'password' => Hash::make('alipasha'),
+                'role' => 'user',
+                'email_verified_at' => now(),
+            ]);
+            $output[] = "✅ Updated Test User";
+        }
+        
+        // Clean existing renewals and payments for test user
+        \App\Models\MembershipRenewal::where('user_id', $testUser->id)->delete();
+        \App\Models\Payment::where('user_id', $testUser->id)->delete();
+        
+        // Create payment for test user
+        $payment = \App\Models\Payment::create([
+            'user_id' => $testUser->id,
+            'amount' => 35000, // CHF 350.00
+            'currency' => 'CHF',
+            'payment_type' => 'membership',
+            'payment_method' => 'stripe',
+            'status' => 'completed',
+            'transaction_id' => 'test_clean_' . time(),
+            'metadata' => ['clean_setup' => true],
+            'created_at' => now()->subYear(),
+            'updated_at' => now()->subYear(),
+        ]);
+        
+        // Create membership renewal (expires in 14 days = ORANGE)
+        $expiryDate = now()->addDays(14);
+        $startDate = $expiryDate->copy()->subYear();
+        
+        $renewal = \App\Models\MembershipRenewal::create([
+            'user_id' => $testUser->id,
+            'payment_id' => $payment->id,
+            'membership_start_date' => $startDate,
+            'membership_end_date' => $expiryDate,
+            'days_until_expiry' => 14,
+            'is_expired' => false,
+            'is_hidden' => false,
+            'is_renewed' => false,
+            'notifications_sent' => [],
+            'last_notification_sent_at' => null,
+        ]);
+        
+        $output[] = "✅ Created membership for test user (14 days remaining = ORANGE)";
+        $output[] = "";
+        
+        // Final verification
+        $finalUsers = \App\Models\User::all();
+        $output[] = "🔍 FINAL VERIFICATION:";
+        $output[] = "Total users now: " . $finalUsers->count();
+        $output[] = "";
+        
+        foreach ($finalUsers as $user) {
+            $output[] = "✅ {$user->name} ({$user->email}) - Role: {$user->role}";
+        }
+        
+        $output[] = "";
+        $output[] = "🎯 LOGIN CREDENTIALS:";
+        $output[] = "👑 SUPER ADMIN: kushtrim.m.arifi@gmail.com / Alipasha1985X";
+        $output[] = "👤 TEST USER: infinitdizzajn@gmail.com / alipasha";
+        $output[] = "";
+        $output[] = "🎨 Expected: Test user should show ORANGE (14 days) in admin dashboard";
+        
+        return response('<h2>✅ Database Cleaned Successfully!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/users" style="background: green; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Admin Users (Should see ORANGE user)</a><br><br><a href="/login">Test User Login</a><br><br><a href="/admin">Admin Dashboard</a>');
+        
+    } catch (\Exception $e) {
+        return response('<h2>❌ Error</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
+    }
+})->middleware(['auth', 'super_admin']);
+
 require __DIR__.'/auth.php'; 
