@@ -1843,7 +1843,7 @@ Route::get('/test-membership-renewal', function() {
 Route::get('/setup-test-users', function() {
     try {
         $output = [];
-        $output[] = "🧪 SETTING UP TEST USERS";
+        $output[] = "🧪 SETTING UP TEST USERS FOR ADMIN DASHBOARD";
         $output[] = "Timestamp: " . now()->toDateTimeString();
         $output[] = "=" . str_repeat("=", 50);
         $output[] = "";
@@ -1869,7 +1869,7 @@ Route::get('/setup-test-users', function() {
             $output[] = "✅ Updated Mardal user: info@mardal.ch";
         }
         
-        // 2. Setup infinitdizzajn@gmail.com - 15 DAYS (ORANGE)
+        // 2. Setup infinitdizzajn@gmail.com - EXPIRING SOON (ORANGE)
         $infinitUser = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
         if (!$infinitUser) {
             $infinitUser = \App\Models\User::create([
@@ -1891,14 +1891,14 @@ Route::get('/setup-test-users', function() {
         }
         
         $output[] = "";
-        $output[] = "🔧 SETTING UP MEMBERSHIPS:";
+        $output[] = "🔧 SETTING UP MEMBERSHIPS (BOTH ABOUT TO EXPIRE):";
         $output[] = "";
         
         // Clean existing renewals and payments for both users
         \App\Models\MembershipRenewal::whereIn('user_id', [$mardalUser->id, $infinitUser->id])->delete();
         \App\Models\Payment::whereIn('user_id', [$mardalUser->id, $infinitUser->id])->delete();
         
-        // 1. MARDAL USER - EXPIRED (30 days ago)
+        // 1. MARDAL USER - EXPIRED (5 days ago) - Should show in admin dashboard
         $mardalPayment = \App\Models\Payment::create([
             'user_id' => $mardalUser->id,
             'amount' => 35000, // CHF 350.00
@@ -1908,19 +1908,20 @@ Route::get('/setup-test-users', function() {
             'status' => 'completed',
             'transaction_id' => 'test_mardal_' . time(),
             'metadata' => ['test_setup' => 'expired'],
-            'created_at' => now()->subYear()->subDays(30),
-            'updated_at' => now()->subYear()->subDays(30),
+            'created_at' => now()->subYear()->subDays(5),
+            'updated_at' => now()->subYear()->subDays(5),
         ]);
         
-        $mardalExpiryDate = now()->subDays(30); // EXPIRED 30 days ago
+        $mardalExpiryDate = now()->subDays(5); // EXPIRED 5 days ago (within 30 day window)
         $mardalStartDate = $mardalExpiryDate->copy()->subYear();
+        $mardalDaysUntilExpiry = (int) now()->diffInDays($mardalExpiryDate, false); // Should be -5
         
         $mardalRenewal = \App\Models\MembershipRenewal::create([
             'user_id' => $mardalUser->id,
             'payment_id' => $mardalPayment->id,
             'membership_start_date' => $mardalStartDate,
             'membership_end_date' => $mardalExpiryDate,
-            'days_until_expiry' => (int) now()->diffInDays($mardalExpiryDate, false), // Negative = expired
+            'days_until_expiry' => $mardalDaysUntilExpiry,
             'is_expired' => true,
             'is_hidden' => false,
             'is_renewed' => false,
@@ -1929,13 +1930,14 @@ Route::get('/setup-test-users', function() {
         ]);
         
         $output[] = "🔴 MARDAL USER (info@mardal.ch):";
-        $output[] = "   - Status: EXPIRED (30 days ago)";
+        $output[] = "   - Status: EXPIRED (5 days ago)";
         $output[] = "   - End Date: {$mardalExpiryDate->format('Y-m-d')}";
-        $output[] = "   - Days Until Expiry: {$mardalRenewal->days_until_expiry}";
+        $output[] = "   - Days Until Expiry: {$mardalDaysUntilExpiry}";
         $output[] = "   - Expected Color: RED 🔴";
+        $output[] = "   - Should appear in admin dashboard: YES";
         $output[] = "";
         
-        // 2. INFINIT USER - 15 DAYS REMAINING (ORANGE)
+        // 2. INFINIT USER - 10 DAYS REMAINING (ORANGE)
         $infinitPayment = \App\Models\Payment::create([
             'user_id' => $infinitUser->id,
             'amount' => 35000, // CHF 350.00
@@ -1945,19 +1947,20 @@ Route::get('/setup-test-users', function() {
             'status' => 'completed',
             'transaction_id' => 'test_infinit_' . time(),
             'metadata' => ['test_setup' => 'expiring_soon'],
-            'created_at' => now()->subYear()->addDays(15),
-            'updated_at' => now()->subYear()->addDays(15),
+            'created_at' => now()->subYear()->addDays(10),
+            'updated_at' => now()->subYear()->addDays(10),
         ]);
         
-        $infinitExpiryDate = now()->addDays(15); // 15 days remaining
+        $infinitExpiryDate = now()->addDays(10); // 10 days remaining
         $infinitStartDate = $infinitExpiryDate->copy()->subYear();
+        $infinitDaysUntilExpiry = (int) now()->diffInDays($infinitExpiryDate, false); // Should be 10
         
         $infinitRenewal = \App\Models\MembershipRenewal::create([
             'user_id' => $infinitUser->id,
             'payment_id' => $infinitPayment->id,
             'membership_start_date' => $infinitStartDate,
             'membership_end_date' => $infinitExpiryDate,
-            'days_until_expiry' => 15,
+            'days_until_expiry' => $infinitDaysUntilExpiry,
             'is_expired' => false,
             'is_hidden' => false,
             'is_renewed' => false,
@@ -1966,10 +1969,11 @@ Route::get('/setup-test-users', function() {
         ]);
         
         $output[] = "🟠 INFINIT USER (infinitdizzajn@gmail.com):";
-        $output[] = "   - Status: EXPIRING SOON (15 days)";
+        $output[] = "   - Status: EXPIRING SOON (10 days)";
         $output[] = "   - End Date: {$infinitExpiryDate->format('Y-m-d')}";
-        $output[] = "   - Days Until Expiry: {$infinitRenewal->days_until_expiry}";
+        $output[] = "   - Days Until Expiry: {$infinitDaysUntilExpiry}";
         $output[] = "   - Expected Color: ORANGE 🟠";
+        $output[] = "   - Should appear in admin dashboard: YES";
         $output[] = "";
         
         // Verify with MembershipService
@@ -1981,6 +1985,26 @@ Route::get('/setup-test-users', function() {
         $output[] = "🎨 COLOR VERIFICATION:";
         $output[] = "   - Mardal Color: {$mardalColor} (should be #dc3545 - RED)";
         $output[] = "   - Infinit Color: {$infinitColor} (should be #ff6c37 - ORANGE)";
+        $output[] = "";
+        
+        // Test admin dashboard logic
+        $adminDashboardRenewals = \App\Models\MembershipRenewal::with('user')
+            ->where('is_renewed', false)
+            ->where('is_hidden', false)
+            ->get()
+            ->filter(function ($renewal) {
+                $daysUntilExpiry = $renewal->calculateDaysUntilExpiry();
+                return $daysUntilExpiry <= 30 && $daysUntilExpiry > -30;
+            });
+        
+        $output[] = "🔍 ADMIN DASHBOARD TEST:";
+        $output[] = "   - Total renewals found: " . $adminDashboardRenewals->count();
+        foreach ($adminDashboardRenewals as $renewal) {
+            $userName = $renewal->user ? $renewal->user->name : 'Unknown';
+            $userEmail = $renewal->user ? $renewal->user->email : 'Unknown';
+            $calculatedDays = $renewal->calculateDaysUntilExpiry();
+            $output[] = "   - {$userName} ({$userEmail}): {$calculatedDays} days";
+        }
         $output[] = "";
         
         $output[] = "🔑 LOGIN CREDENTIALS:";
@@ -1996,7 +2020,7 @@ Route::get('/setup-test-users', function() {
         $output[] = "3. Login as expiring user - should see ORANGE renewal reminder";
         $output[] = "4. Make payments to test renewal logic works correctly";
         
-        return response('<h2>✅ Test Users Setup Complete!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/users" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 View Admin Dashboard</a><br><br><a href="/login" style="background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🔴 Test Expired User Login</a><br><br><a href="/dashboard" style="background: #ff6c37; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🟠 Test Expiring User Dashboard</a>');
+        return response('<h2>✅ Test Users Setup Complete!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 View Admin Dashboard</a><br><br><a href="/admin/users" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Admin Users</a><br><br><a href="/login" style="background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🔴 Test Expired User Login</a>');
         
     } catch (\Exception $e) {
         return response('<h2>❌ Error Setting Up Test Users</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
