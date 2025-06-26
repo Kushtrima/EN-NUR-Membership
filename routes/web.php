@@ -1146,14 +1146,11 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
     // Test notification system
     Route::get('/test-notification', function () {
         try {
-            // Force log driver to avoid SMTP issues
-            config(['mail.default' => 'log']);
-            config(['mail.mailers.log.driver' => 'log']);
-            
             $output = [];
-            $output[] = "🔔 Testing Notification System (Log Mode)";
+            $output[] = "🔔 Testing Notification System (Zoho SMTP)";
             $output[] = "Timestamp: " . now()->toDateTimeString();
             $output[] = "Mail Driver: " . config('mail.default');
+            $output[] = "Mail Host: " . config('mail.mailers.smtp.host');
             $output[] = "";
             
             // Find the infinitdizzajn user

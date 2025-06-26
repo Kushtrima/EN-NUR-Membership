@@ -117,10 +117,6 @@ class MembershipRenewalController extends Controller
      */
     private function sendRenewalNotificationEmail(MembershipRenewal $renewal)
     {
-        // Force log driver to avoid SMTP relay issues
-        config(['mail.default' => 'log']);
-        config(['mail.mailers.log.driver' => 'log']);
-        
         $user = $renewal->user;
         $daysRemaining = $renewal->days_until_expiry;
         $notificationMessage = $renewal->getNotificationMessage();
@@ -168,7 +164,7 @@ EN NUR - MEMBERSHIP Team
         });
 
         // Log successful notification for admin visibility
-        Log::info("Membership renewal notification sent (logged)", [
+        Log::info("Membership renewal notification sent via Zoho", [
             'user_id' => $user->id,
             'user_email' => $user->email,
             'user_name' => $user->name,

@@ -355,10 +355,6 @@ class AdminController extends Controller
     public function sendPaymentNotification(Payment $payment)
     {
         try {
-            // Force log driver to avoid SMTP relay issues
-            config(['mail.default' => 'log']);
-            config(['mail.mailers.log.driver' => 'log']);
-            
             // Create a simple notification email
             $user = $payment->user;
             $subject = 'Payment ' . ucfirst($payment->status) . ' - ' . config('app.name');
