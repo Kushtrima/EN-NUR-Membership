@@ -235,6 +235,62 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/debug-users', [AdminController::class, 'debugUsers'])->name('debug.users');
         Route::get('/setup-expired-memberships', [AdminController::class, 'setupExpiredMemberships'])->name('setup.expired.memberships');
         
+        // Fix dates to make memberships expired
+        Route::get('/fix-membership-dates', function() {
+            // Find the two users
+            $mardalUser = \App\Models\User::where('email', 'info@mardal.ch')->first();
+            $infinitUser = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+            
+            $output = [];
+            $output[] = "🔧 FIXING MEMBERSHIP DATES TO BE EXPIRED";
+            $output[] = "";
+            
+            if ($mardalUser) {
+                $mardalRenewal = \App\Models\MembershipRenewal::where('user_id', $mardalUser->id)->first();
+                if ($mardalRenewal) {
+                    // Make it expired 5 days ago
+                    $newEndDate = now()->subDays(5);
+                    $newStartDate = $newEndDate->copy()->subYear();
+                    
+                    $mardalRenewal->update([
+                        'membership_start_date' => $newStartDate,
+                        'membership_end_date' => $newEndDate,
+                        'days_until_expiry' => -5,
+                        'is_expired' => true,
+                    ]);
+                    
+                    $output[] = "🔴 FIXED Mardal User:";
+                    $output[] = "   - New End Date: {$newEndDate->format('Y-m-d')} (EXPIRED 5 days ago)";
+                    $output[] = "   - Days Until Expiry: -5";
+                }
+            }
+            
+            if ($infinitUser) {
+                $infinitRenewal = \App\Models\MembershipRenewal::where('user_id', $infinitUser->id)->first();
+                if ($infinitRenewal) {
+                    // Make it expiring in 7 days
+                    $newEndDate = now()->addDays(7);
+                    $newStartDate = $newEndDate->copy()->subYear();
+                    
+                    $infinitRenewal->update([
+                        'membership_start_date' => $newStartDate,
+                        'membership_end_date' => $newEndDate,
+                        'days_until_expiry' => 7,
+                        'is_expired' => false,
+                    ]);
+                    
+                    $output[] = "🟠 FIXED Infinit User:";
+                    $output[] = "   - New End Date: {$newEndDate->format('Y-m-d')} (EXPIRES in 7 days)";
+                    $output[] = "   - Days Until Expiry: 7";
+                }
+            }
+            
+            $output[] = "";
+            $output[] = "✅ Dates fixed! Users should now appear as expired/expiring in admin dashboard.";
+            
+            return response('<h2>✅ Membership Dates Fixed!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Check Admin Dashboard</a><br><br><a href="/admin/users" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Users (Should show RED/ORANGE)</a>');
+        });
+        
         // System Management Routes (Super Admin only)
         Route::post('/system/backup', [AdminController::class, 'createSystemBackup'])->name('system.backup');
         Route::post('/system/clear-logs', [AdminController::class, 'clearSystemLogs'])->name('system.clear-logs');
