@@ -24,7 +24,7 @@ services:
       - key: APP_KEY
         generateValue: true
       - key: APP_DEBUG
-        value: false
+        value: "0"
       - key: APP_URL
         value: https://en-nur-membership.onrender.com
       - key: APP_TIMEZONE

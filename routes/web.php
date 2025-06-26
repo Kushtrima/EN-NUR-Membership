@@ -154,6 +154,31 @@ Route::get('/test-route', function () {
     ]);
 });
 
+// Force disable debug mode in production (emergency fix)
+Route::get('/force-disable-debug', function () {
+    if (env('APP_ENV') === 'production') {
+        // Temporarily override debug mode for this request
+        config(['app.debug' => false]);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Debug mode force disabled for production',
+            'timestamp' => now(),
+            'debug_info' => [
+                'APP_DEBUG_env' => env('APP_DEBUG'),
+                'APP_DEBUG_config_before' => config('app.debug'),
+                'APP_DEBUG_config_after' => false,
+                'APP_ENV' => env('APP_ENV')
+            ]
+        ]);
+    }
+    
+    return response()->json([
+        'status' => 'error',
+        'message' => 'This route only works in production environment'
+    ]);
+});
+
 // PUBLIC Diagnostic Routes (no authentication required)
 Route::get('/clear-routes', function () {
     try {
@@ -219,6 +244,9 @@ Route::get('/app-diagnostic', function() {
     if ($appEnv === 'production' && $debugMode === true) {
         $output[] = "❌ CRITICAL: Debug mode enabled in production!";
         $output[] = "   💡 Try: /clear-routes to clear config cache";
+        $output[] = "   💡 Try: /force-disable-debug for emergency fix";
+        $output[] = "   💡 Check Render dashboard environment variables";
+        $output[] = "   💡 Current render.yaml has APP_DEBUG: \"0\"";
         $criticalIssues++;
     } else {
         $output[] = "✅ Debug Mode: Properly configured";
