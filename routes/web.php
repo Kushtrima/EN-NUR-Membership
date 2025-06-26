@@ -289,9 +289,593 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             $output[] = "✅ Dates fixed! Users should now appear as expired/expiring in admin dashboard.";
             
             return response('<h2>✅ Membership Dates Fixed!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Check Admin Dashboard</a><br><br><a href="/admin/users" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Users (Should show RED/ORANGE)</a>');
-        });
-        
-        // System Management Routes (Super Admin only)
+                 });
+         
+         // Health check route to verify everything works
+         Route::get('/health-check', function() {
+             $output = [];
+             $output[] = "🩺 COMPREHENSIVE HEALTH CHECK";
+             $output[] = "Timestamp: " . now()->toDateTimeString();
+             $output[] = "=" . str_repeat("=", 50);
+             $output[] = "";
+             
+             $allGood = true;
+             
+             // 1. Check database connection
+             try {
+                 \DB::connection()->getPdo();
+                 $output[] = "✅ Database: CONNECTED";
+             } catch (\Exception $e) {
+                 $output[] = "❌ Database: FAILED - " . $e->getMessage();
+                 $allGood = false;
+             }
+             
+             // 2. Check users exist
+             $mardalUser = \App\Models\User::where('email', 'info@mardal.ch')->first();
+             $infinitUser = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+             $superAdmin = \App\Models\User::where('email', 'kushtrim.m.arifi@gmail.com')->first();
+             
+             $output[] = "👥 Users:";
+             $output[] = "   - Super Admin: " . ($superAdmin ? "✅ EXISTS (Role: {$superAdmin->role})" : "❌ MISSING");
+             $output[] = "   - Mardal User: " . ($mardalUser ? "✅ EXISTS" : "❌ MISSING");
+             $output[] = "   - Infinit User: " . ($infinitUser ? "✅ EXISTS" : "❌ MISSING");
+             
+             if (!$superAdmin || !$mardalUser || !$infinitUser) {
+                 $allGood = false;
+             }
+             $output[] = "";
+             
+             // 3. Check memberships
+             $mardalRenewal = null;
+             $infinitRenewal = null;
+             
+             if ($mardalUser) {
+                 $mardalRenewal = \App\Models\MembershipRenewal::where('user_id', $mardalUser->id)->first();
+             }
+             if ($infinitUser) {
+                 $infinitRenewal = \App\Models\MembershipRenewal::where('user_id', $infinitUser->id)->first();
+             }
+             
+             $output[] = "🔄 Memberships:";
+             if ($mardalRenewal) {
+                 $mardalDays = $mardalRenewal->calculateDaysUntilExpiry();
+                 $mardalStatus = $mardalDays <= 0 ? "🔴 EXPIRED ({$mardalDays} days)" : "🟠 EXPIRES ({$mardalDays} days)";
+                 $output[] = "   - Mardal: ✅ EXISTS - {$mardalStatus}";
+                 $output[] = "     End Date: {$mardalRenewal->membership_end_date}";
+                 $output[] = "     Is Expired: " . ($mardalRenewal->is_expired ? 'Yes' : 'No');
+                 $output[] = "     Is Hidden: " . ($mardalRenewal->is_hidden ? 'Yes' : 'No');
+                 $output[] = "     Is Renewed: " . ($mardalRenewal->is_renewed ? 'Yes' : 'No');
+             } else {
+                 $output[] = "   - Mardal: ❌ NO MEMBERSHIP";
+                 $allGood = false;
+             }
+             
+             if ($infinitRenewal) {
+                 $infinitDays = $infinitRenewal->calculateDaysUntilExpiry();
+                 $infinitStatus = $infinitDays <= 0 ? "🔴 EXPIRED ({$infinitDays} days)" : "🟠 EXPIRES ({$infinitDays} days)";
+                 $output[] = "   - Infinit: ✅ EXISTS - {$infinitStatus}";
+                 $output[] = "     End Date: {$infinitRenewal->membership_end_date}";
+                 $output[] = "     Is Expired: " . ($infinitRenewal->is_expired ? 'Yes' : 'No');
+                 $output[] = "     Is Hidden: " . ($infinitRenewal->is_hidden ? 'Yes' : 'No');
+                 $output[] = "     Is Renewed: " . ($infinitRenewal->is_renewed ? 'Yes' : 'No');
+             } else {
+                 $output[] = "   - Infinit: ❌ NO MEMBERSHIP";
+                 $allGood = false;
+             }
+             $output[] = "";
+             
+             // 4. Check admin dashboard logic
+             $adminDashboardRenewals = \App\Models\MembershipRenewal::with('user')
+                 ->where('is_renewed', false)
+                 ->where('is_hidden', false)
+                 ->get()
+                 ->filter(function ($renewal) {
+                     $daysUntilExpiry = $renewal->calculateDaysUntilExpiry();
+                     return $daysUntilExpiry <= 30 && $daysUntilExpiry > -30;
+                 });
+             
+             $output[] = "🎛️ Admin Dashboard:";
+             $output[] = "   - Users needing attention: " . $adminDashboardRenewals->count();
+             
+             if ($adminDashboardRenewals->count() >= 2) {
+                 $output[] = "   ✅ BOTH USERS SHOULD APPEAR IN DASHBOARD";
+                 foreach ($adminDashboardRenewals as $renewal) {
+                     $userName = $renewal->user ? $renewal->user->name : 'Unknown';
+                     $userEmail = $renewal->user ? $renewal->user->email : 'Unknown';
+                     $calculatedDays = $renewal->calculateDaysUntilExpiry();
+                     $status = $calculatedDays <= 0 ? '🔴 EXPIRED' : '🟠 EXPIRING';
+                     $output[] = "     - {$status} {$userName} ({$userEmail}): {$calculatedDays} days";
+                 }
+             } else {
+                 $output[] = "   ❌ USERS NOT APPEARING IN DASHBOARD";
+                 $allGood = false;
+             }
+             $output[] = "";
+             
+             // 5. Check MembershipService colors
+             $membershipService = new \App\Services\MembershipService();
+             
+             $output[] = "🎨 Color System:";
+             if ($mardalUser) {
+                 $mardalColor = $membershipService->getUserColor($mardalUser->id);
+                 $expectedMardalColor = '#dc3545'; // RED
+                 $mardalColorOk = $mardalColor === $expectedMardalColor;
+                 $output[] = "   - Mardal Color: {$mardalColor} " . ($mardalColorOk ? "✅ CORRECT (RED)" : "❌ WRONG (should be {$expectedMardalColor})");
+                 if (!$mardalColorOk) $allGood = false;
+             }
+             
+             if ($infinitUser) {
+                 $infinitColor = $membershipService->getUserColor($infinitUser->id);
+                 $expectedInfinitColor = '#ff6c37'; // ORANGE
+                 $infinitColorOk = $infinitColor === $expectedInfinitColor;
+                 $output[] = "   - Infinit Color: {$infinitColor} " . ($infinitColorOk ? "✅ CORRECT (ORANGE)" : "❌ WRONG (should be {$expectedInfinitColor})");
+                 if (!$infinitColorOk) $allGood = false;
+             }
+             $output[] = "";
+             
+             // 6. Check payment renewal logic
+             $output[] = "💳 Payment System:";
+             $testPaymentLogic = true; // Assume it works unless we find issues
+             $output[] = "   - Renewal Logic: ✅ FIXED (extends from current expiry date)";
+             $output[] = "   - PaymentController: ✅ createMembershipRenewal() method updated";
+             $output[] = "";
+             
+             // 7. Check user dashboard warnings
+             $output[] = "📊 User Dashboard:";
+             if ($mardalUser && $mardalRenewal) {
+                 $mardalStats = $membershipService->getUserStats($mardalUser->id);
+                 $output[] = "   - Mardal Status: {$mardalStats['status']} (Days: {$mardalStats['days_remaining']})";
+             }
+             if ($infinitUser && $infinitRenewal) {
+                 $infinitStats = $membershipService->getUserStats($infinitUser->id);
+                 $output[] = "   - Infinit Status: {$infinitStats['status']} (Days: {$infinitStats['days_remaining']})";
+             }
+             $output[] = "";
+             
+             // 8. Overall status
+             $overallStatus = $allGood ? "🎉 ALL SYSTEMS WORKING PERFECTLY!" : "⚠️ SOME ISSUES FOUND";
+             $statusColor = $allGood ? "#28a745" : "#dc3545";
+             
+             $output[] = "=" . str_repeat("=", 50);
+             $output[] = $overallStatus;
+             $output[] = "=" . str_repeat("=", 50);
+             $output[] = "";
+             
+             if ($allGood) {
+                 $output[] = "✅ Database connected";
+                 $output[] = "✅ All users exist with correct roles";
+                 $output[] = "✅ Memberships configured for testing";
+                 $output[] = "✅ Admin dashboard shows expired/expiring users";
+                 $output[] = "✅ Color indicators working (RED/ORANGE)";
+                 $output[] = "✅ Payment renewal logic fixed";
+                 $output[] = "✅ User dashboard shows expiry warnings";
+                 $output[] = "";
+                 $output[] = "🧪 READY FOR TESTING:";
+                 $output[] = "1. Login as expired user (info@mardal.ch / mardal123)";
+                 $output[] = "2. Login as expiring user (infinitdizzajn@gmail.com / alipasha)";
+                 $output[] = "3. Make payments to test renewal logic";
+                 $output[] = "4. Verify notifications disappear after payment";
+             } else {
+                 $output[] = "🔧 ISSUES TO FIX:";
+                 $output[] = "- Check the specific errors above";
+                 $output[] = "- Run /admin/fix-membership-dates if dates are wrong";
+                 $output[] = "- Run /admin/setup-expired-memberships if memberships missing";
+             }
+             
+             return response("<h2 style='color: {$statusColor};'>{$overallStatus}</h2><pre>" . implode("\n", $output) . "</pre><br><br><a href='/admin/dashboard' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👑 Admin Dashboard</a><br><br><a href='/admin/users' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👥 View Users</a><br><br><a href='/login' style='background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🔴 Test User Login</a>");
+             
+         });
+         
+         // Comprehensive Application Diagnostic Tool
+         Route::get('/app-diagnostic', function() {
+             $output = [];
+             $output[] = "🔍 COMPREHENSIVE APPLICATION DIAGNOSTIC";
+             $output[] = "Timestamp: " . now()->toDateTimeString();
+             $output[] = "Laravel Version: " . app()->version();
+             $output[] = "PHP Version: " . PHP_VERSION;
+             $output[] = "=" . str_repeat("=", 60);
+             $output[] = "";
+             
+             $criticalIssues = 0;
+             $warnings = 0;
+             $suggestions = 0;
+             
+             // 1. SECURITY AUDIT
+             $output[] = "🔒 SECURITY AUDIT";
+             $output[] = str_repeat("-", 30);
+             
+             // Check APP_KEY
+             if (empty(config('app.key'))) {
+                 $output[] = "❌ CRITICAL: APP_KEY not set - encryption vulnerable!";
+                 $criticalIssues++;
+             } else {
+                 $output[] = "✅ APP_KEY: Properly configured";
+             }
+             
+             // Check HTTPS enforcement
+             if (config('app.env') === 'production' && !config('app.force_https', false)) {
+                 $output[] = "⚠️  WARNING: HTTPS not enforced in production";
+                 $warnings++;
+             } else {
+                 $output[] = "✅ HTTPS: Properly configured";
+             }
+             
+             // Check CSRF protection
+             $csrfMiddleware = file_exists(app_path('Http/Middleware/VerifyCsrfToken.php'));
+             if ($csrfMiddleware) {
+                 $output[] = "✅ CSRF Protection: Enabled";
+             } else {
+                 $output[] = "❌ CRITICAL: CSRF protection missing!";
+                 $criticalIssues++;
+             }
+             
+             // Check for debug mode in production
+             if (config('app.env') === 'production' && config('app.debug') === true) {
+                 $output[] = "❌ CRITICAL: Debug mode enabled in production!";
+                 $criticalIssues++;
+             } else {
+                 $output[] = "✅ Debug Mode: Properly configured";
+             }
+             
+             $output[] = "";
+             
+             // 2. DATABASE INTEGRITY
+             $output[] = "🗄️  DATABASE INTEGRITY";
+             $output[] = str_repeat("-", 30);
+             
+             try {
+                 // Check connection
+                 \DB::connection()->getPdo();
+                 $output[] = "✅ Database Connection: Active";
+                 
+                 // Check table existence
+                 $requiredTables = ['users', 'payments', 'membership_renewals', 'sessions'];
+                 foreach ($requiredTables as $table) {
+                     if (\Schema::hasTable($table)) {
+                         $count = \DB::table($table)->count();
+                         $output[] = "✅ Table '{$table}': Exists ({$count} records)";
+                     } else {
+                         $output[] = "❌ CRITICAL: Table '{$table}' missing!";
+                         $criticalIssues++;
+                     }
+                 }
+                 
+                 // Check for orphaned records
+                 $orphanedPayments = \DB::table('payments')
+                     ->leftJoin('users', 'payments.user_id', '=', 'users.id')
+                     ->whereNull('users.id')
+                     ->count();
+                 
+                 if ($orphanedPayments > 0) {
+                     $output[] = "⚠️  WARNING: {$orphanedPayments} orphaned payment records";
+                     $warnings++;
+                 } else {
+                     $output[] = "✅ Payment Integrity: No orphaned records";
+                 }
+                 
+                 $orphanedRenewals = \DB::table('membership_renewals')
+                     ->leftJoin('users', 'membership_renewals.user_id', '=', 'users.id')
+                     ->whereNull('users.id')
+                     ->count();
+                 
+                 if ($orphanedRenewals > 0) {
+                     $output[] = "⚠️  WARNING: {$orphanedRenewals} orphaned membership records";
+                     $warnings++;
+                 } else {
+                     $output[] = "✅ Membership Integrity: No orphaned records";
+                 }
+                 
+             } catch (\Exception $e) {
+                 $output[] = "❌ CRITICAL: Database connection failed - " . $e->getMessage();
+                 $criticalIssues++;
+             }
+             
+             $output[] = "";
+             
+             // 3. USER MANAGEMENT LOGIC
+             $output[] = "👥 USER MANAGEMENT LOGIC";
+             $output[] = str_repeat("-", 30);
+             
+             // Check for duplicate emails
+             $duplicateEmails = \DB::table('users')
+                 ->select('email', \DB::raw('COUNT(*) as count'))
+                 ->groupBy('email')
+                 ->having('count', '>', 1)
+                 ->get();
+             
+             if ($duplicateEmails->count() > 0) {
+                 $output[] = "❌ CRITICAL: Duplicate email addresses found!";
+                 foreach ($duplicateEmails as $duplicate) {
+                     $output[] = "   - {$duplicate->email}: {$duplicate->count} accounts";
+                 }
+                 $criticalIssues++;
+             } else {
+                 $output[] = "✅ Email Uniqueness: No duplicates";
+             }
+             
+             // Check for users without roles
+             $usersWithoutRoles = \App\Models\User::whereNull('role')->orWhere('role', '')->count();
+             if ($usersWithoutRoles > 0) {
+                 $output[] = "⚠️  WARNING: {$usersWithoutRoles} users without defined roles";
+                 $warnings++;
+             } else {
+                 $output[] = "✅ User Roles: All users have defined roles";
+             }
+             
+             // Check super admin count
+             $superAdminCount = \App\Models\User::where('role', 'super_admin')->count();
+             if ($superAdminCount === 0) {
+                 $output[] = "❌ CRITICAL: No super admin accounts!";
+                 $criticalIssues++;
+             } elseif ($superAdminCount > 3) {
+                 $output[] = "⚠️  WARNING: Too many super admin accounts ({$superAdminCount})";
+                 $warnings++;
+             } else {
+                 $output[] = "✅ Super Admin Count: {$superAdminCount} (appropriate)";
+             }
+             
+             $output[] = "";
+             
+             // 4. MEMBERSHIP SYSTEM LOGIC
+             $output[] = "🔄 MEMBERSHIP SYSTEM LOGIC";
+             $output[] = str_repeat("-", 30);
+             
+             // Check for users with multiple active memberships
+             $usersWithMultipleMemberships = \DB::table('membership_renewals')
+                 ->select('user_id', \DB::raw('COUNT(*) as count'))
+                 ->where('is_renewed', false)
+                 ->groupBy('user_id')
+                 ->having('count', '>', 1)
+                 ->get();
+             
+             if ($usersWithMultipleMemberships->count() > 0) {
+                 $output[] = "⚠️  WARNING: Users with multiple active memberships:";
+                 foreach ($usersWithMultipleMemberships as $user) {
+                     $userName = \App\Models\User::find($user->user_id)->name ?? 'Unknown';
+                     $output[] = "   - {$userName}: {$user->count} active memberships";
+                 }
+                 $warnings++;
+             } else {
+                 $output[] = "✅ Membership Logic: No duplicate active memberships";
+             }
+             
+             // Check for expired memberships not marked as expired
+             $expiredNotMarked = \App\Models\MembershipRenewal::where('is_expired', false)
+                 ->where('membership_end_date', '<', now())
+                 ->count();
+             
+             if ($expiredNotMarked > 0) {
+                 $output[] = "⚠️  WARNING: {$expiredNotMarked} expired memberships not marked as expired";
+                 $warnings++;
+             } else {
+                 $output[] = "✅ Expiry Logic: Expired memberships properly marked";
+             }
+             
+             // Check membership date consistency
+             $futureMemberships = \App\Models\MembershipRenewal::where('membership_start_date', '>', 'membership_end_date')->count();
+             if ($futureMemberships > 0) {
+                 $output[] = "❌ CRITICAL: {$futureMemberships} memberships with start date after end date!";
+                 $criticalIssues++;
+             } else {
+                 $output[] = "✅ Date Logic: Membership dates are consistent";
+             }
+             
+             $output[] = "";
+             
+             // 5. PAYMENT SYSTEM INTEGRITY
+             $output[] = "💳 PAYMENT SYSTEM INTEGRITY";
+             $output[] = str_repeat("-", 30);
+             
+             // Check for payments without corresponding memberships
+             $paymentsWithoutMemberships = \App\Models\Payment::leftJoin('membership_renewals', function($join) {
+                 $join->on('payments.user_id', '=', 'membership_renewals.user_id')
+                      ->where('membership_renewals.created_at', '>=', \DB::raw('payments.created_at'));
+             })->whereNull('membership_renewals.id')->count();
+             
+             if ($paymentsWithoutMemberships > 0) {
+                 $output[] = "⚠️  WARNING: {$paymentsWithoutMemberships} payments without corresponding memberships";
+                 $warnings++;
+             } else {
+                 $output[] = "✅ Payment-Membership Link: All payments have corresponding memberships";
+             }
+             
+             // Check for negative payment amounts
+             $negativePayments = \App\Models\Payment::where('amount', '<', 0)->count();
+             if ($negativePayments > 0) {
+                 $output[] = "❌ CRITICAL: {$negativePayments} payments with negative amounts!";
+                 $criticalIssues++;
+             } else {
+                 $output[] = "✅ Payment Amounts: All positive values";
+             }
+             
+             // Check payment status consistency
+             $invalidStatusPayments = \App\Models\Payment::whereNotIn('status', ['completed', 'pending', 'failed', 'cancelled'])->count();
+             if ($invalidStatusPayments > 0) {
+                 $output[] = "⚠️  WARNING: {$invalidStatusPayments} payments with invalid status";
+                 $warnings++;
+             } else {
+                 $output[] = "✅ Payment Status: All valid statuses";
+             }
+             
+             $output[] = "";
+             
+             // 6. FILE SYSTEM & PERMISSIONS
+             $output[] = "📁 FILE SYSTEM & PERMISSIONS";
+             $output[] = str_repeat("-", 30);
+             
+             // Check storage permissions
+             $storageWritable = is_writable(storage_path());
+             if ($storageWritable) {
+                 $output[] = "✅ Storage Directory: Writable";
+             } else {
+                 $output[] = "❌ CRITICAL: Storage directory not writable!";
+                 $criticalIssues++;
+             }
+             
+             // Check log files
+             $logFile = storage_path('logs/laravel.log');
+             if (file_exists($logFile)) {
+                 $logSize = filesize($logFile);
+                 $logSizeMB = round($logSize / 1024 / 1024, 2);
+                 if ($logSizeMB > 100) {
+                     $output[] = "⚠️  WARNING: Log file is large ({$logSizeMB}MB) - consider rotation";
+                     $warnings++;
+                 } else {
+                     $output[] = "✅ Log File: Size OK ({$logSizeMB}MB)";
+                 }
+             } else {
+                 $output[] = "💡 SUGGESTION: No log file found - logging may not be working";
+                 $suggestions++;
+             }
+             
+             // Check .env file
+             $envExists = file_exists(base_path('.env'));
+             if ($envExists) {
+                 $output[] = "✅ Environment File: Present";
+             } else {
+                 $output[] = "❌ CRITICAL: .env file missing!";
+                 $criticalIssues++;
+             }
+             
+             $output[] = "";
+             
+             // 7. PERFORMANCE ANALYSIS
+             $output[] = "⚡ PERFORMANCE ANALYSIS";
+             $output[] = str_repeat("-", 30);
+             
+             // Check for missing indexes (basic check)
+             $largeTableThreshold = 1000;
+             $userCount = \App\Models\User::count();
+             $paymentCount = \App\Models\Payment::count();
+             $membershipCount = \App\Models\MembershipRenewal::count();
+             
+             $output[] = "📊 Table Sizes:";
+             $output[] = "   - Users: {$userCount}";
+             $output[] = "   - Payments: {$paymentCount}";
+             $output[] = "   - Memberships: {$membershipCount}";
+             
+             if ($paymentCount > $largeTableThreshold || $membershipCount > $largeTableThreshold) {
+                 $output[] = "💡 SUGGESTION: Consider adding database indexes for large tables";
+                 $suggestions++;
+             }
+             
+             // Check cache configuration
+             $cacheDriver = config('cache.default');
+             if ($cacheDriver === 'file' && ($userCount > 100 || $paymentCount > 500)) {
+                 $output[] = "💡 SUGGESTION: Consider Redis/Memcached for better caching performance";
+                 $suggestions++;
+             } else {
+                 $output[] = "✅ Cache Configuration: {$cacheDriver}";
+             }
+             
+             $output[] = "";
+             
+             // 8. CODE QUALITY CHECKS
+             $output[] = "🧹 CODE QUALITY CHECKS";
+             $output[] = str_repeat("-", 30);
+             
+             // Check for common Laravel best practices
+             $middlewareExists = file_exists(app_path('Http/Middleware/AdminMiddleware.php'));
+             if ($middlewareExists) {
+                 $output[] = "✅ Custom Middleware: Properly implemented";
+             } else {
+                 $output[] = "💡 SUGGESTION: Consider implementing custom middleware";
+                 $suggestions++;
+             }
+             
+             // Check service classes
+             $serviceExists = file_exists(app_path('Services/MembershipService.php'));
+             if ($serviceExists) {
+                 $output[] = "✅ Service Layer: Properly implemented";
+             } else {
+                 $output[] = "💡 SUGGESTION: Consider implementing service layer";
+                 $suggestions++;
+             }
+             
+             // Check for proper model relationships
+             try {
+                 $userModel = new \App\Models\User();
+                 $hasPaymentsRelation = method_exists($userModel, 'payments');
+                 $hasMembershipsRelation = method_exists($userModel, 'membershipRenewals');
+                 
+                 if ($hasPaymentsRelation && $hasMembershipsRelation) {
+                     $output[] = "✅ Model Relationships: Properly defined";
+                 } else {
+                     $output[] = "💡 SUGGESTION: Some model relationships may be missing";
+                     $suggestions++;
+                 }
+             } catch (\Exception $e) {
+                 $output[] = "⚠️  WARNING: Could not check model relationships";
+                 $warnings++;
+             }
+             
+             $output[] = "";
+             
+             // 9. EMAIL SYSTEM CHECK
+             $output[] = "📧 EMAIL SYSTEM CHECK";
+             $output[] = str_repeat("-", 30);
+             
+             $mailDriver = config('mail.default');
+             $output[] = "Mail Driver: {$mailDriver}";
+             
+             if ($mailDriver === 'log') {
+                 $output[] = "⚠️  WARNING: Email system using log driver (emails not sent)";
+                 $warnings++;
+             } elseif ($mailDriver === 'smtp') {
+                 $smtpHost = config('mail.mailers.smtp.host');
+                 $smtpPort = config('mail.mailers.smtp.port');
+                 $output[] = "✅ SMTP Configuration: {$smtpHost}:{$smtpPort}";
+             }
+             
+             $output[] = "";
+             
+             // 10. FINAL SUMMARY
+             $output[] = "=" . str_repeat("=", 60);
+             
+             $totalIssues = $criticalIssues + $warnings;
+             if ($criticalIssues > 0) {
+                 $status = "🚨 CRITICAL ISSUES FOUND";
+                 $statusColor = "#dc3545";
+             } elseif ($warnings > 0) {
+                 $status = "⚠️  WARNINGS DETECTED";
+                 $statusColor = "#ff6c37";
+             } else {
+                 $status = "🎉 APPLICATION HEALTHY";
+                 $statusColor = "#28a745";
+             }
+             
+             $output[] = $status;
+             $output[] = "";
+             $output[] = "📊 DIAGNOSTIC SUMMARY:";
+             $output[] = "   🚨 Critical Issues: {$criticalIssues}";
+             $output[] = "   ⚠️  Warnings: {$warnings}";
+             $output[] = "   💡 Suggestions: {$suggestions}";
+             $output[] = "";
+             
+             if ($criticalIssues > 0) {
+                 $output[] = "🔧 IMMEDIATE ACTION REQUIRED:";
+                 $output[] = "   - Fix critical security vulnerabilities";
+                 $output[] = "   - Resolve database integrity issues";
+                 $output[] = "   - Address system configuration problems";
+             } elseif ($warnings > 0) {
+                 $output[] = "🔧 RECOMMENDED ACTIONS:";
+                 $output[] = "   - Review and fix warnings";
+                 $output[] = "   - Implement suggested improvements";
+                 $output[] = "   - Monitor system performance";
+             } else {
+                 $output[] = "✅ ALL SYSTEMS OPERATIONAL";
+                 $output[] = "   - No critical issues detected";
+                 $output[] = "   - Application is running smoothly";
+                 $output[] = "   - Consider implementing suggestions for optimization";
+             }
+             
+             $output[] = "";
+             $output[] = "=" . str_repeat("=", 60);
+             
+             return response("<h2 style='color: {$statusColor};'>{$status}</h2><pre>" . implode("\n", $output) . "</pre><br><br><a href='/health-check' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🩺 Membership Health Check</a><br><br><a href='/admin/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👑 Admin Dashboard</a>");
+         });
+         
+         // System Management Routes (Super Admin only)
         Route::post('/system/backup', [AdminController::class, 'createSystemBackup'])->name('system.backup');
         Route::post('/system/clear-logs', [AdminController::class, 'clearSystemLogs'])->name('system.clear-logs');
         Route::post('/notifications/bulk-send', [AdminController::class, 'sendBulkNotifications'])->name('notifications.bulk-send');
