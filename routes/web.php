@@ -231,6 +231,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/renewals/{renewal}/show', [MembershipRenewalController::class, 'show'])->name('renewals.show');
         Route::get('/renewals/{renewal}/details', [MembershipRenewalController::class, 'details'])->name('renewals.details');
         
+        // Debug and testing routes
+        Route::get('/debug-users', [AdminController::class, 'debugUsers'])->name('debug.users');
+        Route::get('/setup-expired-memberships', [AdminController::class, 'setupExpiredMemberships'])->name('setup.expired.memberships');
+        
         // System Management Routes (Super Admin only)
         Route::post('/system/backup', [AdminController::class, 'createSystemBackup'])->name('system.backup');
         Route::post('/system/clear-logs', [AdminController::class, 'clearSystemLogs'])->name('system.clear-logs');

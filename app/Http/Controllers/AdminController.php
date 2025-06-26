@@ -1108,4 +1108,195 @@ class AdminController extends Controller
             ');
         }
     }
+
+    /**
+     * Debug method to diagnose user membership issues.
+     */
+    public function debugUsers()
+    {
+        try {
+            $output = [];
+            $output[] = "🔍 DIAGNOSING USER MEMBERSHIP ISSUES";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "=" . str_repeat("=", 60);
+            $output[] = "";
+            
+            // Check if users exist
+            $mardalUser = User::where('email', 'info@mardal.ch')->first();
+            $infinitUser = User::where('email', 'infinitdizzajn@gmail.com')->first();
+            
+            $output[] = "👥 USER CHECK:";
+            $output[] = "- Mardal user (info@mardal.ch): " . ($mardalUser ? "✅ EXISTS (ID: {$mardalUser->id})" : "❌ NOT FOUND");
+            $output[] = "- Infinit user (infinitdizzajn@gmail.com): " . ($infinitUser ? "✅ EXISTS (ID: {$infinitUser->id})" : "❌ NOT FOUND");
+            $output[] = "";
+            
+            // Check all users
+            $allUsers = User::all();
+            $output[] = "📊 ALL USERS IN DATABASE:";
+            foreach ($allUsers as $user) {
+                $output[] = "- ID: {$user->id}, Name: '{$user->name}', Email: '{$user->email}', Role: '{$user->role}'";
+            }
+            $output[] = "";
+            
+            // Check all membership renewals
+            $allRenewals = MembershipRenewal::with('user')->get();
+            $output[] = "🔄 ALL MEMBERSHIP RENEWALS:";
+            if ($allRenewals->count() > 0) {
+                foreach ($allRenewals as $renewal) {
+                    $userName = $renewal->user ? $renewal->user->name : 'Unknown User';
+                    $userEmail = $renewal->user ? $renewal->user->email : 'Unknown Email';
+                    $calculatedDays = $renewal->calculateDaysUntilExpiry();
+                    $output[] = "- User: {$userName} ({$userEmail})";
+                    $output[] = "  Start: {$renewal->membership_start_date}";
+                    $output[] = "  End: {$renewal->membership_end_date}";
+                    $output[] = "  Days Until Expiry (DB): {$renewal->days_until_expiry}";
+                    $output[] = "  Days Until Expiry (Calculated): {$calculatedDays}";
+                    $output[] = "  Is Expired: " . ($renewal->is_expired ? 'Yes' : 'No');
+                    $output[] = "  Is Hidden: " . ($renewal->is_hidden ? 'Yes' : 'No');
+                    $output[] = "  Is Renewed: " . ($renewal->is_renewed ? 'Yes' : 'No');
+                    $output[] = "";
+                }
+            } else {
+                $output[] = "❌ NO MEMBERSHIP RENEWALS FOUND!";
+            }
+            $output[] = "";
+            
+            // Test admin dashboard logic
+            $adminDashboardRenewals = MembershipRenewal::with('user')
+                ->where('is_renewed', false)
+                ->where('is_hidden', false)
+                ->get()
+                ->filter(function ($renewal) {
+                    $daysUntilExpiry = $renewal->calculateDaysUntilExpiry();
+                    return $daysUntilExpiry <= 30 && $daysUntilExpiry > -30;
+                });
+            
+            $output[] = "🎛️ ADMIN DASHBOARD LOGIC TEST:";
+            $output[] = "- Query: is_renewed=false AND is_hidden=false AND days_until_expiry <= 30 AND > -30";
+            $output[] = "- Total renewals matching criteria: " . $adminDashboardRenewals->count();
+            
+            if ($adminDashboardRenewals->count() > 0) {
+                foreach ($adminDashboardRenewals as $renewal) {
+                    $userName = $renewal->user ? $renewal->user->name : 'Unknown';
+                    $userEmail = $renewal->user ? $renewal->user->email : 'Unknown';
+                    $calculatedDays = $renewal->calculateDaysUntilExpiry();
+                    $status = $calculatedDays <= 0 ? '🔴 EXPIRED' : '🟠 EXPIRING';
+                    $output[] = "  - {$status} {$userName} ({$userEmail}): {$calculatedDays} days";
+                }
+            } else {
+                $output[] = "❌ NO USERS WILL APPEAR IN ADMIN DASHBOARD!";
+            }
+            
+            return response('<h2>🔍 User Diagnosis Results</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Admin Dashboard</a>');
+            
+        } catch (\Exception $e) {
+            return response('<h2>❌ Error During Diagnosis</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
+        }
+    }
+
+    /**
+     * Setup expired memberships for testing.
+     */
+    public function setupExpiredMemberships()
+    {
+        try {
+            $output = [];
+            $output[] = "🔧 SETTING UP EXPIRED MEMBERSHIPS FOR TESTING";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "";
+            
+            // Create or find users
+            $mardalUser = User::firstOrCreate(
+                ['email' => 'info@mardal.ch'],
+                [
+                    'name' => 'Mardal User',
+                    'password' => Hash::make('mardal123'),
+                    'role' => 'user',
+                    'email_verified_at' => now(),
+                ]
+            );
+            
+            $infinitUser = User::firstOrCreate(
+                ['email' => 'infinitdizzajn@gmail.com'],
+                [
+                    'name' => 'kushtrim arifi',
+                    'password' => Hash::make('alipasha'),
+                    'role' => 'user',
+                    'email_verified_at' => now(),
+                ]
+            );
+            
+            $output[] = "✅ Users ready: {$mardalUser->name} and {$infinitUser->name}";
+            
+            // Clean existing data
+            MembershipRenewal::whereIn('user_id', [$mardalUser->id, $infinitUser->id])->delete();
+            Payment::whereIn('user_id', [$mardalUser->id, $infinitUser->id])->delete();
+            
+            // Create expired membership for Mardal (5 days ago)
+            $mardalPayment = Payment::create([
+                'user_id' => $mardalUser->id,
+                'amount' => 35000,
+                'currency' => 'CHF',
+                'payment_type' => 'membership',
+                'payment_method' => 'stripe',
+                'status' => 'completed',
+                'transaction_id' => 'test_mardal_' . time(),
+                'created_at' => now()->subYear()->subDays(5),
+                'updated_at' => now()->subYear()->subDays(5),
+            ]);
+            
+            $mardalExpiry = now()->subDays(5);
+            $mardalStart = $mardalExpiry->copy()->subYear();
+            
+            $mardalRenewal = MembershipRenewal::create([
+                'user_id' => $mardalUser->id,
+                'payment_id' => $mardalPayment->id,
+                'membership_start_date' => $mardalStart,
+                'membership_end_date' => $mardalExpiry,
+                'days_until_expiry' => -5,
+                'is_expired' => true,
+                'is_hidden' => false,
+                'is_renewed' => false,
+                'notifications_sent' => [],
+            ]);
+            
+            // Create expiring membership for Infinit (7 days remaining)
+            $infinitPayment = Payment::create([
+                'user_id' => $infinitUser->id,
+                'amount' => 35000,
+                'currency' => 'CHF',
+                'payment_type' => 'membership',
+                'payment_method' => 'stripe',
+                'status' => 'completed',
+                'transaction_id' => 'test_infinit_' . time(),
+                'created_at' => now()->subYear()->addDays(7),
+                'updated_at' => now()->subYear()->addDays(7),
+            ]);
+            
+            $infinitExpiry = now()->addDays(7);
+            $infinitStart = $infinitExpiry->copy()->subYear();
+            
+            $infinitRenewal = MembershipRenewal::create([
+                'user_id' => $infinitUser->id,
+                'payment_id' => $infinitPayment->id,
+                'membership_start_date' => $infinitStart,
+                'membership_end_date' => $infinitExpiry,
+                'days_until_expiry' => 7,
+                'is_expired' => false,
+                'is_hidden' => false,
+                'is_renewed' => false,
+                'notifications_sent' => [],
+            ]);
+            
+            $output[] = "🔴 Mardal User: EXPIRED 5 days ago";
+            $output[] = "🟠 Infinit User: EXPIRES in 7 days";
+            $output[] = "";
+            $output[] = "✅ Both users should now appear in Super Admin dashboard!";
+            
+            return response('<h2>✅ Expired Memberships Setup Complete!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Check Admin Dashboard</a><br><br><a href="/admin/users" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Users</a>');
+            
+        } catch (\Exception $e) {
+            return response('<h2>❌ Error Setting Up Memberships</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
+        }
+    }
 } 
