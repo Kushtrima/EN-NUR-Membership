@@ -26,6 +26,9 @@
 .env.test
 .env.testing
 .env.*test*
+.env.backup*
+.env.*.old
+.env.old
 
 # IDE files
 .vscode/
