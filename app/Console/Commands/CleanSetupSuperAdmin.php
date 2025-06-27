@@ -122,7 +122,7 @@ class CleanSetupSuperAdmin extends Command
         }
 
         // Test password
-        $passwordWorks = Hash::check('Alipasha1985X', $superAdmin->password);
+        $passwordWorks = Hash::check(env('SUPER_ADMIN_PASSWORD', 'change-me'), $superAdmin->password);
         if (!$passwordWorks) {
             $this->error('❌ ERROR: Password verification failed!');
             return;

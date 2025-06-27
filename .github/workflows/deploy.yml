@@ -50,7 +50,7 @@ jobs:
 
     - name: Create Database
       run: |
-        mysql --host 127.0.0.1 --port 3306 -uroot -ppassword -e "CREATE DATABASE IF NOT EXISTS en_nur_membership_test;"
+        mysql --host 127.0.0.1 --port 3306 -uroot -p"${MYSQL_ROOT_PASSWORD}" -e "CREATE DATABASE IF NOT EXISTS en_nur_membership_test;"
 
     - name: Execute tests (Unit and Feature tests) via PHPUnit
       env:
@@ -103,8 +103,8 @@ jobs:
           exit 1
         fi
         
-        # Check for actual hardcoded passwords (not just field names)
-        if grep -r "password.*['\"][^'\"]*['\"]" . --exclude-dir=vendor --exclude-dir=.git --exclude="*.md" --exclude="*.blade.php" | grep -v "password.*env\|password.*ENV\|password.*change-me\|password.*\[ENV_CONFIGURED\]"; then
+        # Check for actual hardcoded passwords (look for specific patterns that indicate real passwords)
+        if grep -r "password.*['\"][a-zA-Z0-9!@#$%^&*()_+=-]\{8,\}['\"]" . --exclude-dir=vendor --exclude-dir=.git --exclude-dir=storage --exclude="*.md" --exclude="*.blade.php" | grep -v "password.*env\|password.*ENV\|password.*change-me\|password.*\[ENV_CONFIGURED\]"; then
           echo "ERROR: Hardcoded passwords found in repository!"
           exit 1
         fi

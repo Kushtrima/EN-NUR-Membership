@@ -95,4 +95,4 @@ jspm_packages/
 
 # Temporary files
 /temp/
-/tmp/ 
+/tmp/ storage/logs/*.log
