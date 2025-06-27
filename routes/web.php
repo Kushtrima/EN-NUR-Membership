@@ -1903,6 +1903,28 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/testing-dashboard', [App\Http\Controllers\TestingDashboardController::class, 'index'])->name('testing-dashboard');
     Route::post('/testing-dashboard/run-tests', [App\Http\Controllers\TestingDashboardController::class, 'runAllTests'])->name('testing-dashboard.run-tests');
+    
+    // Temporary debug route to diagnose 500 error
+    Route::get('/testing-dashboard/debug', function () {
+        try {
+            $controller = new App\Http\Controllers\TestingDashboardController();
+            $response = $controller->runAllTests();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Tests executed successfully',
+                'response_type' => get_class($response),
+                'content_preview' => substr($response->getContent(), 0, 200) . '...'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'error_trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    });
 });
 
     // Email test route
