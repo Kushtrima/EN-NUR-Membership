@@ -118,7 +118,7 @@ services:
       - key: MAIL_USERNAME
         value: info@xhamia-en-nur.ch
       - key: MAIL_PASSWORD
-        value: "##~(nWoL-Bi;&&gJBMmb<>g#2#@"
+        fromSecret: MAIL_PASSWORD_SECRET
       - key: MAIL_ENCRYPTION
         value: tls
       
@@ -128,7 +128,7 @@ services:
       - key: CUSTOM_MAIL_USERNAME
         value: info@xhamia-en-nur.ch
       - key: CUSTOM_MAIL_PASSWORD
-        value: "##~(nWoL-Bi;&&gJBMmb<>g#2#@"
+        fromSecret: CUSTOM_MAIL_PASSWORD_SECRET
       
       # Payment Configuration (Demo Keys - Replace with real ones)
       - key: STRIPE_KEY

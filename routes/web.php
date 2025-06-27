@@ -2247,7 +2247,7 @@ Route::get('/debug-custom-email', function () {
     $output[] = "";
     
     $email = 'info@xhamia-en-nur.ch';
-    $password = '##~(nWoL-Bi;&&gJBMmb<>g#2#@';
+    $password = env('MAIL_PASSWORD', 'password_not_configured');
     
     $output[] = "📧 Testing Email Account: {$email}";
     $output[] = "Password Length: " . strlen($password) . " characters";
