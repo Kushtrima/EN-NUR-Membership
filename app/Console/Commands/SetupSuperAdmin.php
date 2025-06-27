@@ -55,7 +55,7 @@ class SetupSuperAdmin extends Command
         $this->info('Super Admin Details:');
         $this->info('📧 Email: kushtrim.m.arifi@gmail.com');
         $this->info('👤 Name: SUPER ADMIN');
-        $this->info('🔑 Password: Alipasha1985X');
+        $this->info('🔑 Password: [CONFIGURED_VIA_SUPER_ADMIN_PASSWORD_ENV]');
         $this->info('🔐 Role: super_admin');
         $this->info('');
         $this->info('🎉 You can now login with these credentials!');

@@ -2531,7 +2531,7 @@ Route::get('/deep-user-check', function() {
         
         $output[] = "";
         $output[] = "🎯 TARGET USERS TO KEEP:";
-        $output[] = "1. SUPER ADMIN: kushtrim.m.arifi@gmail.com (Password: Alipasha1985X)";
+        $output[] = "1. SUPER ADMIN: kushtrim.m.arifi@gmail.com (Password: [CONFIGURED_VIA_ENV])";
         $output[] = "2. TEST USER: infinitdizzajn@gmail.com (Password: alipasha)";
         $output[] = "";
         $output[] = "❌ ALL OTHER USERS SHOULD BE DELETED";
@@ -3079,7 +3079,7 @@ Route::get('/expire-existing-subscriptions', function() {
         $output[] = "";
         $output[] = "🔑 LOGIN CREDENTIALS:";
         $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
-        $output[] = "👑 SUPER ADMIN: kushtrim.m.arifi@gmail.com / Alipasha1985X";
+        $output[] = "👑 SUPER ADMIN: kushtrim.m.arifi@gmail.com / [CONFIGURED_VIA_ENV]";
         $output[] = "🔴 EXPIRED USER: info@mardal.ch / mardal123";
         $output[] = "🟠 EXPIRING USER: infinitdizzajn@gmail.com / alipasha";
         $output[] = "";

@@ -132,7 +132,7 @@ class CleanSetupSuperAdmin extends Command
         $this->info('');
         $this->info('🔐 LOGIN CREDENTIALS:');
         $this->info('📧 Email: kushtrim.m.arifi@gmail.com');
-        $this->info('🔑 Password: Alipasha1985X');
+        $this->info('🔑 Password: [CONFIGURED_VIA_SUPER_ADMIN_PASSWORD_ENV]');
         $this->info('🌐 URL: https://en-nur-membership.onrender.com/login');
     }
 } 
