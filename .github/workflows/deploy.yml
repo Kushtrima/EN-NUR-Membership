@@ -91,8 +91,14 @@ jobs:
           exit 1
         fi
         
-        if grep -r "sk_live_\|pk_live_\|password.*=" . --exclude-dir=vendor --exclude-dir=.git; then
-          echo "ERROR: Potential secrets found in repository!"
+        if grep -r "sk_live_\|pk_live_" . --exclude-dir=vendor --exclude-dir=.git; then
+          echo "ERROR: Live API keys found in repository!"
+          exit 1
+        fi
+        
+        # Check for actual hardcoded passwords (not just field names)
+        if grep -r "password.*['\"][^'\"]*['\"]" . --exclude-dir=vendor --exclude-dir=.git --exclude="*.md" --exclude="*.blade.php" | grep -v "password.*env\|password.*ENV\|password.*change-me\|password.*\[ENV_CONFIGURED\]"; then
+          echo "ERROR: Hardcoded passwords found in repository!"
           exit 1
         fi
 

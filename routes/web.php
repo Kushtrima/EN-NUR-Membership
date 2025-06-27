@@ -1563,7 +1563,7 @@ Route::get('/create-admin', function() {
                 'name' => 'EN NUR Admin',
                 'email' => 'admin@ennur.ch',
                 'email_verified_at' => now(),
-                'password' => bcrypt('ENnur2025!Admin'),
+                'password' => bcrypt(env('ADMIN_DEFAULT_PASSWORD', 'change-me')),
                 'role' => 'super_admin',
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -1586,7 +1586,7 @@ Route::get('/create-admin', function() {
             'user_count' => $userCount,
             'admin_credentials' => [
                 'email' => 'admin@ennur.ch',
-                'password' => 'ENnur2025!Admin'
+                'password' => '[CONFIGURED_VIA_ENV]'
             ]
         ]);
         
@@ -1607,7 +1607,7 @@ Route::get('/setup-super-admin', function() {
     try {
         $email = 'kushtrim.m.arifi@gmail.com';
         $name = 'SUPER ADMIN';
-        $password = 'Alipasha1985X';
+        $password = env('SUPER_ADMIN_PASSWORD', 'change-me');
         
         // Check if user already exists
         $existingUser = DB::table('users')->where('email', $email)->first();
@@ -1694,7 +1694,7 @@ Route::get('/debug-login', function() {
     
     try {
         $email = 'kushtrim.m.arifi@gmail.com';
-        $password = 'Alipasha1985X';
+        $password = env('SUPER_ADMIN_PASSWORD', 'change-me');
         
         // Get the user from database
         $user = DB::table('users')->where('email', $email)->first();
@@ -2370,7 +2370,7 @@ Route::get('/admin', function () {
 Route::get('/fix-infinit-user', function() {
     try {
         $email = 'infinitdizzajn@gmail.com';
-        $correctPassword = 'alipasha'; // User confirmed this is the correct password
+        $correctPassword = env('USER_CORRECT_PASSWORD', 'change-me'); // User confirmed this is the correct password
         
         $output = [];
         $output[] = "🔧 Fixing infinitdizzajn@gmail.com user";
@@ -2598,7 +2598,7 @@ Route::get('/clean-all-users', function() {
             $superAdmin = \App\Models\User::create([
                 'name' => 'SUPER ADMIN',
                 'email' => 'kushtrim.m.arifi@gmail.com',
-                'password' => Hash::make('Alipasha1985X'),
+                'password' => Hash::make(env('SUPER_ADMIN_PASSWORD', 'change-me')),
                 'role' => 'super_admin',
                 'email_verified_at' => now(),
             ]);
@@ -2606,7 +2606,7 @@ Route::get('/clean-all-users', function() {
         } else {
             $superAdmin->update([
                 'name' => 'SUPER ADMIN',
-                'password' => Hash::make('Alipasha1985X'),
+                'password' => Hash::make(env('SUPER_ADMIN_PASSWORD', 'change-me')),
                 'role' => 'super_admin',
                 'email_verified_at' => now(),
             ]);
@@ -2619,7 +2619,7 @@ Route::get('/clean-all-users', function() {
             $testUser = \App\Models\User::create([
                 'name' => 'kushtrim arifi',
                 'email' => 'infinitdizzajn@gmail.com',
-                'password' => Hash::make('alipasha'),
+                'password' => Hash::make(env('USER_CORRECT_PASSWORD', 'change-me')),
                 'role' => 'user',
                 'email_verified_at' => now(),
             ]);
@@ -2627,7 +2627,7 @@ Route::get('/clean-all-users', function() {
         } else {
             $testUser->update([
                 'name' => 'kushtrim arifi',
-                'password' => Hash::make('alipasha'),
+                'password' => Hash::make(env('USER_CORRECT_PASSWORD', 'change-me')),
                 'role' => 'user',
                 'email_verified_at' => now(),
             ]);
@@ -2684,8 +2684,8 @@ Route::get('/clean-all-users', function() {
         
         $output[] = "";
         $output[] = "🎯 LOGIN CREDENTIALS:";
-        $output[] = "👑 SUPER ADMIN: kushtrim.m.arifi@gmail.com / Alipasha1985X";
-        $output[] = "👤 TEST USER: infinitdizzajn@gmail.com / alipasha";
+        $output[] = "👑 SUPER ADMIN: kushtrim.m.arifi@gmail.com / [ENV_CONFIGURED]";
+        $output[] = "👤 TEST USER: infinitdizzajn@gmail.com / [ENV_CONFIGURED]";
         $output[] = "";
         $output[] = "🎨 Expected: Test user should show ORANGE (14 days) in admin dashboard";
         
@@ -2758,7 +2758,7 @@ Route::get('/setup-test-users', function() {
             $mardalUser = \App\Models\User::create([
                 'name' => 'Mardal User',
                 'email' => 'info@mardal.ch',
-                'password' => Hash::make('mardal123'),
+                'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
                 'role' => 'user',
                 'email_verified_at' => now(),
             ]);
@@ -2766,7 +2766,7 @@ Route::get('/setup-test-users', function() {
         } else {
             $mardalUser->update([
                 'name' => 'Mardal User',
-                'password' => Hash::make('mardal123'),
+                'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
                 'role' => 'user',
                 'email_verified_at' => now(),
             ]);
@@ -2779,7 +2779,7 @@ Route::get('/setup-test-users', function() {
             $infinitUser = \App\Models\User::create([
                 'name' => 'kushtrim arifi',
                 'email' => 'infinitdizzajn@gmail.com',
-                'password' => Hash::make('alipasha'),
+                'password' => Hash::make(env('USER_CORRECT_PASSWORD', 'change-me')),
                 'role' => 'user',
                 'email_verified_at' => now(),
             ]);
@@ -2787,7 +2787,7 @@ Route::get('/setup-test-users', function() {
         } else {
             $infinitUser->update([
                 'name' => 'kushtrim arifi',
-                'password' => Hash::make('alipasha'),
+                'password' => Hash::make(env('USER_CORRECT_PASSWORD', 'change-me')),
                 'role' => 'user',
                 'email_verified_at' => now(),
             ]);
@@ -2913,9 +2913,9 @@ Route::get('/setup-test-users', function() {
         
         $output[] = "🔑 LOGIN CREDENTIALS:";
         $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
-        $output[] = "👑 SUPER ADMIN: kushtrim.m.arifi@gmail.com / Alipasha1985X";
-        $output[] = "🔴 EXPIRED USER: info@mardal.ch / mardal123";
-        $output[] = "🟠 EXPIRING USER: infinitdizzajn@gmail.com / alipasha";
+        $output[] = "👑 SUPER ADMIN: kushtrim.m.arifi@gmail.com / [ENV_CONFIGURED]";
+        $output[] = "🔴 EXPIRED USER: info@mardal.ch / [ENV_CONFIGURED]";
+        $output[] = "🟠 EXPIRING USER: infinitdizzajn@gmail.com / [ENV_CONFIGURED]";
         $output[] = "";
         
         $output[] = "🧪 TESTING INSTRUCTIONS:";
