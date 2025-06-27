@@ -102,7 +102,7 @@ services:
       - key: LOG_STACK
         value: single
       
-      # Mail Configuration (Zoho SMTP)
+      # Professional Email Configuration (Zoho EU)
       - key: MAIL_MAILER
         value: smtp
       - key: MAIL_DRIVER
@@ -121,6 +121,12 @@ services:
         fromSecret: MAIL_PASSWORD_SECRET
       - key: MAIL_ENCRYPTION
         value: tls
+      
+      # Additional Email Settings
+      - key: MAIL_REPLY_TO_ADDRESS
+        value: info@xhamia-en-nur.ch
+      - key: MAIL_REPLY_TO_NAME
+        value: "EN NUR - Xhamia"
       
       # Custom email settings (saved for future reference)
       - key: CUSTOM_MAIL_HOST
@@ -177,9 +183,9 @@ services:
       
       # Admin Configuration (Set these in Render dashboard)
       - key: ADMIN_EMAIL
-        value: kushtrim.m.arifi@gmail.com
+        value: info@xhamia-en-nur.ch
       - key: ADMIN_NAME
-        value: "SUPER ADMIN"
+        value: "EN NUR - XHAMIA"
 
 databases:
   - name: en-nur-membership-db

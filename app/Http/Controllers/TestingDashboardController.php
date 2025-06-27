@@ -744,17 +744,36 @@ class TestingDashboardController extends Controller
                 $mailDriver ? "Driver: {$mailDriver}" : 'Mail driver not configured'
             );
             
-            // Test SMTP settings
+            // Test SMTP settings for Zoho EU
             if ($mailDriver === 'smtp') {
                 $host = config('mail.mailers.smtp.host');
                 $port = config('mail.mailers.smtp.port');
                 $username = config('mail.mailers.smtp.username');
                 $password = config('mail.mailers.smtp.password');
+                $encryption = config('mail.mailers.smtp.encryption');
                 
                 $this->addTestResult(
-                    'SMTP host configuration',
-                    !empty($host),
+                    'SMTP host configuration (Zoho EU)',
+                    $host === 'smtp.zoho.eu',
                     $host ? "Host: {$host}" : 'SMTP host not configured'
+                );
+                
+                $this->addTestResult(
+                    'SMTP port configuration',
+                    $port == 587 || $port == 465,
+                    "Port: {$port} " . ($port == 587 ? '(TLS)' : ($port == 465 ? '(SSL)' : '(Non-standard)'))
+                );
+                
+                $this->addTestResult(
+                    'SMTP encryption configuration',
+                    $encryption === 'tls' || $encryption === 'ssl',
+                    $encryption ? "Encryption: {$encryption}" : 'Encryption not configured'
+                );
+                
+                $this->addTestResult(
+                    'Professional email username',
+                    $username === 'info@xhamia-en-nur.ch',
+                    $username ? "Username: {$username}" : 'Username not configured'
                 );
                 
                 $this->addTestResult(
@@ -776,7 +795,7 @@ class TestingDashboardController extends Controller
                         $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
                             $host,
                             $port,
-                            config('mail.mailers.smtp.encryption') === 'tls'
+                            $encryption === 'tls'
                         );
                         $transport->setUsername($username);
                         $transport->setPassword($password);
@@ -806,9 +825,23 @@ class TestingDashboardController extends Controller
             $fromName = config('mail.from.name');
             
             $this->addTestResult(
-                'Mail from address configured',
-                !empty($fromAddress) && filter_var($fromAddress, FILTER_VALIDATE_EMAIL),
+                'Professional email from address',
+                $fromAddress === 'info@xhamia-en-nur.ch',
                 $fromAddress ? "From: {$fromName} <{$fromAddress}>" : 'Mail from address not configured'
+            );
+            
+            $this->addTestResult(
+                'Professional email from name',
+                !empty($fromName) && $fromName === 'EN NUR - Xhamia',
+                $fromName ? "From Name: {$fromName}" : 'Mail from name not configured'
+            );
+            
+            // Test reply-to configuration
+            $replyToAddress = env('MAIL_REPLY_TO_ADDRESS');
+            $this->addTestResult(
+                'Reply-to address configured',
+                $replyToAddress === 'info@xhamia-en-nur.ch',
+                $replyToAddress ? "Reply-to: {$replyToAddress}" : 'Reply-to address not configured'
             );
             
         } catch (\Exception $e) {

@@ -3221,3 +3221,77 @@ Route::get('/diagnose-users', function() {
 })->middleware(['auth', 'super_admin']);
 
 require __DIR__.'/auth.php'; 
+
+    // Test professional email setup
+    Route::get('/test-professional-email', function () {
+        try {
+            $output = [];
+            $output[] = "📧 Testing Professional Email Setup";
+            $output[] = "Email: info@xhamia-en-nur.ch";
+            $output[] = "Provider: Zoho EU";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "";
+            
+            // Test email configuration
+            $output[] = "📋 Email Settings:";
+            $output[] = "- MAIL_MAILER: " . config('mail.default');
+            $output[] = "- MAIL_HOST: " . config('mail.mailers.smtp.host');
+            $output[] = "- MAIL_PORT: " . config('mail.mailers.smtp.port');
+            $output[] = "- MAIL_USERNAME: " . config('mail.mailers.smtp.username');
+            $output[] = "- MAIL_ENCRYPTION: " . config('mail.mailers.smtp.encryption');
+            $output[] = "- MAIL_FROM_ADDRESS: " . config('mail.from.address');
+            $output[] = "- MAIL_FROM_NAME: " . config('mail.from.name');
+            $output[] = "";
+            
+            // Verify configuration
+            $isConfigured = (
+                config('mail.mailers.smtp.host') === 'smtp.zoho.eu' &&
+                config('mail.mailers.smtp.username') === 'info@xhamia-en-nur.ch' &&
+                config('mail.from.address') === 'info@xhamia-en-nur.ch' &&
+                config('mail.from.name') === 'EN NUR - Xhamia'
+            );
+            
+            if ($isConfigured) {
+                $output[] = "✅ Professional email configuration is correct!";
+                $output[] = "";
+                
+                // Send test email
+                $output[] = "📤 Sending test email...";
+                
+                Mail::raw("🎉 Professional Email Setup Test\n\nThis is a test email from your professional email system.\n\nConfiguration:\n- From: EN NUR - Xhamia <info@xhamia-en-nur.ch>\n- Provider: Zoho EU\n- Timestamp: " . now()->toDateTimeString() . "\n\n✅ Your professional email system is working correctly!\n\nBest regards,\nEN NUR Membership System", function ($mail) {
+                    $mail->to('info@xhamia-en-nur.ch') // Send to self for testing
+                         ->subject('🎉 Professional Email Test - ' . now()->format('H:i:s'))
+                         ->from(config('mail.from.address'), config('mail.from.name'));
+                });
+                
+                $output[] = "✅ Email sent successfully!";
+                $output[] = "Check the inbox for info@xhamia-en-nur.ch";
+                $output[] = "";
+                $output[] = "🚀 Professional email system is ready for:";
+                $output[] = "• Membership renewal notifications";
+                $output[] = "• Payment confirmations";
+                $output[] = "• User registration emails";
+                $output[] = "• Admin notifications";
+                
+            } else {
+                $output[] = "❌ Professional email configuration needs attention:";
+                if (config('mail.mailers.smtp.host') !== 'smtp.zoho.eu') {
+                    $output[] = "- SMTP host should be 'smtp.zoho.eu'";
+                }
+                if (config('mail.mailers.smtp.username') !== 'info@xhamia-en-nur.ch') {
+                    $output[] = "- Username should be 'info@xhamia-en-nur.ch'";
+                }
+                if (config('mail.from.address') !== 'info@xhamia-en-nur.ch') {
+                    $output[] = "- From address should be 'info@xhamia-en-nur.ch'";
+                }
+                if (config('mail.from.name') !== 'EN NUR - Xhamia') {
+                    $output[] = "- From name should be 'EN NUR - Xhamia'";
+                }
+            }
+            
+            return response('<h2>Professional Email Test Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin/testing-dashboard">View Testing Dashboard</a><br><a href="/admin">Go to Dashboard</a>');
+            
+        } catch (\Exception $e) {
+            return response('<h2>Professional Email Test Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
+        }
+    });
