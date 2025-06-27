@@ -112,15 +112,15 @@ services:
       - key: MAIL_FROM_NAME
         value: "EN NUR - Xhamia"
       - key: MAIL_HOST
-        value: smtp.zoho.eu
+        value: smtppro.zoho.com
       - key: MAIL_PORT
-        value: 587
+        value: 465
       - key: MAIL_USERNAME
         value: info@xhamia-en-nur.ch
       - key: MAIL_PASSWORD
         fromSecret: MAIL_PASSWORD_SECRET
       - key: MAIL_ENCRYPTION
-        value: tls
+        value: ssl
       
       # Additional Email Settings
       - key: MAIL_REPLY_TO_ADDRESS
