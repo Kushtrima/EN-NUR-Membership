@@ -41,17 +41,17 @@
                 </div>
             </button>
 
-            <!-- Send Notifications -->
-            <button onclick="showNotificationsModal();" style="background: #1F6E38; color: white; padding: 1rem 1.5rem; border-radius: 12px; border: none; text-align: center; transition: all 0.3s ease; cursor: pointer; width: 100%;" 
+            <!-- Testing Dashboard -->
+            <button onclick="window.location.href='/testing-dashboard';" style="background: #1F6E38; color: white; padding: 1rem 1.5rem; border-radius: 12px; border: none; text-align: center; transition: all 0.3s ease; cursor: pointer; width: 100%;" 
                     onmouseover="this.style.background='#0d4d1f'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(31, 110, 56, 0.5)'" 
                     onmouseout="this.style.background='#1F6E38'; this.style.transform='translateY(0)'; this.style.boxShadow='none'"
-                    id="notify-btn">
+                    id="testing-btn">
                 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
                     <svg style="width: 32px; height: 32px;" fill="white" viewBox="0 0 24 24">
-                        <path d="M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21"/>
+                        <path d="M7,2V4H8V18A4,4 0 0,0 12,22A4,4 0 0,0 16,18V4H17V2H7M11,16C10.4,16 10,15.6 10,15C10,14.4 10.4,14 11,14C11.6,14 12,14.4 12,15C12,15.6 11.6,16 11,16M13,12C12.4,12 12,11.6 12,11C12,10.4 12.4,10 13,10C13.6,10 14,10.4 14,11C14,11.6 13.6,12 13,12M14,7H10V9H14V7Z"/>
                     </svg>
-                    <div style="font-weight: bold; font-size: 0.95rem;">Send Notifications</div>
-                    <div style="font-size: 0.75rem; opacity: 0.9;">Bulk notifications</div>
+                    <div style="font-weight: bold; font-size: 0.95rem;">🧪 Testing Dashboard</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9;">Run system tests</div>
                 </div>
             </button>
         </div>
