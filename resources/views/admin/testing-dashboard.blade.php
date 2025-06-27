@@ -1,120 +1,141 @@
 <x-app-layout>
     <style>
         .test-dashboard {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 1rem;
+            padding: 2rem;
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            background: #1a202c;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         
         .test-header {
-            background: linear-gradient(135deg, #1F6E38 0%, #28a745 100%);
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
             color: white;
             padding: 2rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            text-align: center;
+            border-bottom: 1px solid #4a5568;
+        }
+        
+        .test-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .test-subtitle {
+            color: #a0aec0;
+            font-size: 1rem;
+            margin: 0;
         }
         
         .test-controls {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: center;
+            background: #2d3748;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #4a5568;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .run-tests-btn {
-            background: #28a745;
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
             color: white;
             border: none;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         .run-tests-btn:hover {
-            background: #218838;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+            background: linear-gradient(135deg, #2f855a 0%, #276749 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(56, 161, 105, 0.4);
         }
         
         .run-tests-btn:disabled {
-            background: #6c757d;
+            background: #4a5568;
             cursor: not-allowed;
             transform: none;
         }
         
-        .test-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        
-        .summary-card {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .summary-card.success {
-            border-left: 4px solid #28a745;
-        }
-        
-        .summary-card.warning {
-            border-left: 4px solid #ffc107;
-        }
-        
-        .summary-card.danger {
-            border-left: 4px solid #dc3545;
-        }
-        
-        .summary-number {
-            font-size: 2rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-        
-        .summary-label {
-            color: #666;
+        .test-info {
+            color: #a0aec0;
             font-size: 0.9rem;
         }
         
+        .test-summary {
+            background: #2d3748;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #4a5568;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .summary-card {
+            text-align: center;
+        }
+        
+        .summary-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .summary-label {
+            color: #a0aec0;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .summary-card.success .summary-number {
+            color: #68d391;
+        }
+        
+        .summary-card.warning .summary-number {
+            color: #f6ad55;
+        }
+        
+        .summary-card.danger .summary-number {
+            color: #fc8181;
+        }
+        
         .test-results {
-            margin-bottom: 2rem;
+            background: #2d3748;
+            max-height: 600px;
+            overflow-y: auto;
         }
         
-        .test-category-section {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 1.5rem;
-            overflow: hidden;
+        .test-results::-webkit-scrollbar {
+            width: 8px;
         }
         
-        .category-header {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #e9ecef;
+        .test-results::-webkit-scrollbar-track {
+            background: #1a202c;
         }
         
-        .category-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #2d3748;
-            margin: 0;
+        .test-results::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
         }
         
-        .category-stats {
-            font-size: 0.85rem;
-            color: #6b7280;
-            margin-top: 0.25rem;
+        .test-results::-webkit-scrollbar-thumb:hover {
+            background: #718096;
         }
         
         .test-table {
@@ -123,41 +144,61 @@
         }
         
         .test-table th {
-            background: #f8f9fa;
-            padding: 0.75rem 1rem;
+            background: #1a202c;
+            padding: 1rem 1.5rem;
             text-align: left;
             font-weight: 600;
-            color: #495057;
-            border-bottom: 1px solid #e9ecef;
+            color: #e2e8f0;
+            border-bottom: 1px solid #4a5568;
             font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         
         .test-table td {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid #f1f3f4;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(74, 85, 104, 0.3);
             vertical-align: top;
         }
         
         .test-table tr:hover {
-            background: #f8f9fa;
+            background: rgba(74, 85, 104, 0.2);
         }
         
         .test-table tr.failed {
-            background: rgba(220, 53, 69, 0.02);
+            background: rgba(245, 101, 101, 0.1);
         }
         
         .test-table tr.failed:hover {
-            background: rgba(220, 53, 69, 0.05);
+            background: rgba(245, 101, 101, 0.15);
         }
         
-        .test-table tr:last-child td {
-            border-bottom: none;
+        .category-row {
+            background: #1a202c !important;
+            font-weight: 600;
+            color: #e2e8f0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+        }
+        
+        .category-row:hover {
+            background: #1a202c !important;
+        }
+        
+        .category-row td {
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid #4a5568;
         }
         
         .test-name {
             font-weight: 500;
-            color: #2d3748;
+            color: #e2e8f0;
             font-size: 0.9rem;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
         }
         
         .test-status {
@@ -165,73 +206,77 @@
             align-items: center;
             gap: 0.5rem;
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 600;
+            font-family: monospace;
         }
         
         .status-pass {
-            color: #28a745;
+            color: #68d391;
         }
         
         .status-fail {
-            color: #dc3545;
+            color: #fc8181;
         }
         
         .test-error {
-            margin-top: 0.5rem;
+            margin-top: 0.75rem;
             padding: 0.75rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-family: 'Monaco', 'Menlo', monospace;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
             white-space: pre-wrap;
             word-break: break-word;
+            line-height: 1.4;
         }
         
         .error-critical {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #991b1b;
+            background: rgba(245, 101, 101, 0.1);
+            border: 1px solid rgba(245, 101, 101, 0.3);
+            color: #fc8181;
         }
         
         .error-moderate {
-            background: #fffbeb;
-            border: 1px solid #fed7aa;
-            color: #92400e;
+            background: rgba(246, 173, 85, 0.1);
+            border: 1px solid rgba(246, 173, 85, 0.3);
+            color: #f6ad55;
         }
         
         .error-minor {
-            background: #f0f9ff;
-            border: 1px solid #bae6fd;
-            color: #1e40af;
+            background: rgba(99, 179, 237, 0.1);
+            border: 1px solid rgba(99, 179, 237, 0.3);
+            color: #63b3ed;
         }
         
         .error-severity {
             display: inline-block;
-            padding: 0.15rem 0.5rem;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.65rem;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
             margin-bottom: 0.5rem;
         }
         
         .severity-critical {
-            background: #dc3545;
-            color: white;
+            background: #fc8181;
+            color: #1a202c;
         }
         
         .severity-moderate {
-            background: #f59e0b;
-            color: white;
+            background: #f6ad55;
+            color: #1a202c;
         }
         
         .severity-minor {
-            background: #3b82f6;
-            color: white;
+            background: #63b3ed;
+            color: #1a202c;
         }
         
         .test-duration {
-            color: #718096;
+            color: #a0aec0;
             font-size: 0.8rem;
+            font-family: monospace;
         }
         
         .loading {
@@ -275,21 +320,27 @@
     </style>
 
     <div class="test-dashboard">
-        <!-- Header -->
-        <div class="test-header">
-            <h1 style="margin: 0 0 0.5rem 0; font-size: 2.5rem;">Testing Dashboard</h1>
-            <p style="margin: 0; opacity: 0.9; font-size: 1.1rem;">Comprehensive Business Logic & System Testing</p>
-        </div>
+        <div class="test-container">
+            <!-- Header -->
+            <div class="test-header">
+                <h1 class="test-title">
+                    <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    System Testing Suite
+                </h1>
+                <p class="test-subtitle">Comprehensive Business Logic & System Integration Testing</p>
+            </div>
 
-        <!-- Controls -->
-        <div class="test-controls">
-            <button id="runTestsBtn" class="run-tests-btn" onclick="runAllTests()">
-                Run All Tests
-            </button>
-            <p style="margin: 1rem 0 0 0; color: #666;">
-                This will test all business logic, data integrity, system integration, and performance
-            </p>
-        </div>
+            <!-- Controls -->
+            <div class="test-controls">
+                <div class="test-info">
+                    Business Logic • Data Integrity • Performance • Integration
+                </div>
+                <button id="runTestsBtn" class="run-tests-btn" onclick="runAllTests()">
+                    Execute Tests
+                </button>
+            </div>
 
         <!-- Test Summary -->
         <div id="testSummary" class="test-summary" style="display: none;">
@@ -315,16 +366,17 @@
             </div>
         </div>
 
-        <!-- Test Results -->
-        <div id="testResults" class="test-results" style="display: none;">
-            <!-- Results will be populated here -->
-        </div>
+            <!-- Test Results -->
+            <div id="testResults" class="test-results" style="display: none;">
+                <!-- Results will be populated here -->
+            </div>
 
-        <!-- Loading State -->
-        <div id="loadingState" class="loading" style="display: none;">
-            <div class="loading-spinner"></div>
-            <p>Running comprehensive tests...</p>
-            <p style="font-size: 0.9rem; color: #999;">This may take a few moments</p>
+            <!-- Loading State -->
+            <div id="loadingState" class="loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Running comprehensive tests...</p>
+                <p style="font-size: 0.9rem; color: #999;">This may take a few moments</p>
+            </div>
         </div>
     </div>
 
@@ -337,7 +389,7 @@
             
             // Show loading state
             runBtn.disabled = true;
-            runBtn.textContent = 'Running Tests...';
+            runBtn.textContent = 'Executing...';
             loadingState.style.display = 'block';
             testSummary.style.display = 'none';
             testResults.style.display = 'none';
@@ -365,7 +417,7 @@
                 // Hide loading state
                 loadingState.style.display = 'none';
                 runBtn.disabled = false;
-                runBtn.textContent = 'Run All Tests';
+                runBtn.textContent = 'Execute Tests';
             }
         }
         
@@ -390,67 +442,67 @@
                 successRateCard.className = 'summary-card danger';
             }
             
-            // Group results by category
-            const categories = {};
-            let currentCategory = '';
+            // Build unified testing table with category separators
+            let resultsHTML = `
+                <table class="test-table">
+                    <thead>
+                        <tr>
+                            <th>Test Case</th>
+                            <th>Status</th>
+                            <th>Execution Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
             
+            let currentCategory = '';
+            let categoryStats = {};
+            
+            // First pass: collect category statistics
             results.forEach(result => {
                 if (result.type === 'category') {
                     currentCategory = result.name;
-                    categories[currentCategory] = {
-                        name: currentCategory,
-                        tests: [],
-                        passed: 0,
-                        failed: 0
-                    };
+                    categoryStats[currentCategory] = { passed: 0, failed: 0, total: 0 };
                 } else if (result.type === 'test' && currentCategory) {
-                    categories[currentCategory].tests.push(result);
+                    categoryStats[currentCategory].total++;
                     if (result.passed) {
-                        categories[currentCategory].passed++;
+                        categoryStats[currentCategory].passed++;
                     } else {
-                        categories[currentCategory].failed++;
+                        categoryStats[currentCategory].failed++;
                     }
                 }
             });
             
-            // Build separated category sections
-            let resultsHTML = '';
-            
-            Object.values(categories).forEach(category => {
-                const totalTests = category.tests.length;
-                const successRate = totalTests > 0 ? Math.round((category.passed / totalTests) * 100) : 0;
-                
-                resultsHTML += `
-                    <div class="test-category-section">
-                        <div class="category-header">
-                            <h3 class="category-title">${category.name}</h3>
-                            <div class="category-stats">
-                                ${category.passed} passed, ${category.failed} failed • ${successRate}% success rate
-                            </div>
-                        </div>
-                        <table class="test-table">
-                            <thead>
-                                <tr>
-                                    <th>Test Name</th>
-                                    <th>Status</th>
-                                    <th>Duration</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-                
-                category.tests.forEach(test => {
-                    const statusClass = test.passed ? '' : 'failed';
-                    const statusText = test.passed ? 'Pass' : 'Fail';
-                    const statusIcon = test.passed ? '✓' : '✗';
-                    const statusColorClass = test.passed ? 'status-pass' : 'status-fail';
-                    const duration = test.duration || '< 1ms';
+            // Second pass: build table
+            currentCategory = '';
+            results.forEach(result => {
+                if (result.type === 'category') {
+                    currentCategory = result.name;
+                    const stats = categoryStats[currentCategory];
+                    const successRate = stats.total > 0 ? Math.round((stats.passed / stats.total) * 100) : 0;
+                    
+                    resultsHTML += `
+                        <tr class="category-row">
+                            <td colspan="3">
+                                ${currentCategory} 
+                                <span style="font-weight: normal; opacity: 0.7; margin-left: 1rem;">
+                                    ${stats.passed}/${stats.total} passed (${successRate}%)
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                } else if (result.type === 'test') {
+                    const statusClass = result.passed ? '' : 'failed';
+                    const statusText = result.passed ? 'PASS' : 'FAIL';
+                    const statusIcon = result.passed ? '✓' : '✗';
+                    const statusColorClass = result.passed ? 'status-pass' : 'status-fail';
+                    const duration = result.duration || '< 1ms';
                     
                     resultsHTML += `
                         <tr class="${statusClass}">
                             <td>
-                                <div class="test-name">${test.name}</div>
-                                ${test.error ? generateErrorDisplay(test.error, test.error_details) : ''}
+                                <div class="test-name">${result.name}</div>
+                                ${result.error ? generateErrorDisplay(result.error, result.error_details) : ''}
                             </td>
                             <td>
                                 <div class="test-status ${statusColorClass}">
@@ -462,14 +514,13 @@
                             </td>
                         </tr>
                     `;
-                });
-                
-                resultsHTML += `
-                            </tbody>
-                        </table>
-                    </div>
-                `;
+                }
             });
+            
+            resultsHTML += `
+                    </tbody>
+                </table>
+            `;
             
             testResults.innerHTML = resultsHTML;
             
