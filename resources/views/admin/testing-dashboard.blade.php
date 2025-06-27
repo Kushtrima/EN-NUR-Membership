@@ -279,6 +279,89 @@
             font-family: monospace;
         }
         
+        .log-entry {
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid rgba(74, 85, 104, 0.3);
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        
+        .log-entry:hover {
+            background: rgba(74, 85, 104, 0.2);
+        }
+        
+        .log-timestamp {
+            color: #a0aec0;
+            margin-right: 1rem;
+        }
+        
+        .log-level {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-right: 1rem;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .log-level.info {
+            background: #63b3ed;
+            color: #1a202c;
+        }
+        
+        .log-level.warning {
+            background: #f6ad55;
+            color: #1a202c;
+        }
+        
+        .log-level.error {
+            background: #fc8181;
+            color: #1a202c;
+        }
+        
+        .log-level.debug {
+            background: #68d391;
+            color: #1a202c;
+        }
+        
+        .log-message {
+            color: #e2e8f0;
+        }
+        
+        .log-context {
+            color: #a0aec0;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            padding-left: 1rem;
+        }
+        
+        .logs-header {
+            background: #1a202c;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #4a5568;
+            color: #e2e8f0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.85rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .logs-stats {
+            color: #a0aec0;
+            font-size: 0.8rem;
+            font-weight: normal;
+            text-transform: none;
+            letter-spacing: normal;
+            margin-left: 1rem;
+        }
+        
         .loading {
             text-align: center;
             padding: 2rem;
@@ -337,9 +420,14 @@
                 <div class="test-info">
                     Business Logic • Data Integrity • Performance • Integration
                 </div>
-                <button id="runTestsBtn" class="run-tests-btn" onclick="runAllTests()">
-                    Execute Tests
-                </button>
+                <div style="display: flex; gap: 1rem;">
+                    <button id="runTestsBtn" class="run-tests-btn" onclick="runAllTests()">
+                        Execute Tests
+                    </button>
+                    <button id="viewLogsBtn" class="run-tests-btn" onclick="showSystemLogs()" style="background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);">
+                        View System Logs
+                    </button>
+                </div>
             </div>
 
         <!-- Test Summary -->
@@ -369,6 +457,11 @@
             <!-- Test Results -->
             <div id="testResults" class="test-results" style="display: none;">
                 <!-- Results will be populated here -->
+            </div>
+
+            <!-- System Logs -->
+            <div id="systemLogs" class="test-results" style="display: none;">
+                <!-- Logs will be populated here -->
             </div>
 
             <!-- Loading State -->
@@ -534,6 +627,89 @@
             } else {
                 showWarning(`${summary.failed_tests} out of ${summary.total_tests} tests failed. Please review the detailed error information below.`);
             }
+        }
+        
+        async function showSystemLogs() {
+            const viewLogsBtn = document.getElementById('viewLogsBtn');
+            const testResults = document.getElementById('testResults');
+            const systemLogs = document.getElementById('systemLogs');
+            const testSummary = document.getElementById('testSummary');
+            const loadingState = document.getElementById('loadingState');
+            
+            // Show loading state
+            viewLogsBtn.disabled = true;
+            viewLogsBtn.textContent = 'Loading...';
+            loadingState.style.display = 'block';
+            testResults.style.display = 'none';
+            systemLogs.style.display = 'none';
+            testSummary.style.display = 'none';
+            
+            try {
+                const response = await fetch('/testing-dashboard/system-logs', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displaySystemLogs(data.logs, data.stats);
+                } else {
+                    showError('Failed to load system logs: ' + (data.error || 'Unknown error'));
+                }
+                
+            } catch (error) {
+                showError('Failed to load system logs: ' + error.message);
+            } finally {
+                // Hide loading state
+                loadingState.style.display = 'none';
+                viewLogsBtn.disabled = false;
+                viewLogsBtn.textContent = 'View System Logs';
+            }
+        }
+        
+        function displaySystemLogs(logs, stats) {
+            const systemLogs = document.getElementById('systemLogs');
+            
+            let logsHTML = `
+                <div class="logs-header">
+                    System Logs (Last 30 Days)
+                    <span class="logs-stats">
+                        ${stats.total_logs} entries • ${stats.error_count} errors • ${stats.warning_count} warnings
+                    </span>
+                </div>
+            `;
+            
+            if (logs.length === 0) {
+                logsHTML += `
+                    <div style="padding: 2rem; text-align: center; color: #a0aec0;">
+                        No log entries found in the last 30 days
+                    </div>
+                `;
+            } else {
+                logs.forEach(log => {
+                    const levelClass = log.level.toLowerCase();
+                    const timestamp = new Date(log.timestamp).toLocaleString();
+                    
+                    logsHTML += `
+                        <div class="log-entry">
+                            <span class="log-timestamp">${timestamp}</span>
+                            <span class="log-level ${levelClass}">${log.level}</span>
+                            <span class="log-message">${log.message}</span>
+                            ${log.context ? `<div class="log-context">${log.context}</div>` : ''}
+                        </div>
+                    `;
+                });
+            }
+            
+            systemLogs.innerHTML = logsHTML;
+            systemLogs.style.display = 'block';
+            
+            // Show success message
+            showSuccess(`Loaded ${logs.length} log entries from the last 30 days. Auto-cleanup enabled.`);
         }
         
         function generateErrorDisplay(error, errorDetails) {
