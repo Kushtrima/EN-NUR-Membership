@@ -23,7 +23,7 @@ class TestingDashboardController extends Controller
     }
 
     /**
-     * Show the testing dashboard
+     * Display the testing dashboard
      */
     public function index()
     {
