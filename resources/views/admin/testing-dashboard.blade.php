@@ -448,7 +448,7 @@
                 <div class="summary-number" id="successRate">0%</div>
                 <div class="summary-label">Success Rate</div>
             </div>
-            <div class="summary-card">
+            <div class="summary-card success">
                 <div class="summary-number" id="totalCategories">0</div>
                 <div class="summary-label">Test Categories</div>
             </div>

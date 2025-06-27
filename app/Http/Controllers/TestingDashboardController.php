@@ -105,10 +105,12 @@ class TestingDashboardController extends Controller
                     if (empty(trim($line))) continue;
                     
                     // Parse Laravel log format: [timestamp] environment.level: message
-                    if (preg_match('/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] \w+\.(\w+): (.+)$/', $line, $matches)) {
+                    // Support multiple formats: [timestamp] env.level: message OR [timestamp] level: message
+                    if (preg_match('/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] (?:(\w+)\.)?(\w+): (.+)$/', $line, $matches)) {
                         $timestamp = Carbon::parse($matches[1]);
-                        $level = strtoupper($matches[2]);
-                        $message = $matches[3];
+                        $environment = $matches[2] ?? 'unknown';
+                        $level = strtoupper($matches[3]);
+                        $message = $matches[4];
                         
                         // Only include logs from the last 30 days
                         if ($timestamp->gte($cutoffDate)) {
@@ -116,6 +118,7 @@ class TestingDashboardController extends Controller
                                 'timestamp' => $timestamp->toISOString(),
                                 'level' => $level,
                                 'message' => $message,
+                                'environment' => $environment,
                                 'context' => $this->extractLogContext($message)
                             ];
                             
@@ -124,6 +127,7 @@ class TestingDashboardController extends Controller
                             // Count by level
                             switch (strtolower($level)) {
                                 case 'error':
+                                case 'emergency':
                                     $stats['error_count']++;
                                     break;
                                 case 'warning':
