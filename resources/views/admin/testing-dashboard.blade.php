@@ -87,11 +87,34 @@
         }
         
         .test-results {
+            margin-bottom: 2rem;
+        }
+        
+        .test-category-section {
             background: white;
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
             overflow: hidden;
-            margin-bottom: 2rem;
+        }
+        
+        .category-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .category-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0;
+        }
+        
+        .category-stats {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
         }
         
         .test-table {
@@ -101,12 +124,12 @@
         
         .test-table th {
             background: #f8f9fa;
-            padding: 1rem;
+            padding: 0.75rem 1rem;
             text-align: left;
             font-weight: 600;
             color: #495057;
             border-bottom: 1px solid #e9ecef;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         
         .test-table td {
@@ -127,14 +150,14 @@
             background: rgba(220, 53, 69, 0.05);
         }
         
+        .test-table tr:last-child td {
+            border-bottom: none;
+        }
+        
         .test-name {
             font-weight: 500;
             color: #2d3748;
-        }
-        
-        .test-category-name {
-            color: #4a5568;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
         
         .test-status {
@@ -156,30 +179,59 @@
         .test-error {
             margin-top: 0.5rem;
             padding: 0.75rem;
-            background: #fff5f5;
-            border: 1px solid #fed7d7;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 0.85rem;
-            color: #c53030;
             font-family: 'Monaco', 'Menlo', monospace;
             white-space: pre-wrap;
             word-break: break-word;
         }
         
+        .error-critical {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+        
+        .error-moderate {
+            background: #fffbeb;
+            border: 1px solid #fed7aa;
+            color: #92400e;
+        }
+        
+        .error-minor {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            color: #1e40af;
+        }
+        
+        .error-severity {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        
+        .severity-critical {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .severity-moderate {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .severity-minor {
+            background: #3b82f6;
+            color: white;
+        }
+        
         .test-duration {
             color: #718096;
             font-size: 0.8rem;
-        }
-        
-        .category-divider {
-            background: #e2e8f0;
-            font-weight: 600;
-            color: #4a5568;
-            font-size: 0.9rem;
-        }
-        
-        .category-divider td {
-            padding: 0.5rem 1rem;
         }
         
         .loading {
@@ -338,40 +390,67 @@
                 successRateCard.className = 'summary-card danger';
             }
             
-            // Build minimal table HTML
-            let resultsHTML = `
-                <table class="test-table">
-                    <thead>
-                        <tr>
-                            <th>Test Name</th>
-                            <th>Category</th>
-                            <th>Status</th>
-                            <th>Duration</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
+            // Group results by category
+            const categories = {};
             let currentCategory = '';
             
             results.forEach(result => {
                 if (result.type === 'category') {
                     currentCategory = result.name;
-                } else if (result.type === 'test') {
-                    const statusClass = result.passed ? '' : 'failed';
-                    const statusText = result.passed ? 'Pass' : 'Fail';
-                    const statusIcon = result.passed ? '✓' : '✗';
-                    const statusColorClass = result.passed ? 'status-pass' : 'status-fail';
-                    const duration = result.duration || '< 1ms';
+                    categories[currentCategory] = {
+                        name: currentCategory,
+                        tests: [],
+                        passed: 0,
+                        failed: 0
+                    };
+                } else if (result.type === 'test' && currentCategory) {
+                    categories[currentCategory].tests.push(result);
+                    if (result.passed) {
+                        categories[currentCategory].passed++;
+                    } else {
+                        categories[currentCategory].failed++;
+                    }
+                }
+            });
+            
+            // Build separated category sections
+            let resultsHTML = '';
+            
+            Object.values(categories).forEach(category => {
+                const totalTests = category.tests.length;
+                const successRate = totalTests > 0 ? Math.round((category.passed / totalTests) * 100) : 0;
+                
+                resultsHTML += `
+                    <div class="test-category-section">
+                        <div class="category-header">
+                            <h3 class="category-title">${category.name}</h3>
+                            <div class="category-stats">
+                                ${category.passed} passed, ${category.failed} failed • ${successRate}% success rate
+                            </div>
+                        </div>
+                        <table class="test-table">
+                            <thead>
+                                <tr>
+                                    <th>Test Name</th>
+                                    <th>Status</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                category.tests.forEach(test => {
+                    const statusClass = test.passed ? '' : 'failed';
+                    const statusText = test.passed ? 'Pass' : 'Fail';
+                    const statusIcon = test.passed ? '✓' : '✗';
+                    const statusColorClass = test.passed ? 'status-pass' : 'status-fail';
+                    const duration = test.duration || '< 1ms';
                     
                     resultsHTML += `
                         <tr class="${statusClass}">
                             <td>
-                                <div class="test-name">${result.name}</div>
-                                ${result.error ? `<div class="test-error">Error: ${result.error}${result.error_details ? '\n\nDetails:\n' + result.error_details : ''}</div>` : ''}
-                            </td>
-                            <td>
-                                <div class="test-category-name">${currentCategory}</div>
+                                <div class="test-name">${test.name}</div>
+                                ${test.error ? generateErrorDisplay(test.error, test.error_details) : ''}
                             </td>
                             <td>
                                 <div class="test-status ${statusColorClass}">
@@ -383,13 +462,14 @@
                             </td>
                         </tr>
                     `;
-                }
+                });
+                
+                resultsHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
             });
-            
-            resultsHTML += `
-                    </tbody>
-                </table>
-            `;
             
             testResults.innerHTML = resultsHTML;
             
@@ -403,6 +483,44 @@
             } else {
                 showWarning(`${summary.failed_tests} out of ${summary.total_tests} tests failed. Please review the detailed error information below.`);
             }
+        }
+        
+        function generateErrorDisplay(error, errorDetails) {
+            // Determine error severity based on keywords
+            const severity = determineErrorSeverity(error, errorDetails);
+            const severityClass = `error-${severity.level}`;
+            const severityBadgeClass = `severity-${severity.level}`;
+            
+            return `
+                <div class="test-error ${severityClass}">
+                    <div class="error-severity ${severityBadgeClass}">${severity.label}</div>
+                    <strong>Error:</strong> ${error}
+                    ${errorDetails ? `\n\n<strong>Details:</strong>\n${errorDetails}` : ''}
+                </div>
+            `;
+        }
+        
+        function determineErrorSeverity(error, errorDetails) {
+            const errorText = (error + ' ' + (errorDetails || '')).toLowerCase();
+            
+            // Critical errors - system breaking issues
+            if (errorText.includes('database') || errorText.includes('connection') || 
+                errorText.includes('exception') || errorText.includes('critical') ||
+                errorText.includes('fatal') || errorText.includes('cannot connect') ||
+                errorText.includes('table doesn\'t exist') || errorText.includes('column not found')) {
+                return { level: 'critical', label: 'Critical' };
+            }
+            
+            // Moderate errors - functionality issues
+            if (errorText.includes('relationship') || errorText.includes('model') ||
+                errorText.includes('method') || errorText.includes('class') ||
+                errorText.includes('undefined') || errorText.includes('null') ||
+                errorText.includes('permission') || errorText.includes('access denied')) {
+                return { level: 'moderate', label: 'Moderate' };
+            }
+            
+            // Minor errors - cosmetic or non-critical issues
+            return { level: 'minor', label: 'Minor' };
         }
         
         function showError(message) {
