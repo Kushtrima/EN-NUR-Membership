@@ -219,45 +219,86 @@ class TestingDashboardController extends Controller
             // Test User -> Payments relationship
             $userWithPayments = User::with('payments')->first();
             if ($userWithPayments) {
+                $paymentsLoaded = $userWithPayments->payments !== null;
                 $this->addTestResult(
                     'User -> Payments relationship',
-                    $userWithPayments->payments !== null,
-                    'Relationship loads correctly'
+                    $paymentsLoaded,
+                    $paymentsLoaded ? "User {$userWithPayments->id} has {$userWithPayments->payments->count()} payments" : 'Payments relationship not loaded',
+                    $paymentsLoaded ? null : 'User->payments relationship returned null - check hasMany relationship definition in User model'
+                );
+            } else {
+                $this->addTestResult(
+                    'User -> Payments relationship',
+                    false,
+                    'No users found in database',
+                    'Cannot test relationship - no users exist in the database'
                 );
             }
             
             // Test User -> MembershipRenewals relationship
             $userWithRenewals = User::with('membershipRenewals')->first();
             if ($userWithRenewals) {
+                $renewalsLoaded = $userWithRenewals->membershipRenewals !== null;
                 $this->addTestResult(
                     'User -> MembershipRenewals relationship',
-                    $userWithRenewals->membershipRenewals !== null,
-                    'Relationship loads correctly'
+                    $renewalsLoaded,
+                    $renewalsLoaded ? "User {$userWithRenewals->id} has {$userWithRenewals->membershipRenewals->count()} renewals" : 'MembershipRenewals relationship not loaded',
+                    $renewalsLoaded ? null : 'User->membershipRenewals relationship returned null - check hasMany relationship definition in User model'
+                );
+            } else {
+                $this->addTestResult(
+                    'User -> MembershipRenewals relationship',
+                    false,
+                    'No users found in database',
+                    'Cannot test relationship - no users exist in the database'
                 );
             }
             
             // Test MembershipRenewal -> User relationship
             $renewal = MembershipRenewal::with('user')->first();
             if ($renewal) {
+                $userLoaded = $renewal->user !== null;
                 $this->addTestResult(
                     'MembershipRenewal -> User relationship',
-                    $renewal->user !== null,
-                    'Relationship loads correctly'
+                    $userLoaded,
+                    $userLoaded ? "Renewal {$renewal->id} belongs to user {$renewal->user->name} (ID: {$renewal->user->id})" : 'User relationship not loaded',
+                    $userLoaded ? null : 'MembershipRenewal->user relationship returned null - check belongsTo relationship definition in MembershipRenewal model'
+                );
+            } else {
+                $this->addTestResult(
+                    'MembershipRenewal -> User relationship',
+                    false,
+                    'No membership renewals found in database',
+                    'Cannot test relationship - no membership renewals exist in the database'
                 );
             }
             
             // Test MembershipRenewal -> Payment relationship
             $renewalWithPayment = MembershipRenewal::with('payment')->first();
             if ($renewalWithPayment) {
+                $paymentLoaded = $renewalWithPayment->payment !== null;
                 $this->addTestResult(
                     'MembershipRenewal -> Payment relationship',
-                    $renewalWithPayment->payment !== null,
-                    'Relationship loads correctly'
+                    $paymentLoaded,
+                    $paymentLoaded ? "Renewal {$renewalWithPayment->id} linked to payment {$renewalWithPayment->payment->id}" : 'Payment relationship not loaded',
+                    $paymentLoaded ? null : 'MembershipRenewal->payment relationship returned null - check belongsTo relationship definition or foreign key constraint'
+                );
+            } else {
+                $this->addTestResult(
+                    'MembershipRenewal -> Payment relationship',
+                    false,
+                    'No membership renewals found in database',
+                    'Cannot test relationship - no membership renewals exist in the database'
                 );
             }
             
         } catch (\Exception $e) {
-            $this->addTestResult('Database Relationships', false, 'Exception: ' . $e->getMessage());
+            $this->addTestResult(
+                'Database Relationships', 
+                false, 
+                'Critical database error occurred',
+                "Exception: {$e->getMessage()}\nFile: {$e->getFile()}\nLine: {$e->getLine()}\n\nThis indicates a serious database connectivity or model configuration issue."
+            );
         }
     }
 
@@ -631,15 +672,33 @@ class TestingDashboardController extends Controller
         ];
     }
 
-    private function addTestResult($testName, $passed, $details = '')
+    private function addTestResult($testName, $passed, $details = '', $error = null)
     {
-        $this->testResults[] = [
+        $result = [
             'type' => 'test',
             'name' => $testName,
             'passed' => $passed,
             'details' => $details,
+            'duration' => '< 1ms',
             'timestamp' => now()->toISOString()
         ];
+        
+        // Add detailed error information if test failed
+        if (!$passed) {
+            if ($error) {
+                $result['error'] = $error;
+                if ($details && $details !== $error) {
+                    $result['error_details'] = $details;
+                }
+            } elseif ($details) {
+                // If no separate error provided, use details as error
+                $result['error'] = $details;
+            } else {
+                $result['error'] = 'Test failed - no details provided';
+            }
+        }
+        
+        $this->testResults[] = $result;
     }
 
     private function generateSummary()

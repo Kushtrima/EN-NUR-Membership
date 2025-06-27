@@ -89,74 +89,97 @@
         .test-results {
             background: white;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             overflow: hidden;
+            margin-bottom: 2rem;
         }
         
-        .test-category {
+        .test-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .test-table th {
             background: #f8f9fa;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #e9ecef;
-            font-weight: bold;
-            font-size: 1.1rem;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
             color: #495057;
-        }
-        
-        .test-item {
-            padding: 1rem 1.5rem;
             border-bottom: 1px solid #e9ecef;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            font-size: 0.9rem;
         }
         
-        .test-item:last-child {
-            border-bottom: none;
+        .test-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f1f3f4;
+            vertical-align: top;
         }
         
-        .test-item.passed {
-            background: rgba(40, 167, 69, 0.05);
+        .test-table tr:hover {
+            background: #f8f9fa;
         }
         
-        .test-item.failed {
+        .test-table tr.failed {
+            background: rgba(220, 53, 69, 0.02);
+        }
+        
+        .test-table tr.failed:hover {
             background: rgba(220, 53, 69, 0.05);
         }
         
         .test-name {
-            flex: 1;
             font-weight: 500;
+            color: #2d3748;
+        }
+        
+        .test-category-name {
+            color: #4a5568;
+            font-size: 0.85rem;
         }
         
         .test-status {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
         }
         
-        .test-icon {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
+        .status-pass {
+            color: #28a745;
         }
         
-        .test-icon.passed {
-            background: #28a745;
+        .status-fail {
+            color: #dc3545;
         }
         
-        .test-icon.failed {
-            background: #dc3545;
+        .test-error {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #c53030;
+            font-family: 'Monaco', 'Menlo', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
         
-        .test-details {
+        .test-duration {
+            color: #718096;
+            font-size: 0.8rem;
+        }
+        
+        .category-divider {
+            background: #e2e8f0;
+            font-weight: 600;
+            color: #4a5568;
             font-size: 0.9rem;
-            color: #666;
-            margin-left: 1rem;
+        }
+        
+        .category-divider td {
+            padding: 0.5rem 1rem;
         }
         
         .loading {
@@ -315,30 +338,58 @@
                 successRateCard.className = 'summary-card danger';
             }
             
-            // Build results HTML
-            let resultsHTML = '';
+            // Build minimal table HTML
+            let resultsHTML = `
+                <table class="test-table">
+                    <thead>
+                        <tr>
+                            <th>Test Name</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            let currentCategory = '';
             
             results.forEach(result => {
                 if (result.type === 'category') {
-                    resultsHTML += `<div class="test-category">${result.name}</div>`;
+                    currentCategory = result.name;
                 } else if (result.type === 'test') {
-                    const statusClass = result.passed ? 'passed' : 'failed';
-                    const iconClass = result.passed ? 'passed' : 'failed';
-                    const iconText = result.passed ? '✓' : '✗';
+                    const statusClass = result.passed ? '' : 'failed';
+                    const statusText = result.passed ? 'Pass' : 'Fail';
+                    const statusIcon = result.passed ? '✓' : '✗';
+                    const statusColorClass = result.passed ? 'status-pass' : 'status-fail';
+                    const duration = result.duration || '< 1ms';
                     
                     resultsHTML += `
-                        <div class="test-item ${statusClass}">
-                            <div class="test-name">
-                                ${result.name}
-                                ${result.details ? `<div class="test-details">${result.details}</div>` : ''}
-                            </div>
-                            <div class="test-status">
-                                <div class="test-icon ${iconClass}">${iconText}</div>
-                            </div>
-                        </div>
+                        <tr class="${statusClass}">
+                            <td>
+                                <div class="test-name">${result.name}</div>
+                                ${result.error ? `<div class="test-error">Error: ${result.error}${result.error_details ? '\n\nDetails:\n' + result.error_details : ''}</div>` : ''}
+                            </td>
+                            <td>
+                                <div class="test-category-name">${currentCategory}</div>
+                            </td>
+                            <td>
+                                <div class="test-status ${statusColorClass}">
+                                    ${statusIcon} ${statusText}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="test-duration">${duration}</div>
+                            </td>
+                        </tr>
                     `;
                 }
             });
+            
+            resultsHTML += `
+                    </tbody>
+                </table>
+            `;
             
             testResults.innerHTML = resultsHTML;
             
@@ -350,7 +401,7 @@
             if (summary.failed_tests === 0) {
                 showSuccess(`All ${summary.total_tests} tests passed! Your system is working perfectly.`);
             } else {
-                showWarning(`${summary.failed_tests} out of ${summary.total_tests} tests failed. Please review the results below.`);
+                showWarning(`${summary.failed_tests} out of ${summary.total_tests} tests failed. Please review the detailed error information below.`);
             }
         }
         
