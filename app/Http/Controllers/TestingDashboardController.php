@@ -10,6 +10,7 @@ use App\Services\MembershipService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 
 class TestingDashboardController extends Controller
 {
@@ -59,6 +60,13 @@ class TestingDashboardController extends Controller
             // Email & Notification Tests
             $this->testNotificationLogic();
             
+            // CRITICAL PRODUCTION TESTS
+            $this->testEmailConfiguration();
+            $this->testPaymentGateways();
+            $this->testEnvironmentConfiguration();
+            $this->testSecurityFeatures();
+            $this->testExternalDependencies();
+            
             return response()->json([
                 'success' => true,
                 'results' => $this->testResults,
@@ -73,8 +81,6 @@ class TestingDashboardController extends Controller
             ]);
         }
     }
-
-
 
     /**
      * Test membership status calculation logic
@@ -720,5 +726,374 @@ class TestingDashboardController extends Controller
             'success_rate' => $totalTests > 0 ? round(($passedTests / $totalTests) * 100, 2) : 0,
             'status' => $failedTests === 0 ? 'all_passed' : ($passedTests > $failedTests ? 'mostly_passed' : 'needs_attention')
         ];
+    }
+
+    /**
+     * Test email configuration and SMTP connectivity
+     */
+    private function testEmailConfiguration()
+    {
+        $this->addTestCategory('Email & SMTP Configuration');
+        
+        try {
+            // Test mail configuration
+            $mailDriver = config('mail.default');
+            $this->addTestResult(
+                'Mail driver configuration',
+                !empty($mailDriver),
+                $mailDriver ? "Driver: {$mailDriver}" : 'Mail driver not configured'
+            );
+            
+            // Test SMTP settings
+            if ($mailDriver === 'smtp') {
+                $host = config('mail.mailers.smtp.host');
+                $port = config('mail.mailers.smtp.port');
+                $username = config('mail.mailers.smtp.username');
+                $password = config('mail.mailers.smtp.password');
+                
+                $this->addTestResult(
+                    'SMTP host configuration',
+                    !empty($host),
+                    $host ? "Host: {$host}" : 'SMTP host not configured'
+                );
+                
+                $this->addTestResult(
+                    'SMTP credentials configured',
+                    !empty($username) && !empty($password),
+                    (!empty($username) && !empty($password)) ? 'SMTP credentials configured' : 'SMTP credentials missing'
+                );
+                
+                // Test SMTP connection (without sending email)
+                try {
+                    $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
+                        $host,
+                        $port,
+                        config('mail.mailers.smtp.encryption') === 'tls'
+                    );
+                    $transport->setUsername($username);
+                    $transport->setPassword($password);
+                    
+                    // Quick connection test
+                    $transport->start();
+                    $transport->stop();
+                    
+                    $this->addTestResult(
+                        'SMTP connection test',
+                        true,
+                        "Successfully connected to {$host}:{$port}"
+                    );
+                } catch (\Exception $e) {
+                    $this->addTestResult(
+                        'SMTP connection test',
+                        false,
+                        'SMTP connection failed: ' . $e->getMessage(),
+                        'Check SMTP credentials and server settings'
+                    );
+                }
+            }
+            
+            // Test mail from configuration
+            $fromAddress = config('mail.from.address');
+            $fromName = config('mail.from.name');
+            
+            $this->addTestResult(
+                'Mail from address configured',
+                !empty($fromAddress) && filter_var($fromAddress, FILTER_VALIDATE_EMAIL),
+                $fromAddress ? "From: {$fromName} <{$fromAddress}>" : 'Mail from address not configured'
+            );
+            
+        } catch (\Exception $e) {
+            $this->addTestResult('Email Configuration', false, 'Exception: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Test payment gateway configurations
+     */
+    private function testPaymentGateways()
+    {
+        $this->addTestCategory('Payment Gateway Configuration');
+        
+        try {
+            // Test Stripe configuration
+            $stripeKey = config('services.stripe.key');
+            $stripeSecret = config('services.stripe.secret');
+            
+            $this->addTestResult(
+                'Stripe publishable key configured',
+                !empty($stripeKey) && !in_array($stripeKey, ['your-stripe-key', 'pk_test_demo_key_replace_with_real']),
+                $stripeKey ? 'Stripe key configured' : 'Stripe key missing or demo'
+            );
+            
+            $this->addTestResult(
+                'Stripe secret key configured',
+                !empty($stripeSecret) && !in_array($stripeSecret, ['your-stripe-secret', 'sk_test_demo_key_replace_with_real']),
+                $stripeSecret ? 'Stripe secret configured' : 'Stripe secret missing or demo'
+            );
+            
+            // Test PayPal configuration
+            $paypalClientId = config('services.paypal.client_id');
+            $paypalSecret = config('services.paypal.client_secret');
+            $paypalMode = config('services.paypal.mode');
+            
+            $this->addTestResult(
+                'PayPal client ID configured',
+                !empty($paypalClientId) && !in_array($paypalClientId, ['your-paypal-client-id', 'demo_client_id_replace_with_real']),
+                $paypalClientId ? "PayPal configured ({$paypalMode} mode)" : 'PayPal client ID missing or demo'
+            );
+            
+            $this->addTestResult(
+                'PayPal secret configured',
+                !empty($paypalSecret) && !in_array($paypalSecret, ['your-paypal-secret', 'demo_client_secret_replace_with_real']),
+                $paypalSecret ? 'PayPal secret configured' : 'PayPal secret missing or demo'
+            );
+            
+            // Test payment amount configuration
+            $membershipAmount = config('app.membership_amount', 35000);
+            $this->addTestResult(
+                'Membership amount configured',
+                is_numeric($membershipAmount) && $membershipAmount > 0,
+                "Membership amount: CHF " . number_format($membershipAmount / 100, 2)
+            );
+            
+        } catch (\Exception $e) {
+            $this->addTestResult('Payment Gateway Configuration', false, 'Exception: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Test environment configuration
+     */
+    private function testEnvironmentConfiguration()
+    {
+        $this->addTestCategory('Environment Configuration');
+        
+        try {
+            // Test APP_KEY
+            $appKey = config('app.key');
+            $this->addTestResult(
+                'Application key configured',
+                !empty($appKey),
+                $appKey ? 'App key configured' : 'App key missing - run php artisan key:generate'
+            );
+            
+            // Test APP_ENV
+            $appEnv = config('app.env');
+            $this->addTestResult(
+                'Environment setting',
+                !empty($appEnv),
+                "Environment: {$appEnv}"
+            );
+            
+            // Test APP_DEBUG for production
+            $appDebug = config('app.debug');
+            $this->addTestResult(
+                'Debug mode setting',
+                $appEnv === 'production' ? !$appDebug : true,
+                $appEnv === 'production' && $appDebug ? 'WARNING: Debug enabled in production' : "Debug: " . ($appDebug ? 'enabled' : 'disabled')
+            );
+            
+            // Test APP_URL
+            $appUrl = config('app.url');
+            $this->addTestResult(
+                'Application URL configured',
+                !empty($appUrl) && filter_var($appUrl, FILTER_VALIDATE_URL),
+                $appUrl ?: 'App URL not configured'
+            );
+            
+            // Test timezone
+            $timezone = config('app.timezone');
+            $this->addTestResult(
+                'Timezone configuration',
+                !empty($timezone),
+                "Timezone: {$timezone}"
+            );
+            
+            // Test session configuration
+            $sessionDriver = config('session.driver');
+            $this->addTestResult(
+                'Session driver configured',
+                !empty($sessionDriver),
+                "Session driver: {$sessionDriver}"
+            );
+            
+            // Test cache configuration
+            $cacheDriver = config('cache.default');
+            $this->addTestResult(
+                'Cache driver configured',
+                !empty($cacheDriver),
+                "Cache driver: {$cacheDriver}"
+            );
+            
+        } catch (\Exception $e) {
+            $this->addTestResult('Environment Configuration', false, 'Exception: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Test security features
+     */
+    private function testSecurityFeatures()
+    {
+        $this->addTestCategory('Security Features');
+        
+        try {
+            // Test HTTPS in production
+            $isHttps = request()->isSecure();
+            $appEnv = config('app.env');
+            
+            $this->addTestResult(
+                'HTTPS security',
+                $appEnv !== 'production' || $isHttps,
+                $isHttps ? 'HTTPS enabled' : ($appEnv === 'production' ? 'WARNING: HTTP in production' : 'HTTP (development)')
+            );
+            
+            // Test session security
+            $sessionSecure = config('session.secure');
+            $this->addTestResult(
+                'Secure session cookies',
+                $appEnv !== 'production' || $sessionSecure,
+                $sessionSecure ? 'Secure cookies enabled' : 'Secure cookies disabled'
+            );
+            
+            // Test CSRF protection
+            $csrfToken = csrf_token();
+            $this->addTestResult(
+                'CSRF protection',
+                !empty($csrfToken),
+                $csrfToken ? 'CSRF protection active' : 'CSRF protection disabled'
+            );
+            
+            // Test password hashing
+            $testPassword = 'test123';
+            $hashedPassword = Hash::make($testPassword);
+            $verificationResult = Hash::check($testPassword, $hashedPassword);
+            
+            $this->addTestResult(
+                'Password hashing system',
+                $verificationResult,
+                $verificationResult ? 'Password hashing working' : 'Password hashing failed'
+            );
+            
+            // Test bcrypt rounds
+            $bcryptRounds = config('hashing.bcrypt.rounds', 10);
+            $this->addTestResult(
+                'Password hash strength',
+                $bcryptRounds >= 12,
+                "Bcrypt rounds: {$bcryptRounds}" . ($bcryptRounds < 12 ? ' (consider increasing to 12+)' : '')
+            );
+            
+        } catch (\Exception $e) {
+            $this->addTestResult('Security Features', false, 'Exception: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Test external dependencies and system requirements
+     */
+    private function testExternalDependencies()
+    {
+        $this->addTestCategory('External Dependencies');
+        
+        try {
+            // Test storage directory permissions
+            $storagePath = storage_path();
+            $storageWritable = is_writable($storagePath);
+            
+            $this->addTestResult(
+                'Storage directory writable',
+                $storageWritable,
+                $storageWritable ? 'Storage writable' : 'Storage not writable - check permissions'
+            );
+            
+            // Test bootstrap/cache permissions
+            $cachePath = base_path('bootstrap/cache');
+            $cacheWritable = is_writable($cachePath);
+            
+            $this->addTestResult(
+                'Bootstrap cache writable',
+                $cacheWritable,
+                $cacheWritable ? 'Cache writable' : 'Cache not writable - check permissions'
+            );
+            
+            // Test required PHP extensions
+            $requiredExtensions = ['pdo', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'json'];
+            $missingExtensions = [];
+            
+            foreach ($requiredExtensions as $extension) {
+                if (!extension_loaded($extension)) {
+                    $missingExtensions[] = $extension;
+                }
+            }
+            
+            $this->addTestResult(
+                'Required PHP extensions',
+                empty($missingExtensions),
+                empty($missingExtensions) ? 'All extensions loaded' : 'Missing: ' . implode(', ', $missingExtensions)
+            );
+            
+            // Test database-specific extension
+            $dbConnection = config('database.default');
+            $dbExtension = $dbConnection === 'pgsql' ? 'pdo_pgsql' : 'pdo_mysql';
+            
+            $this->addTestResult(
+                "Database extension ({$dbExtension})",
+                extension_loaded($dbExtension),
+                extension_loaded($dbExtension) ? "{$dbExtension} loaded" : "{$dbExtension} missing"
+            );
+            
+            // Test disk space (if possible)
+            $diskFree = disk_free_space(storage_path());
+            $diskTotal = disk_total_space(storage_path());
+            
+            if ($diskFree !== false && $diskTotal !== false) {
+                $diskUsagePercent = (($diskTotal - $diskFree) / $diskTotal) * 100;
+                $freeSpaceGB = round($diskFree / (1024 * 1024 * 1024), 2);
+                
+                $this->addTestResult(
+                    'Disk space availability',
+                    $diskUsagePercent < 90,
+                    "Free space: {$freeSpaceGB}GB (" . round(100 - $diskUsagePercent, 1) . "% available)"
+                );
+            }
+            
+            // Test memory limit
+            $memoryLimit = ini_get('memory_limit');
+            $memoryLimitBytes = $this->parseMemoryLimit($memoryLimit);
+            $recommendedMemory = 256 * 1024 * 1024; // 256MB
+            
+            $this->addTestResult(
+                'PHP memory limit',
+                $memoryLimitBytes >= $recommendedMemory || $memoryLimit === '-1',
+                "Memory limit: {$memoryLimit}" . ($memoryLimitBytes < $recommendedMemory && $memoryLimit !== '-1' ? ' (consider increasing)' : '')
+            );
+            
+        } catch (\Exception $e) {
+            $this->addTestResult('External Dependencies', false, 'Exception: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Parse memory limit string to bytes
+     */
+    private function parseMemoryLimit($memoryLimit)
+    {
+        if ($memoryLimit === '-1') {
+            return PHP_INT_MAX;
+        }
+        
+        $unit = strtolower(substr($memoryLimit, -1));
+        $value = (int) substr($memoryLimit, 0, -1);
+        
+        switch ($unit) {
+            case 'g':
+                return $value * 1024 * 1024 * 1024;
+            case 'm':
+                return $value * 1024 * 1024;
+            case 'k':
+                return $value * 1024;
+            default:
+                return (int) $memoryLimit;
+        }
     }
 } 
