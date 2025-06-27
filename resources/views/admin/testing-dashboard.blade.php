@@ -202,14 +202,14 @@
     <div class="test-dashboard">
         <!-- Header -->
         <div class="test-header">
-            <h1 style="margin: 0 0 0.5rem 0; font-size: 2.5rem;">🧪 Testing Dashboard</h1>
+            <h1 style="margin: 0 0 0.5rem 0; font-size: 2.5rem;">Testing Dashboard</h1>
             <p style="margin: 0; opacity: 0.9; font-size: 1.1rem;">Comprehensive Business Logic & System Testing</p>
         </div>
 
         <!-- Controls -->
         <div class="test-controls">
             <button id="runTestsBtn" class="run-tests-btn" onclick="runAllTests()">
-                🚀 Run All Tests
+                Run All Tests
             </button>
             <p style="margin: 1rem 0 0 0; color: #666;">
                 This will test all business logic, data integrity, system integration, and performance
@@ -262,7 +262,7 @@
             
             // Show loading state
             runBtn.disabled = true;
-            runBtn.textContent = '⏳ Running Tests...';
+            runBtn.textContent = 'Running Tests...';
             loadingState.style.display = 'block';
             testSummary.style.display = 'none';
             testResults.style.display = 'none';
@@ -290,7 +290,7 @@
                 // Hide loading state
                 loadingState.style.display = 'none';
                 runBtn.disabled = false;
-                runBtn.textContent = '🚀 Run All Tests';
+                runBtn.textContent = 'Run All Tests';
             }
         }
         
