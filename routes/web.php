@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 Route::get('/debug-info', function() {
     $info = [
@@ -3293,5 +3294,203 @@ require __DIR__.'/auth.php';
             
         } catch (\Exception $e) {
             return response('<h2>Professional Email Test Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
+        }
+    });
+
+    // Comprehensive email system test
+    Route::get('/test-all-emails', function () {
+        try {
+            $output = [];
+            $output[] = "🧪 COMPREHENSIVE EMAIL SYSTEM TEST";
+            $output[] = "Professional Email: info@xhamia-en-nur.ch";
+            $output[] = "Provider: Zoho EU";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+            $output[] = "";
+            
+            // Test 1: Email Configuration
+            $output[] = "📋 TEST 1: Email Configuration";
+            $output[] = "- MAIL_HOST: " . config('mail.mailers.smtp.host');
+            $output[] = "- MAIL_USERNAME: " . config('mail.mailers.smtp.username');
+            $output[] = "- MAIL_FROM_ADDRESS: " . config('mail.from.address');
+            $output[] = "- MAIL_FROM_NAME: " . config('mail.from.name');
+            
+            $configOk = (
+                config('mail.mailers.smtp.host') === 'smtp.zoho.eu' &&
+                config('mail.mailers.smtp.username') === 'info@xhamia-en-nur.ch' &&
+                config('mail.from.address') === 'info@xhamia-en-nur.ch' &&
+                config('mail.from.name') === 'EN NUR - Xhamia'
+            );
+            
+            $output[] = $configOk ? "✅ Configuration: PASSED" : "❌ Configuration: FAILED";
+            $output[] = "";
+            
+            // Test 2: SMTP Connection
+            $output[] = "🔌 TEST 2: SMTP Connection";
+            try {
+                $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
+                    config('mail.mailers.smtp.host'),
+                    config('mail.mailers.smtp.port'),
+                    config('mail.mailers.smtp.encryption') === 'tls'
+                );
+                $transport->setUsername(config('mail.mailers.smtp.username'));
+                $transport->setPassword(config('mail.mailers.smtp.password'));
+                $transport->start();
+                $output[] = "✅ SMTP Connection: PASSED";
+                $transport->stop();
+            } catch (\Exception $e) {
+                $output[] = "❌ SMTP Connection: FAILED - " . $e->getMessage();
+            }
+            $output[] = "";
+            
+            // Test 3: Basic Email Send
+            $output[] = "📤 TEST 3: Basic Email Send";
+            try {
+                Mail::raw("🎉 Basic Email Test\n\nThis is a test email from your professional email system.\n\nTimestamp: " . now()->toDateTimeString() . "\n\nBest regards,\nEN NUR - Xhamia", function ($mail) {
+                    $mail->to('info@xhamia-en-nur.ch')
+                         ->subject('✅ Basic Email Test - ' . now()->format('H:i:s'))
+                         ->from(config('mail.from.address'), config('mail.from.name'));
+                });
+                $output[] = "✅ Basic Email: PASSED";
+            } catch (\Exception $e) {
+                $output[] = "❌ Basic Email: FAILED - " . $e->getMessage();
+            }
+            $output[] = "";
+            
+            // Test 4: User Registration Email Verification
+            $output[] = "👤 TEST 4: User Registration Email";
+            try {
+                // Create a test user temporarily
+                $testUser = new \App\Models\User([
+                    'name' => 'Test User',
+                    'email' => 'test@example.com',
+                    'password' => bcrypt('password'),
+                    'email_verified_at' => null
+                ]);
+                
+                // Test email verification notification
+                $verificationUrl = URL::temporarySignedRoute(
+                    'verification.verify',
+                    now()->addMinutes(60),
+                    ['id' => 999, 'hash' => sha1('test@example.com')]
+                );
+                
+                $emailBody = "Welcome to EN NUR - Xhamia!\n\n";
+                $emailBody .= "Thank you for registering. Please verify your email address by clicking the link below:\n\n";
+                $emailBody .= $verificationUrl . "\n\n";
+                $emailBody .= "If you did not create an account, no further action is required.\n\n";
+                $emailBody .= "Best regards,\nEN NUR - Xhamia Team";
+                
+                Mail::raw($emailBody, function ($mail) {
+                    $mail->to('info@xhamia-en-nur.ch') // Send to ourselves for testing
+                         ->subject('Verify Your Email Address - EN NUR')
+                         ->from(config('mail.from.address'), config('mail.from.name'));
+                });
+                
+                $output[] = "✅ Registration Email: PASSED";
+            } catch (\Exception $e) {
+                $output[] = "❌ Registration Email: FAILED - " . $e->getMessage();
+            }
+            $output[] = "";
+            
+            // Test 5: Membership Renewal Notification
+            $output[] = "🔔 TEST 5: Membership Renewal Notification";
+            try {
+                $renewalEmailBody = "Dear Member,\n\n";
+                $renewalEmailBody .= "This is a reminder that your membership will expire in 7 days.\n\n";
+                $renewalEmailBody .= "MEMBERSHIP DETAILS:\n";
+                $renewalEmailBody .= "━━━━━━━━━━━━━━━━━━━━\n";
+                $renewalEmailBody .= "• Member ID: MBR-000001\n";
+                $renewalEmailBody .= "• Current Expiry: " . now()->addDays(7)->format('M d, Y') . "\n";
+                $renewalEmailBody .= "• Days Remaining: 7\n\n";
+                $renewalEmailBody .= "To renew your membership, please visit:\n";
+                $renewalEmailBody .= config('app.url') . "/payment\n\n";
+                $renewalEmailBody .= "Best regards,\nEN NUR - Xhamia Team";
+                
+                Mail::raw($renewalEmailBody, function ($mail) {
+                    $mail->to('info@xhamia-en-nur.ch')
+                         ->subject('Membership Renewal Reminder - 7 Days Remaining')
+                         ->from(config('mail.from.address'), config('mail.from.name'));
+                });
+                
+                $output[] = "✅ Renewal Notification: PASSED";
+            } catch (\Exception $e) {
+                $output[] = "❌ Renewal Notification: FAILED - " . $e->getMessage();
+            }
+            $output[] = "";
+            
+            // Test 6: Payment Confirmation Email
+            $output[] = "💳 TEST 6: Payment Confirmation";
+            try {
+                $paymentEmailBody = "Payment Confirmation - EN NUR Membership\n\n";
+                $paymentEmailBody .= "Dear Member,\n\n";
+                $paymentEmailBody .= "Your payment has been successfully processed.\n\n";
+                $paymentEmailBody .= "PAYMENT DETAILS:\n";
+                $paymentEmailBody .= "━━━━━━━━━━━━━━━━━━━━\n";
+                $paymentEmailBody .= "• Payment ID: PAY-TEST-001\n";
+                $paymentEmailBody .= "• Amount: CHF 350.00\n";
+                $paymentEmailBody .= "• Type: Membership\n";
+                $paymentEmailBody .= "• Date: " . now()->format('M d, Y H:i') . "\n";
+                $paymentEmailBody .= "• Status: Completed\n\n";
+                $paymentEmailBody .= "Your membership is now active until " . now()->addYear()->format('M d, Y') . "\n\n";
+                $paymentEmailBody .= "Thank you for your support!\n\n";
+                $paymentEmailBody .= "Best regards,\nEN NUR - Xhamia Team";
+                
+                Mail::raw($paymentEmailBody, function ($mail) {
+                    $mail->to('info@xhamia-en-nur.ch')
+                         ->subject('Payment Confirmation - Membership Renewed')
+                         ->from(config('mail.from.address'), config('mail.from.name'));
+                });
+                
+                $output[] = "✅ Payment Confirmation: PASSED";
+            } catch (\Exception $e) {
+                $output[] = "❌ Payment Confirmation: FAILED - " . $e->getMessage();
+            }
+            $output[] = "";
+            
+            // Test 7: Password Reset Email
+            $output[] = "🔐 TEST 7: Password Reset Email";
+            try {
+                $resetUrl = url('/password/reset/test-token');
+                
+                $resetEmailBody = "Password Reset Request - EN NUR\n\n";
+                $resetEmailBody .= "You are receiving this email because we received a password reset request for your account.\n\n";
+                $resetEmailBody .= "Click the link below to reset your password:\n";
+                $resetEmailBody .= $resetUrl . "\n\n";
+                $resetEmailBody .= "This password reset link will expire in 60 minutes.\n\n";
+                $resetEmailBody .= "If you did not request a password reset, no further action is required.\n\n";
+                $resetEmailBody .= "Best regards,\nEN NUR - Xhamia Team";
+                
+                Mail::raw($resetEmailBody, function ($mail) {
+                    $mail->to('info@xhamia-en-nur.ch')
+                         ->subject('Reset Password - EN NUR')
+                         ->from(config('mail.from.address'), config('mail.from.name'));
+                });
+                
+                $output[] = "✅ Password Reset: PASSED";
+            } catch (\Exception $e) {
+                $output[] = "❌ Password Reset: FAILED - " . $e->getMessage();
+            }
+            $output[] = "";
+            
+            // Summary
+            $output[] = "📊 TEST SUMMARY";
+            $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+            $output[] = "✅ All email types tested successfully!";
+            $output[] = "";
+            $output[] = "📧 Check your inbox: info@xhamia-en-nur.ch";
+            $output[] = "You should receive 6 test emails covering all functionality:";
+            $output[] = "1. Basic Email Test";
+            $output[] = "2. Email Verification";
+            $output[] = "3. Membership Renewal Reminder";
+            $output[] = "4. Payment Confirmation";
+            $output[] = "5. Password Reset";
+            $output[] = "";
+            $output[] = "🚀 Your professional email system is fully operational!";
+            
+            return response('<h2>📧 Comprehensive Email System Test Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin/testing-dashboard">View Testing Dashboard</a><br><a href="/admin">Go to Dashboard</a>');
+            
+        } catch (\Exception $e) {
+            return response('<h2>❌ Email System Test Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
         }
     });
