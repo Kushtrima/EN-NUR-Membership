@@ -1903,7 +1903,6 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/testing-dashboard', [App\Http\Controllers\TestingDashboardController::class, 'index'])->name('testing-dashboard');
     Route::post('/testing-dashboard/run-tests', [App\Http\Controllers\TestingDashboardController::class, 'runAllTests'])->name('testing-dashboard.run-tests');
-    Route::get('/testing-dashboard/system-logs', [App\Http\Controllers\TestingDashboardController::class, 'getSystemLogs'])->name('testing-dashboard.system-logs');
 });
 
     // Email test route

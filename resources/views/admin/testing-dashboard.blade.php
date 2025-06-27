@@ -459,10 +459,7 @@
                 <!-- Results will be populated here -->
             </div>
 
-            <!-- System Logs -->
-            <div id="systemLogs" class="test-results" style="display: none;">
-                <!-- Logs will be populated here -->
-            </div>
+
 
             <!-- Loading State -->
             <div id="loadingState" class="loading" style="display: none;">
@@ -629,88 +626,7 @@
             }
         }
         
-        async function showSystemLogs() {
-            const viewLogsBtn = document.getElementById('viewLogsBtn');
-            const testResults = document.getElementById('testResults');
-            const systemLogs = document.getElementById('systemLogs');
-            const testSummary = document.getElementById('testSummary');
-            const loadingState = document.getElementById('loadingState');
-            
-            // Show loading state
-            viewLogsBtn.disabled = true;
-            viewLogsBtn.textContent = 'Loading...';
-            loadingState.style.display = 'block';
-            testResults.style.display = 'none';
-            systemLogs.style.display = 'none';
-            testSummary.style.display = 'none';
-            
-            try {
-                const response = await fetch('/testing-dashboard/system-logs', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    displaySystemLogs(data.logs, data.stats);
-                } else {
-                    showError('Failed to load system logs: ' + (data.error || 'Unknown error'));
-                }
-                
-            } catch (error) {
-                showError('Failed to load system logs: ' + error.message);
-            } finally {
-                // Hide loading state
-                loadingState.style.display = 'none';
-                viewLogsBtn.disabled = false;
-                viewLogsBtn.textContent = 'View System Logs';
-            }
-        }
-        
-        function displaySystemLogs(logs, stats) {
-            const systemLogs = document.getElementById('systemLogs');
-            
-            let logsHTML = `
-                <div class="logs-header">
-                    System Logs (Last 30 Days)
-                    <span class="logs-stats">
-                        ${stats.total_logs} entries • ${stats.error_count} errors • ${stats.warning_count} warnings
-                    </span>
-                </div>
-            `;
-            
-            if (logs.length === 0) {
-                logsHTML += `
-                    <div style="padding: 2rem; text-align: center; color: #a0aec0;">
-                        No log entries found in the last 30 days
-                    </div>
-                `;
-            } else {
-                logs.forEach(log => {
-                    const levelClass = log.level.toLowerCase();
-                    const timestamp = new Date(log.timestamp).toLocaleString();
-                    
-                    logsHTML += `
-                        <div class="log-entry">
-                            <span class="log-timestamp">${timestamp}</span>
-                            <span class="log-level ${levelClass}">${log.level}</span>
-                            <span class="log-message">${log.message}</span>
-                            ${log.context ? `<div class="log-context">${log.context}</div>` : ''}
-                        </div>
-                    `;
-                });
-            }
-            
-            systemLogs.innerHTML = logsHTML;
-            systemLogs.style.display = 'block';
-            
-            // Show success message
-            showSuccess(`Loaded ${logs.length} log entries from the last 30 days. Auto-cleanup enabled.`);
-        }
+
         
         function generateErrorDisplay(error, errorDetails) {
             // Determine error severity based on keywords
