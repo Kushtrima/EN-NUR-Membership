@@ -424,9 +424,6 @@
                     <button id="runTestsBtn" class="run-tests-btn" onclick="runAllTests()">
                         Execute Tests
                     </button>
-                    <button id="viewLogsBtn" class="run-tests-btn" onclick="showSystemLogs()" style="background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);">
-                        View System Logs
-                    </button>
                 </div>
             </div>
 
