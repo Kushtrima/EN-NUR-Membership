@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Super Admin',
                 'email_verified_at' => now(),
-                'password' => Hash::make('superadmin123'),
+                'password' => Hash::make(env('SUPER_ADMIN_PASSWORD', 'change-me')),
                 'role' => User::ROLE_SUPER_ADMIN,
             ]
         );
@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Admin',
                 'email_verified_at' => now(),
-                'password' => Hash::make('admin123'),
+                'password' => Hash::make(env('ADMIN_DEFAULT_PASSWORD', 'change-me')),
                 'role' => User::ROLE_ADMIN,
             ]
         );
@@ -43,7 +43,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Test User',
                 'email_verified_at' => now(),
-                'password' => Hash::make('password'),
+                'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
                 'role' => User::ROLE_USER,
             ]
         );
@@ -54,7 +54,7 @@ class DatabaseSeeder extends Seeder
         $expiredUser = User::create([
             'name' => 'John Expired',
             'email' => 'expired@test.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
             'role' => 'user',
             'email_verified_at' => now(),
         ]);
@@ -85,7 +85,7 @@ class DatabaseSeeder extends Seeder
         $expiringUser = User::create([
             'name' => 'Sarah Expiring',
             'email' => 'expiring@test.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
             'role' => 'user',
             'email_verified_at' => now(),
         ]);
@@ -116,7 +116,7 @@ class DatabaseSeeder extends Seeder
         $hiddenUser = User::create([
             'name' => 'Mike Hidden',
             'email' => 'hidden@test.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
             'role' => 'user',
             'email_verified_at' => now(),
         ]);
@@ -148,6 +148,6 @@ class DatabaseSeeder extends Seeder
         $this->command->info('🔴 John Expired (expired@test.com) - RED background');
         $this->command->info('🟠 Sarah Expiring (expiring@test.com) - ORANGE background'); 
         $this->command->info('⚪ Mike Hidden (hidden@test.com) - GRAY background');
-        $this->command->info('Password for all: password');
+        $this->command->info('Password for all: [CONFIGURED_VIA_TEST_USER_PASSWORD_ENV]');
     }
 } 

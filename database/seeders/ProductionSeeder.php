@@ -22,14 +22,14 @@ class ProductionSeeder extends Seeder
             [
                 'name' => 'EN NUR Admin',
                 'email_verified_at' => now(),
-                'password' => Hash::make('ENnur2025!Admin'), // Strong temporary password
+                'password' => Hash::make(env('ADMIN_DEFAULT_PASSWORD', 'change-me-immediately')), // Environment configured password
                 'role' => User::ROLE_SUPER_ADMIN,
             ]
         );
 
         $this->command->info('✅ Production admin created successfully');
         $this->command->info('🔐 Admin Login: admin@ennur.ch');
-        $this->command->info('🔑 Temporary Password: ENnur2025!Admin');
+        $this->command->info('🔑 Password: [CONFIGURED_VIA_ADMIN_DEFAULT_PASSWORD_ENV]');
         $this->command->info('⚠️  CHANGE PASSWORD IMMEDIATELY AFTER FIRST LOGIN!');
     }
 } 

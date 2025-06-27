@@ -202,7 +202,7 @@ class CreateExpiredTestUsers extends Command
             $user = User::create([
                 'name' => $userData['name'],
                 'email' => $userData['email'],
-                'password' => Hash::make('TestPassword123!'),
+                'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
                 'role' => User::ROLE_USER,
                 'email_verified_at' => now(),
             ]);
@@ -277,7 +277,7 @@ class CreateExpiredTestUsers extends Command
                 'name' => 'Sara Test User',
                 'email' => $email,
                 'email_verified_at' => now(),
-                'password' => Hash::make('TestPassword123!'),
+                'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
                 'role' => 'user'
             ]);
             

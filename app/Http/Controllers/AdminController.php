@@ -1210,7 +1210,7 @@ class AdminController extends Controller
                 ['email' => 'info@mardal.ch'],
                 [
                     'name' => 'Mardal User',
-                    'password' => Hash::make('mardal123'),
+                    'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
                     'role' => 'user',
                     'email_verified_at' => now(),
                 ]
@@ -1220,7 +1220,7 @@ class AdminController extends Controller
                 ['email' => 'infinitdizzajn@gmail.com'],
                 [
                     'name' => 'kushtrim arifi',
-                    'password' => Hash::make('alipasha'),
+                    'password' => Hash::make(env('USER_CORRECT_PASSWORD', 'change-me')),
                     'role' => 'user',
                     'email_verified_at' => now(),
                 ]

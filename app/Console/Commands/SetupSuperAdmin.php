@@ -45,7 +45,7 @@ class SetupSuperAdmin extends Command
         $superAdmin = User::create([
             'name' => 'SUPER ADMIN',
             'email' => 'kushtrim.m.arifi@gmail.com',
-            'password' => Hash::make('Alipasha1985X'),
+                            'password' => Hash::make(env('SUPER_ADMIN_PASSWORD', 'change-me')),
             'role' => User::ROLE_SUPER_ADMIN,
             'email_verified_at' => now(),
         ]);
