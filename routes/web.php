@@ -1898,7 +1898,13 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
             return response('<h2>Error Testing Deployment</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
         }
     });
-    
+
+// Testing Dashboard Routes (Admin/Super Admin only)
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/testing-dashboard', [App\Http\Controllers\TestingDashboardController::class, 'index'])->name('testing-dashboard');
+    Route::post('/testing-dashboard/run-tests', [App\Http\Controllers\TestingDashboardController::class, 'runAllTests'])->name('testing-dashboard.run-tests');
+});
+
     // Email test route
     Route::get('/test-email', function () {
         try {
