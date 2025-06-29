@@ -1252,35 +1252,217 @@
         });
     </script>
 
-    <!-- Admin Personal Summary -->
+    <!-- Pending Cash Payments Management -->
     <div class="card">
-        <h2 class="card-title">My Personal Summary</h2>
-        @if(auth()->user()->payments->count() > 0)
-            @php
-                $totalPaid = auth()->user()->payments->where('status', 'completed')->sum('amount') / 100;
-                $totalDonations = auth()->user()->payments->where('payment_type', 'donation')->where('status', 'completed')->sum('amount') / 100;
-            @endphp
+        <h2 class="card-title" style="display: flex; align-items: center; gap: 0.5rem;">
+            <svg style="width: 1.2em; height: 1.2em; color: #C19A61;" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M21,4H3A2,2 0 0,0 1,6V18A2,2 0 0,0 3,20H21A2,2 0 0,0 23,18V6A2,2 0 0,0 21,4M21,18H3V6H21V18Z"/>
+            </svg>
+            Pending Cash Payments 
+            @if($pendingCashPayments->count() > 0)
+                <span style="background: #dc3545; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: normal;">
+                    {{ $pendingCashPayments->count() }} Awaiting Confirmation
+                </span>
+            @endif
+        </h2>
+        
+        @if($pendingCashPayments->count() > 0)
+            <p style="color: #666; margin-bottom: 1.5rem;">
+                Cash payments waiting for your confirmation. Click "Confirm Payment" when you receive the cash.
+            </p>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                <div style="text-align: center; padding: 1rem; background-color: #1F6E38; border-radius: 12px;">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: white;">CHF {{ number_format($totalPaid, 2) }}</div>
-                    <small style="color: white;">My Total Paid</small>
+            <!-- Summary Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                @php
+                    $totalPendingAmount = $pendingCashPayments->sum('amount') / 100;
+                    $membershipCount = $pendingCashPayments->where('payment_type', 'membership')->count();
+                    $donationCount = $pendingCashPayments->where('payment_type', 'donation')->count();
+                    $donationAmount = $pendingCashPayments->where('payment_type', 'donation')->sum('amount') / 100;
+                @endphp
+                
+                <div style="background: rgba(220, 53, 69, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #dc3545;">{{ $pendingCashPayments->count() }}</div>
+                    <small style="color: #666;">Pending Payments</small>
                 </div>
-                <div style="text-align: center; padding: 1rem; background-color: #C19A61; border-radius: 12px;">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: white;">CHF {{ number_format($totalDonations, 2) }}</div>
-                    <small style="color: white;">My Donations</small>
+                
+                <div style="background: rgba(193, 154, 97, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #C19A61;">CHF {{ number_format($totalPendingAmount, 2) }}</div>
+                    <small style="color: #666;">Total Amount</small>
                 </div>
-                <div style="text-align: center; padding: 1rem; background-color: #1F6E38; border-radius: 12px;">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: white;">{{ auth()->user()->payments->where('status', 'completed')->count() }}</div>
-                    <small style="color: white;">My Payments</small>
+                
+                <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #1F6E38;">{{ $membershipCount }}</div>
+                    <small style="color: #666;">Memberships</small>
+                </div>
+                
+                <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #1F6E38;">{{ $donationCount }}</div>
+                    <small style="color: #666;">Donations</small>
+                </div>
+            </div>
+            
+            <!-- Payments Table -->
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6; font-weight: 600;">User</th>
+                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6; font-weight: 600;">Type</th>
+                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6; font-weight: 600;">Amount</th>
+                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6; font-weight: 600;">Date</th>
+                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid #dee2e6; font-weight: 600;">Reference</th>
+                            <th style="padding: 1rem; text-align: center; border-bottom: 1px solid #dee2e6; font-weight: 600;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($pendingCashPayments as $payment)
+                            <tr style="border-bottom: 1px solid #f1f3f4;">
+                                <td style="padding: 1rem;">
+                                    <div style="font-weight: 600; color: #333;">{{ $payment->user->name }}</div>
+                                    <div style="font-size: 0.85rem; color: #666;">{{ $payment->user->email }}</div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    @if($payment->payment_type === 'membership')
+                                        <span style="background: #1F6E38; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 500;">
+                                            💎 Membership
+                                        </span>
+                                    @else
+                                        <span style="background: #C19A61; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 500;">
+                                            ❤️ Donation
+                                        </span>
+                                    @endif
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div style="font-weight: 600; color: #1F6E38; font-size: 1.1rem;">{{ $payment->formatted_amount }}</div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <div style="font-weight: 500;">{{ $payment->created_at->format('M d, Y') }}</div>
+                                    <div style="font-size: 0.85rem; color: #666;">{{ $payment->created_at->format('H:i') }}</div>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <code style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.9rem; color: #666;">
+                                        CASH-{{ $payment->id }}
+                                    </code>
+                                </td>
+                                <td style="padding: 1rem; text-align: center;">
+                                    <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                        <!-- Confirm Payment Button -->
+                                        <button onclick="confirmCashPayment({{ $payment->id }}, '{{ $payment->user->name }}', '{{ $payment->formatted_amount }}')"
+                                                style="background: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.3s ease;"
+                                                onmouseover="this.style.background='#218838'"
+                                                onmouseout="this.style.background='#28a745'">
+                                            ✅ Confirm
+                                        </button>
+                                        
+                                        <!-- View Details Button -->
+                                        <a href="{{ route('admin.payments.details', $payment) }}" 
+                                           style="background: #6c757d; color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.85rem; font-weight: 500; transition: all 0.3s ease;"
+                                           onmouseover="this.style.background='#5a6268'"
+                                           onmouseout="this.style.background='#6c757d'">
+                                            👁️ Details
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div style="margin-top: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #C19A61;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #C19A61;">💡 Quick Actions</h4>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="{{ route('admin.payments') }}" 
+                       style="background: #1F6E38; color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9rem;">
+                        📊 View All Payments
+                    </a>
+                    <a href="{{ route('admin.payments') }}?method=cash" 
+                       style="background: #C19A61; color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9rem;">
+                        💰 All Cash Payments
+                    </a>
                 </div>
             </div>
         @else
-            <div style="text-align: center; padding: 2rem; color: #666; background: rgba(31, 110, 56, 0.1); border-radius: 8px;">
-                <p><strong>Admin Account Notice:</strong></p>
-                <p>You haven't made any personal payments yet. As an admin, you can still make payments like regular users.</p>
-                <a href="{{ route('payment.create') }}" style="background: #1F6E38; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; margin-top: 1rem; display: inline-block;">Make a Payment</a>
+            <div style="text-align: center; padding: 3rem; color: #666; background: rgba(31, 110, 56, 0.1); border-radius: 8px;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                <h3 style="color: #1F6E38; margin-bottom: 0.5rem;">All Caught Up!</h3>
+                <p>No pending cash payments require confirmation at this time.</p>
+                <div style="margin-top: 1.5rem;">
+                    <a href="{{ route('admin.payments') }}" 
+                       style="background: #1F6E38; color: white; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 4px; font-weight: 500;">
+                        📊 View All Payments
+                    </a>
+                </div>
             </div>
         @endif
     </div>
+    
+    <!-- Cash Payment Confirmation Modal -->
+    <div id="cashConfirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 8px; padding: 2rem; max-width: 500px; width: 90%; margin: 1rem;">
+            <h3 style="margin: 0 0 1rem 0; color: #1F6E38;">Confirm Cash Payment</h3>
+            <div id="cashConfirmDetails" style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;"></div>
+            
+            <form id="cashConfirmForm" method="POST" style="margin-bottom: 1rem;">
+                @csrf
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Notes (Optional):</label>
+                    <textarea name="notes" placeholder="Add any notes about this cash payment confirmation..." 
+                              style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; resize: vertical; min-height: 80px;"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" onclick="closeCashConfirmModal()" 
+                            style="background: #6c757d; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            style="background: #28a745; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                        ✅ Confirm Payment Received
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        function confirmCashPayment(paymentId, userName, amount) {
+            const modal = document.getElementById('cashConfirmModal');
+            const form = document.getElementById('cashConfirmForm');
+            const details = document.getElementById('cashConfirmDetails');
+            
+            // Update form action
+            form.action = `/admin/payments/cash/confirm/${paymentId}`;
+            
+            // Update details
+            details.innerHTML = `
+                <div><strong>User:</strong> ${userName}</div>
+                <div><strong>Amount:</strong> ${amount}</div>
+                <div><strong>Payment ID:</strong> CASH-${paymentId}</div>
+                <div style="margin-top: 0.5rem; color: #dc3545; font-weight: 500;">⚠️ Only confirm if you have physically received the cash payment!</div>
+            `;
+            
+            // Show modal
+            modal.style.display = 'flex';
+        }
+        
+        function closeCashConfirmModal() {
+            document.getElementById('cashConfirmModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('cashConfirmModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCashConfirmModal();
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeCashConfirmModal();
+            }
+        });
+    </script>
 </x-app-layout> 

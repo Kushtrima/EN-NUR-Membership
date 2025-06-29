@@ -37,6 +37,13 @@ class DashboardController extends Controller
             'pending_payments' => \App\Models\Payment::where('status', \App\Models\Payment::STATUS_PENDING)->count(),
         ];
 
+        // Get pending cash payments for all admins
+        $pendingCashPayments = \App\Models\Payment::with('user')
+            ->where('payment_method', 'cash')
+            ->where('status', \App\Models\Payment::STATUS_PENDING)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         // Super Admin Analytics (only for super admins)
         $analytics = null;
         $renewals = null;
@@ -45,7 +52,7 @@ class DashboardController extends Controller
             $renewals = $this->getMembershipRenewals();
         }
 
-        return view('dashboard.admin', compact('stats', 'analytics', 'renewals'));
+        return view('dashboard.admin', compact('stats', 'analytics', 'renewals', 'pendingCashPayments'));
     }
     
     /**
