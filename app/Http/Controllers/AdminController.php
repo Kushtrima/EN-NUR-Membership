@@ -584,86 +584,129 @@ class AdminController extends Controller
     public function sendBulkNotifications()
     {
         try {
-            // Get all users with expiring memberships (≤30 days)
-            $renewals = MembershipRenewal::with('user')
+            // Get all expired users (days_until_expiry <= 0) that are not hidden
+            $expiredRenewals = MembershipRenewal::with('user')
                 ->where('is_hidden', false)
-                ->where('days_until_expiry', '<=', 30)
-                ->where('days_until_expiry', '>', 0)
+                ->where('is_renewed', false)
+                ->where('days_until_expiry', '<=', 0)
                 ->get();
 
+            if ($expiredRenewals->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No expired users found to notify'
+                ]);
+            }
+
             $sentCount = 0;
+            $failedCount = 0;
+            $results = [];
             
-            foreach ($renewals as $renewal) {
+            foreach ($expiredRenewals as $renewal) {
                 try {
-                    // Create notification message
                     $user = $renewal->user;
-                    $daysLeft = $renewal->days_until_expiry;
+                    $daysExpired = abs($renewal->days_until_expiry); // Get positive number of days expired
                     
-                    $subject = "Membership Renewal Reminder - {$daysLeft} Days Left";
+                    // Create personalized subject
+                    $subject = "URGENT: Membership Expired - Immediate Renewal Required";
                     
+                    // Create personalized message for each user
                     $message = "Dear {$user->name},\n\n";
-                    $message .= "This is a friendly reminder that your mosque membership will expire in {$daysLeft} days.\n\n";
+                    $message .= "Your mosque membership has expired and requires immediate attention.\n\n";
+                    
                     $message .= "MEMBERSHIP DETAILS:\n";
                     $message .= "━━━━━━━━━━━━━━━━━━━━\n";
                     $message .= "• Member ID: MBR-" . str_pad($user->id, 6, '0', STR_PAD_LEFT) . "\n";
-                    $message .= "• Current Expiry: " . $renewal->membership_end_date->format('M d, Y') . "\n";
-                    $message .= "• Days Remaining: {$daysLeft}\n\n";
+                    $message .= "• Name: {$user->name}\n";
+                    $message .= "• Email: {$user->email}\n";
+                    $message .= "• Membership Started: " . $renewal->membership_start_date->format('M d, Y') . "\n";
+                    $message .= "• Membership Expired: " . $renewal->membership_end_date->format('M d, Y') . "\n";
+                    $message .= "• Days Expired: {$daysExpired} days ago\n\n";
                     
-                    if ($daysLeft <= 7) {
-                        $message .= "⚠️ URGENT: Your membership expires very soon!\n\n";
-                    } elseif ($daysLeft <= 30) {
-                        $message .= "📅 Please consider renewing your membership soon.\n\n";
-                    }
+                    $message .= "❌ EXPIRED STATUS:\n";
+                    $message .= "Your membership expired {$daysExpired} days ago. To continue enjoying our services and maintain your access to the mosque facilities, please renew immediately.\n\n";
                     
                     $message .= "TO RENEW YOUR MEMBERSHIP:\n";
                     $message .= "━━━━━━━━━━━━━━━━━━━━━━━━━\n";
-                    $message .= "1. Log in to your account at " . config('app.url') . "\n";
-                    $message .= "2. Click 'Make Payment'\n";
-                    $message .= "3. Select 'Membership' (CHF 350)\n";
-                    $message .= "4. Complete payment via Stripe, PayPal, TWINT, or Bank Transfer\n\n";
+                    $message .= "1. Visit: " . config('app.url') . "/login\n";
+                    $message .= "2. Log in with your account credentials\n";
+                    $message .= "3. Click 'Make Payment'\n";
+                    $message .= "4. Select 'Membership Renewal' (CHF 350)\n";
+                    $message .= "5. Complete payment via Stripe, PayPal, TWINT, or Bank Transfer\n\n";
                     
-                    $message .= "🕌 MEMBERSHIP BENEFITS:\n";
+                    $message .= "🕌 MEMBERSHIP BENEFITS (Upon Renewal):\n";
                     $message .= "• 24/7 access to prayer facilities\n";
                     $message .= "• Friday prayers and religious services\n";
                     $message .= "• Islamic education and community events\n";
-                    $message .= "• Voting rights in community decisions\n\n";
+                    $message .= "• Voting rights in community decisions\n";
+                    $message .= "• Community support and networking\n\n";
                     
-                    $message .= "If you have any questions or need assistance with renewal, please contact us.\n\n";
+                    $message .= "⏰ IMPORTANT:\n";
+                    $message .= "Please renew as soon as possible to avoid any interruption in services. If you have any questions or need assistance with the renewal process, please contact us immediately.\n\n";
+                    
+                    $message .= "If you believe this notice is in error or if you have already renewed, please contact our support team.\n\n";
                     $message .= "Barakallahu feek!\n\n";
-                    $message .= "Best regards,\n" . config('app.name') . " Team";
+                    $message .= "Best regards,\n";
+                    $message .= config('mail.from.name') . " Team\n";
+                    $message .= config('app.url') . "\n";
+                    $message .= config('mail.from.address');
 
-                    // For now, just log the email (in production, use Mail facade)
-                    Log::info("Bulk renewal notification sent to {$user->email}", [
+                    // Send personalized email using the working Zoho SMTP
+                    Mail::raw($message, function ($mail) use ($user, $subject) {
+                        $mail->to($user->email, $user->name)
+                             ->subject($subject)
+                             ->from(config('mail.from.address'), config('mail.from.name'))
+                             ->replyTo(config('mail.from.address'), config('mail.from.name'));
+                    });
+
+                    // Mark notification as sent for this specific user
+                    $renewal->markNotificationSent($renewal->days_until_expiry);
+
+                    $sentCount++;
+                    $results[] = [
+                        'user' => $user->name,
+                        'email' => $user->email,
+                        'days_expired' => $daysExpired,
+                        'status' => 'sent'
+                    ];
+
+                    Log::info("Bulk expired notification sent successfully", [
                         'user_id' => $user->id,
+                        'user_email' => $user->email,
                         'renewal_id' => $renewal->id,
-                        'days_until_expiry' => $daysLeft,
+                        'days_expired' => $daysExpired,
                         'subject' => $subject
                     ]);
 
-                    // Update renewal to mark notification as sent
-                    $notificationsSent = $renewal->notifications_sent ?? [];
-                    if (!in_array($daysLeft, $notificationsSent)) {
-                        $notificationsSent[] = $daysLeft;
-                        $renewal->update([
-                            'notifications_sent' => $notificationsSent,
-                            'last_notification_sent_at' => now()
-                        ]);
-                    }
-
-                    $sentCount++;
                 } catch (\Exception $e) {
-                    Log::error("Failed to send bulk notification to user {$renewal->user_id}: " . $e->getMessage());
+                    $failedCount++;
+                    $results[] = [
+                        'user' => $user->name ?? 'Unknown',
+                        'email' => $user->email ?? 'Unknown',
+                        'status' => 'failed',
+                        'error' => $e->getMessage()
+                    ];
+
+                    Log::error("Failed to send bulk notification to user {$renewal->user_id}", [
+                        'user_email' => $user->email ?? 'unknown',
+                        'error' => $e->getMessage(),
+                        'renewal_id' => $renewal->id
+                    ]);
                 }
             }
 
             return response()->json([
                 'success' => true,
-                'count' => $sentCount,
-                'message' => "Sent {$sentCount} renewal notifications successfully"
+                'sent_count' => $sentCount,
+                'failed_count' => $failedCount,
+                'total_expired' => $expiredRenewals->count(),
+                'message' => "Sent {$sentCount} personalized notifications to expired users" . 
+                           ($failedCount > 0 ? " ({$failedCount} failed)" : ""),
+                'results' => $results
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Bulk notifications failed: ' . $e->getMessage());
+            Log::error('Bulk expired notifications failed: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to send notifications: ' . $e->getMessage()

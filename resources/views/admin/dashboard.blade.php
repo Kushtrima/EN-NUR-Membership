@@ -150,20 +150,25 @@
                     <input type="hidden" name="renewal_ids" value="{{ $membershipRenewals->pluck('id')->implode(',') }}">
                     <button type="submit" 
                             style="
-                                background: #fff; 
-                                color: #C19A61; 
+                                background: #dc3545; 
+                                color: white; 
                                 border: none; 
-                                padding: 0.75rem 1.5rem; 
-                                border-radius: 4px; 
+                                padding: 1rem 2rem; 
+                                border-radius: 8px; 
                                 font-weight: bold; 
                                 cursor: pointer;
-                                font-size: 1rem;
+                                font-size: 1.1rem;
+                                box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+                                transition: all 0.3s ease;
                             "
-                            onmouseover="this.style.background='#f8f9fa'"
-                            onmouseout="this.style.background='#fff'">
-                        📧 Send All Reminders ({{ $membershipRenewals->count() }})
+                            onmouseover="this.style.background='#c82333'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(220, 53, 69, 0.4)'"
+                            onmouseout="this.style.background='#dc3545'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 8px rgba(220, 53, 69, 0.3)'">
+                        🚨 NOTIFY ALL EXPIRED USERS ({{ $membershipRenewals->where('days_until_expiry', '<=', 0)->count() }})
                     </button>
                 </form>
+                <div style="margin-top: 0.5rem; font-size: 0.85rem; color: rgba(255,255,255,0.8);">
+                    Sends personalized emails to all expired members with their specific membership details
+                </div>
             </div>
         @else
             <div style="text-align: center; padding: 2rem; opacity: 0.8;">

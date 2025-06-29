@@ -886,11 +886,11 @@
         }
 
         function sendBulkNotifications() {
-            const button = document.getElementById('notify-btn');
+            const button = document.querySelector('button[type="submit"]');
             const originalText = button.innerHTML;
             
             // Show loading state
-            button.innerHTML = 'Sending...';
+            button.innerHTML = '⏳ Sending Emails...';
             button.disabled = true;
             
             fetch('/admin/notifications/bulk-send', {
@@ -903,16 +903,32 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showNotification('Notifications sent successfully!', 'success');
+                    const message = `✅ Successfully sent ${data.sent_count} personalized notifications to expired users!` + 
+                                  (data.failed_count > 0 ? ` (${data.failed_count} failed)` : '');
+                    showNotification(message, 'success');
+                    
+                    // Show detailed results
+                    console.log('Bulk notification results:', data.results);
+                    
+                    // Update button to show success
+                    button.innerHTML = `✅ Sent ${data.sent_count} Emails!`;
+                    button.style.background = '#28a745';
+                    
+                    // Reset after 5 seconds
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.style.background = '#dc3545';
+                        button.disabled = false;
+                    }, 5000);
                 } else {
-                    showNotification('Failed to send notifications: ' + (data.message || 'Unknown error'), 'error');
+                    showNotification('Failed to send notifications: ' + (data.message || data.error || 'Unknown error'), 'error');
+                    button.innerHTML = originalText;
+                    button.disabled = false;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 showNotification('Error sending notifications: ' + error.message, 'error');
-            })
-            .finally(() => {
                 button.innerHTML = originalText;
                 button.disabled = false;
             });
