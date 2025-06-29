@@ -4078,3 +4078,61 @@ require __DIR__.'/auth.php';
         
         return response($output);
     });
+
+    // Fix membership data for infinitdizzajn@gmail.com
+    Route::get('/fix-infinit-membership', function() {
+        $user = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+        if (!$user) {
+            return response('<h2>User not found</h2>');
+        }
+        
+        $renewal = \App\Models\MembershipRenewal::where('user_id', $user->id)->first();
+        if (!$renewal) {
+            return response('<h2>No renewal found</h2>');
+        }
+        
+        $output = "<h2>🔧 Fixing Membership Data</h2>";
+        $output .= "<p><strong>User:</strong> {$user->name} ({$user->email})</p>";
+        
+        $output .= "<h3>BEFORE:</h3>";
+        $output .= "<ul>";
+        $output .= "<li>Start Date: {$renewal->membership_start_date}</li>";
+        $output .= "<li>End Date: {$renewal->membership_end_date}</li>";
+        $output .= "<li>Days Until Expiry: " . $renewal->calculateDaysUntilExpiry() . "</li>";
+        $output .= "<li>Status: " . ($renewal->calculateDaysUntilExpiry() <= 0 ? 'EXPIRED' : 'ACTIVE') . "</li>";
+        $output .= "</ul>";
+        
+        // Update to make active (1 year from now)
+        $newEndDate = now()->addYear()->format('Y-m-d');
+        $newStartDate = now()->format('Y-m-d');
+        
+        $renewal->membership_start_date = $newStartDate;
+        $renewal->membership_end_date = $newEndDate;
+        $renewal->is_expired = false;
+        $renewal->is_hidden = false;
+        $renewal->is_renewed = false;
+        $renewal->save();
+        
+        // Recalculate
+        $newDays = $renewal->calculateDaysUntilExpiry();
+        
+        $output .= "<h3>AFTER:</h3>";
+        $output .= "<ul>";
+        $output .= "<li>Start Date: {$renewal->membership_start_date}</li>";
+        $output .= "<li>End Date: {$renewal->membership_end_date}</li>";
+        $output .= "<li>Days Until Expiry: {$newDays}</li>";
+        $output .= "<li>Status: " . ($newDays <= 0 ? 'EXPIRED' : 'ACTIVE') . "</li>";
+        $output .= "</ul>";
+        
+        $output .= "<h3>✅ Results:</h3>";
+        $output .= "<ul>";
+        $output .= "<li>User should now show as <strong>ACTIVE</strong> in user dashboard</li>";
+        $output .= "<li>User should <strong>NOT appear</strong> in super admin expired users section</li>";
+        $output .= "<li>Both dashboards should now be consistent</li>";
+        $output .= "</ul>";
+        
+        $output .= "<br><a href='/admin/users' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Check Users List</a>";
+        $output .= "<br><br><a href='/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Check Dashboard</a>";
+        
+        return response($output);
+    });
