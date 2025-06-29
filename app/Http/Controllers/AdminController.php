@@ -16,90 +16,7 @@ use App\Services\MembershipService;
 
 class AdminController extends Controller
 {
-    /**
-     * Show admin dashboard.
-     */
-    public function dashboard()
-    {
-        // Optimize with a single aggregation query for all payment statistics
-        // Use Laravel query builder instead of raw SQL for PostgreSQL compatibility
-        $totalPayments = Payment::count();
-        $completedPayments = Payment::where('status', Payment::STATUS_COMPLETED);
-        $pendingPayments = Payment::where('status', Payment::STATUS_PENDING)->count();
-        
-        $totalRevenue = $completedPayments->sum('amount');
-        $membershipRevenue = $completedPayments->where('payment_type', Payment::TYPE_MEMBERSHIP)->sum('amount');
-        $donationRevenue = $completedPayments->where('payment_type', Payment::TYPE_DONATION)->sum('amount');
-        $membershipCount = $completedPayments->where('payment_type', Payment::TYPE_MEMBERSHIP)->count();
-        $donationCount = $completedPayments->where('payment_type', Payment::TYPE_DONATION)->count();
-        
-        // Create stats object for compatibility
-        $paymentStats = (object) [
-            'total_payments' => $totalPayments,
-            'total_revenue' => $totalRevenue,
-            'pending_payments' => $pendingPayments,
-            'membership_revenue' => $membershipRevenue,
-            'donation_revenue' => $donationRevenue,
-            'membership_count' => $membershipCount,
-            'donation_count' => $donationCount,
-        ];
 
-        $totalUsers = User::count();
-        $totalPayments = $paymentStats->total_payments;
-        $totalRevenue = $paymentStats->total_revenue / 100;
-        $pendingPayments = $paymentStats->pending_payments;
-
-        // Get recent users with optimized payment loading
-        $recentUsers = User::with(['payments' => function($query) {
-            $query->where('status', 'completed')
-                  ->select('user_id', 'amount', 'payment_type', 'created_at')
-                  ->latest()
-                  ->limit(5); // Limit payment records per user
-        }])
-        ->select('id', 'name', 'email', 'created_at') // Only select needed columns
-        ->latest()
-        ->take(20)
-        ->get();
-
-        // Get recent payments with user information
-        $recentPayments = Payment::with(['user:id,name,email']) // Only select needed user columns
-            ->select('id', 'user_id', 'payment_type', 'amount', 'status', 'payment_method', 'created_at')
-            ->latest()
-            ->take(20)
-            ->get();
-
-        // Pass aggregated stats to view to avoid queries in Blade
-        $dashboardStats = [
-            'membership_revenue' => $paymentStats->membership_revenue / 100,
-            'donation_revenue' => $paymentStats->donation_revenue / 100,
-            'membership_count' => $paymentStats->membership_count,
-            'donation_count' => $paymentStats->donation_count,
-        ];
-
-        // Get membership renewals requiring attention (expiring within 30 days, not hidden)
-        $membershipRenewals = MembershipRenewal::with('user')
-            ->where('is_renewed', false)
-            ->where('is_hidden', false)
-            ->get()
-            ->filter(function ($renewal) {
-                $daysUntilExpiry = $renewal->calculateDaysUntilExpiry();
-                return $daysUntilExpiry <= 30 && $daysUntilExpiry > -30; // Show expiring soon or recently expired
-            })
-            ->sortBy(function ($renewal) {
-                return $renewal->calculateDaysUntilExpiry();
-            });
-
-        return view('admin.dashboard', compact(
-            'totalUsers', 
-            'totalPayments', 
-            'totalRevenue', 
-            'pendingPayments', 
-            'recentUsers', 
-            'recentPayments', 
-            'dashboardStats',
-            'membershipRenewals'
-        ));
-    }
 
     /**
      * Show all users.
@@ -1230,7 +1147,7 @@ class AdminController extends Controller
                 $output[] = "❌ NO USERS WILL APPEAR IN ADMIN DASHBOARD!";
             }
             
-            return response('<h2>🔍 User Diagnosis Results</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Admin Dashboard</a>');
+            return response('<h2>🔍 User Diagnosis Results</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Admin Dashboard</a>');
             
         } catch (\Exception $e) {
             return response('<h2>❌ Error During Diagnosis</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
@@ -1336,7 +1253,7 @@ class AdminController extends Controller
             $output[] = "";
             $output[] = "✅ Both users should now appear in Super Admin dashboard!";
             
-            return response('<h2>✅ Expired Memberships Setup Complete!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Check Admin Dashboard</a><br><br><a href="/admin/users" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Users</a>');
+            return response('<h2>✅ Expired Memberships Setup Complete!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Check Admin Dashboard</a><br><br><a href="/admin/users" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Users</a>');
             
         } catch (\Exception $e) {
             return response('<h2>❌ Error Setting Up Memberships</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');

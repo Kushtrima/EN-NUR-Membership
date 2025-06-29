@@ -309,7 +309,7 @@
                         </a>
                         
                         @if(auth()->user()->isAdmin())
-                            <a href="{{ route('admin.dashboard') }}" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; transition: background-color 0.2s; background-color: rgba(255,255,255,0.1);">
+                            <a href="{{ route('admin.users') }}" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; transition: background-color 0.2s; background-color: rgba(255,255,255,0.1);">
                                 🛡️ Admin Panel
                             </a>
                             <a href="{{ route('testing-dashboard') }}" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; transition: background-color 0.2s; background-color: rgba(255,255,255,0.15);">

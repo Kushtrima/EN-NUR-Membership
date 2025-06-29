@@ -338,7 +338,7 @@ Route::get('/app-diagnostic', function() {
     $output[] = "   ⚠️  Warnings: {$warnings}";
     $output[] = "   💡 Suggestions: {$suggestions}";
     
-    return response("<h2 style='color: {$statusColor};'>{$status}</h2><pre>" . implode("\n", $output) . "</pre><br><br><a href='/health-check' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🩺 Health Check</a><br><br><a href='/admin/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👑 Admin Dashboard</a>");
+    return response("<h2 style='color: {$statusColor};'>{$status}</h2><pre>" . implode("\n", $output) . "</pre><br><br><a href='/health-check' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🩺 Health Check</a><br><br><a href='/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👑 Admin Dashboard</a>");
 });
 
 Route::get('/health-check', function() {
@@ -384,7 +384,7 @@ Route::get('/health-check', function() {
     $output[] = $overallStatus;
     $output[] = "=" . str_repeat("=", 50);
     
-    return response("<h2 style='color: {$statusColor};'>{$overallStatus}</h2><pre>" . implode("\n", $output) . "</pre><br><br><a href='/app-diagnostic' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🔍 Full Diagnostic</a><br><br><a href='/admin/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👑 Admin Dashboard</a>");
+    return response("<h2 style='color: {$statusColor};'>{$overallStatus}</h2><pre>" . implode("\n", $output) . "</pre><br><br><a href='/app-diagnostic' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🔍 Full Diagnostic</a><br><br><a href='/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👑 Admin Dashboard</a>");
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
@@ -431,7 +431,6 @@ Route::post('/webhook/stripe', [PaymentController::class, 'stripeWebhook'])->nam
 
 // Admin routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/payments', [AdminController::class, 'payments'])->name('payments');
     
@@ -521,7 +520,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             $output[] = "";
             $output[] = "✅ Dates fixed! Users should now appear as expired/expiring in admin dashboard.";
             
-            return response('<h2>✅ Membership Dates Fixed!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Check Admin Dashboard</a><br><br><a href="/admin/users" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Users (Should show RED/ORANGE)</a>');
+            return response('<h2>✅ Membership Dates Fixed!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Check Admin Dashboard</a><br><br><a href="/admin/users" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Users (Should show RED/ORANGE)</a>');
                  });
          
          // Health check route to verify everything works
@@ -695,7 +694,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
                  $output[] = "- Run /admin/setup-expired-memberships if memberships missing";
              }
              
-             return response("<h2 style='color: {$statusColor};'>{$overallStatus}</h2><pre>" . implode("\n", $output) . "</pre><br><br><a href='/admin/dashboard' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👑 Admin Dashboard</a><br><br><a href='/admin/users' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👥 View Users</a><br><br><a href='/login' style='background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🔴 Test User Login</a>");
+             return response("<h2 style='color: {$statusColor};'>{$overallStatus}</h2><pre>" . implode("\n", $output) . "</pre><br><br><a href='/dashboard' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👑 Admin Dashboard</a><br><br><a href='/admin/users' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👥 View Users</a><br><br><a href='/login' style='background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🔴 Test User Login</a>");
              
          });
          
@@ -1105,7 +1104,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
              $output[] = "";
              $output[] = "=" . str_repeat("=", 60);
              
-             return response("<h2 style='color: {$statusColor};'>{$status}</h2><pre>" . implode("\n", $output) . "</pre><br><br><a href='/health-check' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🩺 Membership Health Check</a><br><br><a href='/admin/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👑 Admin Dashboard</a>");
+             return response("<h2 style='color: {$statusColor};'>{$status}</h2><pre>" . implode("\n", $output) . "</pre><br><br><a href='/health-check' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🩺 Membership Health Check</a><br><br><a href='/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👑 Admin Dashboard</a>");
          });
          
          // System Management Routes (Super Admin only)
@@ -2359,12 +2358,12 @@ Route::get('/debug-custom-email', function () {
 
 // Test simple admin access (no auth required)
 Route::get('/admin-test', function () {
-    return response('<h1>✅ Admin Routes Working!</h1><p>Timestamp: ' . now() . '</p><p>If you see this, the routing is working correctly.</p><br><a href="/login">Go to Login</a><br><a href="/admin/dashboard">Try Admin Dashboard</a>');
+    return response('<h1>✅ Admin Routes Working!</h1><p>Timestamp: ' . now() . '</p><p>If you see this, the routing is working correctly.</p><br><a href="/login">Go to Login</a><br><a href="/dashboard">Try Admin Dashboard</a>');
 });
 
-// Simple redirect for /admin to /admin/dashboard
+// Simple redirect for /admin to main dashboard
 Route::get('/admin', function () {
-    return redirect('/admin/dashboard');
+    return redirect('/dashboard');
 });
 
 // Fix infinitdizzajn user password and membership status
@@ -2925,7 +2924,7 @@ Route::get('/setup-test-users', function() {
         $output[] = "3. Login as expiring user - should see ORANGE renewal reminder";
         $output[] = "4. Make payments to test renewal logic works correctly";
         
-        return response('<h2>✅ Test Users Setup Complete!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 View Admin Dashboard</a><br><br><a href="/admin/users" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Admin Users</a><br><br><a href="/login" style="background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🔴 Test Expired User Login</a>');
+        return response('<h2>✅ Test Users Setup Complete!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 View Admin Dashboard</a><br><br><a href="/admin/users" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Admin Users</a><br><br><a href="/login" style="background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🔴 Test Expired User Login</a>');
         
     } catch (\Exception $e) {
         return response('<h2>❌ Error Setting Up Test Users</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
@@ -3086,7 +3085,7 @@ Route::get('/expire-existing-subscriptions', function() {
         
         $output[] = "✅ SUCCESS! Both users should now appear in Super Admin dashboard";
         
-        return response('<h2>✅ Subscriptions Modified Successfully!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/admin/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Check Admin Dashboard</a><br><br><a href="/admin/users" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Admin Users</a><br><br><a href="/login" style="background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🔴 Test Expired User</a>');
+        return response('<h2>✅ Subscriptions Modified Successfully!</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/dashboard" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Check Admin Dashboard</a><br><br><a href="/admin/users" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Admin Users</a><br><br><a href="/login" style="background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🔴 Test Expired User</a>');
         
     } catch (\Exception $e) {
         return response('<h2>❌ Error Modifying Subscriptions</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
@@ -3214,7 +3213,7 @@ Route::get('/diagnose-users', function() {
         }
         $output[] = "2. Check the results above to understand why users aren't showing";
         
-        return response('<h2>🔍 User Diagnosis Results</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/setup-test-users" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🧪 Setup Test Users</a><br><br><a href="/expire-existing-subscriptions" style="background: #ff6c37; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">⏰ Expire Existing Subscriptions</a><br><br><a href="/admin/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Admin Dashboard</a>');
+        return response('<h2>🔍 User Diagnosis Results</h2><pre>' . implode("\n", $output) . '</pre><br><br><a href="/setup-test-users" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">🧪 Setup Test Users</a><br><br><a href="/expire-existing-subscriptions" style="background: #ff6c37; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">⏰ Expire Existing Subscriptions</a><br><br><a href="/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👑 Admin Dashboard</a>');
         
     } catch (\Exception $e) {
         return response('<h2>❌ Error During Diagnosis</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
@@ -3513,7 +3512,7 @@ require __DIR__.'/auth.php';
                 htmlspecialchars($output) . 
                 '</pre>
                 <br>
-                <a href="/admin/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                <a href="/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                     🎛️ Go to Admin Dashboard
                 </a>
             ');
@@ -3684,10 +3683,10 @@ require __DIR__.'/auth.php';
                 }
             }
             
-            return response('<h2>Email Configuration Refresh Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin/dashboard">Go to Dashboard</a>');
+            return response('<h2>Email Configuration Refresh Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/dashboard">Go to Dashboard</a>');
             
         } catch (\Exception $e) {
-            return response('<h2>Email Configuration Refresh Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin/dashboard">Go to Dashboard</a>');
+            return response('<h2>Email Configuration Refresh Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/dashboard">Go to Dashboard</a>');
         }
     });
 
@@ -3860,7 +3859,7 @@ require __DIR__.'/auth.php';
             $output[] = "3. Enable IMAP/SMTP access in Zoho settings";
             $output[] = "4. Try the working configuration above";
             
-            return response('<h2>SMTP Authentication Test Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin/dashboard">Go to Dashboard</a>');
+            return response('<h2>SMTP Authentication Test Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/dashboard">Go to Dashboard</a>');
             
         } catch (\Exception $e) {
             return response('<h2>SMTP Test Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
