@@ -4279,3 +4279,75 @@ require __DIR__.'/auth.php';
         
         return response($output);
     });
+
+    // Force sync user status across all systems
+    Route::get('/force-sync-infinit', function() {
+        $user = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+        if (!$user) {
+            return response('<h2>User not found</h2>');
+        }
+        
+        $renewal = \App\Models\MembershipRenewal::where('user_id', $user->id)->first();
+        if (!$renewal) {
+            return response('<h2>No renewal found</h2>');
+        }
+        
+        $output = "<h2>🔄 Force Syncing User Status</h2>";
+        $output .= "<p><strong>User:</strong> {$user->name} ({$user->email})</p>";
+        
+        // Get current calculated values
+        $calculatedDays = $renewal->calculateDaysUntilExpiry();
+        $isExpired = $calculatedDays <= 0;
+        
+        $output .= "<h3>BEFORE SYNC:</h3>";
+        $output .= "<ul>";
+        $output .= "<li>Stored days_until_expiry: {$renewal->days_until_expiry}</li>";
+        $output .= "<li>Calculated days: {$calculatedDays}</li>";
+        $output .= "<li>is_expired (stored): " . ($renewal->is_expired ? 'true' : 'false') . "</li>";
+        $output .= "<li>is_expired (calculated): " . ($isExpired ? 'true' : 'false') . "</li>";
+        $output .= "</ul>";
+        
+        // Force update all stored values to match calculated values
+        $renewal->days_until_expiry = $calculatedDays;
+        $renewal->is_expired = $isExpired;
+        $renewal->updated_at = now();
+        $renewal->save();
+        
+        // Clear all caches
+        \Illuminate\Support\Facades\Cache::flush();
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        
+        $output .= "<h3>AFTER SYNC:</h3>";
+        $output .= "<ul>";
+        $output .= "<li>Stored days_until_expiry: {$renewal->days_until_expiry}</li>";
+        $output .= "<li>Calculated days: " . $renewal->calculateDaysUntilExpiry() . "</li>";
+        $output .= "<li>is_expired (stored): " . ($renewal->is_expired ? 'true' : 'false') . "</li>";
+        $output .= "<li>All values now synchronized!</li>";
+        $output .= "</ul>";
+        
+        $output .= "<h3>✅ Expected Results:</h3>";
+        if ($isExpired) {
+            $output .= "<ul>";
+            $output .= "<li>Admin Dashboard: User should appear in <strong>EXPIRED</strong> section (red)</li>";
+            $output .= "<li>Users List: User should show <strong>EXPIRED</strong> badge (red)</li>";
+            $output .= "<li>User Dashboard: Should show <strong>Membership Expired</strong> (red)</li>";
+            $output .= "<li>Bulk Notifications: Should <strong>INCLUDE</strong> this user</li>";
+            $output .= "</ul>";
+        } else {
+            $output .= "<ul>";
+            $output .= "<li>Admin Dashboard: User should <strong>NOT appear</strong> in expired section</li>";
+            $output .= "<li>Users List: User should show <strong>ACTIVE</strong> badge (green)</li>";
+            $output .= "<li>User Dashboard: Should show <strong>Active Member</strong> (green)</li>";
+            $output .= "<li>Bulk Notifications: Should <strong>EXCLUDE</strong> this user</li>";
+            $output .= "</ul>";
+        }
+        
+        $output .= "<h3>🧪 Test All Systems:</h3>";
+        $output .= "<a href='/admin/users' style='background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px;'>Check Users List</a>";
+        $output .= "<a href='/dashboard' style='background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px;'>Check Admin Dashboard</a>";
+        $output .= "<br><br><em>Note: Login as infinitdizzajn@gmail.com to check user dashboard</em>";
+        
+        return response($output);
+    });
