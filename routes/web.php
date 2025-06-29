@@ -4355,3 +4355,116 @@ require __DIR__.'/auth.php';
         
         return response($output);
     });
+
+    Route::get('/debug-cash-payment', function() {
+        try {
+            // Test basic functionality
+            $user = auth()->user();
+            if (!$user) {
+                return response()->json(['error' => 'User not authenticated']);
+            }
+            
+            // Test Payment model creation
+            $testPayment = new \App\Models\Payment([
+                'user_id' => $user->id,
+                'payment_type' => 'membership',
+                'amount' => 35000,
+                'currency' => 'chf',
+                'status' => \App\Models\Payment::STATUS_PENDING,
+                'payment_method' => 'cash',
+                'metadata' => [
+                    'test' => true,
+                    'user_email' => $user->email,
+                ]
+            ]);
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Cash payment test successful',
+                'user' => $user->email,
+                'payment_model' => 'OK',
+                'constants' => [
+                    'STATUS_PENDING' => \App\Models\Payment::STATUS_PENDING,
+                    'TYPE_MEMBERSHIP' => \App\Models\Payment::TYPE_MEMBERSHIP,
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    })->middleware('auth');
+
+    Route::post('/test-cash-payment', function(\Illuminate\Http\Request $request) {
+        try {
+            // Simulate the exact same request that comes from the form
+            $request->merge([
+                'payment_type' => 'membership',
+                'amount' => 35000
+            ]);
+            
+            // Test validation
+            $request->validate([
+                'payment_type' => 'required|in:membership,donation',
+                'amount' => 'required|integer|min:500|max:1000000',
+            ]);
+            
+            $paymentType = $request->payment_type;
+            $amount = (int) $request->amount;
+            $user = auth()->user();
+            
+            if (!$user) {
+                return response()->json(['error' => 'User not authenticated']);
+            }
+            
+            // Test amount validation
+            if ($paymentType === 'membership') {
+                $expectedAmount = (int) config('app.membership_amount', 35000);
+                if ($amount !== $expectedAmount) {
+                    return response()->json(['error' => 'Invalid membership amount', 'expected' => $expectedAmount, 'received' => $amount]);
+                }
+            }
+            
+            // Test Payment creation
+            $payment = \App\Models\Payment::create([
+                'user_id' => $user->id,
+                'payment_type' => $paymentType,
+                'amount' => $amount,
+                'currency' => 'chf',
+                'status' => \App\Models\Payment::STATUS_PENDING,
+                'payment_method' => 'cash',
+                'metadata' => [
+                    'user_email' => $user->email,
+                    'user_name' => $user->name,
+                    'payment_type' => $paymentType,
+                    'amount_validation' => hash('sha256', $amount . $user->id . config('app.key')),
+                    'created_at' => now()->toISOString(),
+                    'cash_payment' => true,
+                    'awaiting_admin_approval' => true,
+                    'test_payment' => true,
+                ]
+            ]);
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Test cash payment created successfully',
+                'payment_id' => $payment->id,
+                'payment' => $payment->toArray(),
+                'redirect_url' => route('payment.cash.instructions', $payment),
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    })->middleware('auth');
