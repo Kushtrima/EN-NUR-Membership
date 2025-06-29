@@ -135,37 +135,45 @@ class DashboardController extends Controller
      */
     private function getMembershipRenewals()
     {
-        // Get renewals needing attention (within 30 days only)
-        $renewalsNeedingAttention = \App\Models\MembershipRenewal::where('days_until_expiry', '<=', 30)
+        // Get all renewals and filter using calculated values
+        $allRenewals = \App\Models\MembershipRenewal::with(['user', 'payment'])
             ->where('is_hidden', false)
             ->where('is_renewed', false)
-            ->with(['user', 'payment'])
-            ->orderByRaw('
-                CASE 
-                    WHEN days_until_expiry <= 0 THEN 4
-                    WHEN days_until_expiry <= 7 THEN 3
-                    WHEN days_until_expiry <= 30 THEN 2
-                    ELSE 1
-                END DESC
-            ')
-            ->orderBy('days_until_expiry', 'asc')
             ->get();
 
-        // Get statistics with updated logic
+        // Filter renewals needing attention (within 30 days) using calculated values
+        $renewalsNeedingAttention = $allRenewals->filter(function ($renewal) {
+            $daysUntilExpiry = $renewal->calculateDaysUntilExpiry();
+            return $daysUntilExpiry <= 30 && $daysUntilExpiry > -30;
+        })->sortBy(function ($renewal) {
+            $daysUntilExpiry = $renewal->calculateDaysUntilExpiry();
+            // Priority sorting: expired first, then critical, then warning
+            if ($daysUntilExpiry <= 0) return 1; // Expired - highest priority
+            if ($daysUntilExpiry <= 7) return 2; // Critical - 7 days or less
+            if ($daysUntilExpiry <= 30) return 3; // Warning - 30 days or less
+            return 4; // Should not happen in this filter
+        })->values();
+
+        // Calculate statistics using calculated values
+        $expired = $allRenewals->filter(function ($renewal) {
+            return $renewal->calculateDaysUntilExpiry() <= 0;
+        })->count();
+
+        $expiring7Days = $allRenewals->filter(function ($renewal) {
+            $days = $renewal->calculateDaysUntilExpiry();
+            return $days > 0 && $days <= 7;
+        })->count();
+
+        $expiring30Days = $allRenewals->filter(function ($renewal) {
+            $days = $renewal->calculateDaysUntilExpiry();
+            return $days > 0 && $days <= 30;
+        })->count();
+
         $renewalStats = [
-            'total_active_memberships' => \App\Models\MembershipRenewal::active()->count(),
-            'expiring_within_30_days' => \App\Models\MembershipRenewal::where('days_until_expiry', '<=', 30)
-                ->where('is_hidden', false)
-                ->where('is_renewed', false)
-                ->count(),
-            'expiring_within_7_days' => \App\Models\MembershipRenewal::where('days_until_expiry', '<=', 7)
-                ->where('is_hidden', false)
-                ->where('is_renewed', false)
-                ->count(),
-            'expired' => \App\Models\MembershipRenewal::where('days_until_expiry', '<=', 0)
-                ->where('is_hidden', false)
-                ->where('is_renewed', false)
-                ->count(),
+            'total_active_memberships' => \App\Models\MembershipRenewal::where('is_renewed', false)->count(),
+            'expiring_within_30_days' => $expiring30Days,
+            'expiring_within_7_days' => $expiring7Days,
+            'expired' => $expired,
             'hidden' => \App\Models\MembershipRenewal::where('is_hidden', true)->count(),
         ];
 

@@ -185,22 +185,25 @@
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
                 @foreach($renewalsPaginated as $renewal)
                     @php
+                        // Use calculated days instead of stored database field
+                        $calculatedDays = $renewal->calculateDaysUntilExpiry();
+                        
                         // New Logic: Orange for 30 days, Red for 7 days or expired
-                        if ($renewal->days_until_expiry <= 0) {
+                        if ($calculatedDays <= 0) {
                             // EXPIRED - RED
                             $colors = [
                                 'bg' => 'rgba(220, 53, 69, 0.1)',
                                 'border' => '#dc3545',
                                 'text' => '#721c24'
                             ];
-                        } elseif ($renewal->days_until_expiry <= 7) {
+                        } elseif ($calculatedDays <= 7) {
                             // CRITICAL (7 days or less) - RED  
                             $colors = [
                                 'bg' => 'rgba(220, 53, 69, 0.1)',
                                 'border' => '#dc3545',
                                 'text' => '#721c24'
                             ];
-                        } elseif ($renewal->days_until_expiry <= 30) {
+                        } elseif ($calculatedDays <= 30) {
                             // WARNING (30 days or less) - ORANGE
                             $colors = [
                                 'bg' => 'rgba(255, 108, 55, 0.1)',
@@ -229,17 +232,17 @@
                             </div>
                             
                             <div style="text-align: right; flex-shrink: 0; margin-left: 0.5rem;">
-                                @if($renewal->days_until_expiry <= 0)
+                                @if($calculatedDays <= 0)
                                     <span style="background: #dc3545; color: white; padding: 0.15rem 0.3rem; border-radius: 3px; font-size: 0.65rem; font-weight: bold;">
                                         EXPIRED
                                     </span>
-                                @elseif($renewal->days_until_expiry <= 7)
+                                @elseif($calculatedDays <= 7)
                                     <span style="background: #dc3545; color: white; padding: 0.15rem 0.3rem; border-radius: 3px; font-size: 0.65rem; font-weight: bold;">
-                                        {{ $renewal->days_until_expiry }}D
+                                        {{ $calculatedDays }}D
                                     </span>
                                 @else
                                     <span style="background: #ff6c37; color: white; padding: 0.15rem 0.3rem; border-radius: 3px; font-size: 0.65rem; font-weight: bold;">
-                                        {{ $renewal->days_until_expiry }}D
+                                        {{ $calculatedDays }}D
                                     </span>
                                 @endif
                             </div>

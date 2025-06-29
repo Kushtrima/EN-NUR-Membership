@@ -501,12 +501,16 @@ class AdminController extends Controller
     public function sendBulkNotifications()
     {
         try {
-            // Get all expired users (days_until_expiry <= 0) that are not hidden
-            $expiredRenewals = MembershipRenewal::with('user')
+            // Get all expired users using calculated values (like the user status logic)
+            $allRenewals = MembershipRenewal::with('user')
                 ->where('is_hidden', false)
                 ->where('is_renewed', false)
-                ->where('days_until_expiry', '<=', 0)
                 ->get();
+
+            // Filter by calculated expiry (not stored database field)
+            $expiredRenewals = $allRenewals->filter(function ($renewal) {
+                return $renewal->calculateDaysUntilExpiry() <= 0;
+            });
 
             if ($expiredRenewals->isEmpty()) {
                 return response()->json([
@@ -522,7 +526,8 @@ class AdminController extends Controller
             foreach ($expiredRenewals as $renewal) {
                 try {
                     $user = $renewal->user;
-                    $daysExpired = abs($renewal->days_until_expiry); // Get positive number of days expired
+                    $calculatedDays = $renewal->calculateDaysUntilExpiry();
+                    $daysExpired = abs($calculatedDays); // Get positive number of days expired
                     
                     // Create personalized subject
                     $subject = "URGENT: Membership Expired - Immediate Renewal Required";
@@ -577,7 +582,7 @@ class AdminController extends Controller
                     });
 
                     // Mark notification as sent for this specific user
-                    $renewal->markNotificationSent($renewal->days_until_expiry);
+                    $renewal->markNotificationSent($calculatedDays);
 
                     $sentCount++;
                     $results[] = [
@@ -592,6 +597,7 @@ class AdminController extends Controller
                         'user_email' => $user->email,
                         'renewal_id' => $renewal->id,
                         'days_expired' => $daysExpired,
+                        'calculated_days' => $calculatedDays,
                         'subject' => $subject
                     ]);
 
