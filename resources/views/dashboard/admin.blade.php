@@ -115,7 +115,20 @@
     <!-- Membership Renewals (Only for Super Admins) -->
     @if(auth()->user()->isSuperAdmin() && $renewals)
     <div class="card">
-        <h2 class="card-title">Membership Renewal Notifications</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 class="card-title" style="margin: 0;">Membership Renewal Notifications</h2>
+            
+            <!-- NOTIFY ALL EXPIRED USERS Button -->
+            @if($renewals['stats']['expired'] > 0)
+            <button onclick="showNotifyAllExpiredModal();" 
+                    style="background: #dc3545; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: bold; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);" 
+                    onmouseover="this.style.background='#c82333'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(220, 53, 69, 0.4)'" 
+                    onmouseout="this.style.background='#dc3545'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(220, 53, 69, 0.3)'"
+                    id="notify-all-expired-btn">
+                🚨 NOTIFY ALL EXPIRED USERS ({{ $renewals['stats']['expired'] }})
+            </button>
+            @endif
+        </div>
         
         <!-- Renewal Statistics -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
@@ -697,13 +710,134 @@
         </div>
     </div>
 
+    <!-- Notify All Expired Users Modal -->
+    <div id="notifyAllExpiredModal" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+    ">
+        <div style="
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-width: 28rem;
+            width: 100%;
+            margin: 1rem;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        ">
+            <!-- Icon -->
+            <div style="padding: 2rem 2rem 0 2rem; text-align: center;">
+                <div style="
+                    width: 64px;
+                    height: 64px;
+                    background: #fee2e2;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 1.5rem auto;
+                ">
+                    <svg style="width: 32px; height: 32px;" fill="#dc2626" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            <div style="
+                padding: 0 2rem 2rem 2rem;
+                text-align: center;
+            ">
+                <h3 style="
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                    color: #1f2937;
+                    margin: 0 0 1rem 0;
+                ">
+                    Notify All Expired Users
+                </h3>
+                
+                <p style="
+                    color: #6b7280;
+                    margin-bottom: 2rem;
+                    line-height: 1.6;
+                    margin-top: 0;
+                ">
+                    This will send personalized renewal notifications to all <strong>{{ $renewals['stats']['expired'] ?? 0 }} expired users</strong>. Each user will receive a customized email with their specific membership details and renewal instructions.
+                </p>
+                
+                <!-- Action Buttons -->
+                <div style="
+                    display: flex;
+                    gap: 0.75rem;
+                    flex-direction: column;
+                ">
+                    <button type="button" onclick="closeNotifyAllExpiredModal()" style="
+                        flex: 1;
+                        padding: 0.75rem 1.5rem;
+                        background: white;
+                        border: 2px solid #d1d5db;
+                        color: #374151;
+                        border-radius: 8px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        font-size: 1rem;
+                    " onmouseover="
+                        this.style.background='#f9fafb';
+                        this.style.borderColor='#9ca3af';
+                        this.style.transform='translateY(-1px)';
+                    " onmouseout="
+                        this.style.background='white';
+                        this.style.borderColor='#d1d5db';
+                        this.style.transform='translateY(0)';
+                    ">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="confirmNotifyAllExpired()" style="
+                        flex: 1;
+                        padding: 0.75rem 1.5rem;
+                        background: #dc2626;
+                        color: white;
+                        border-radius: 8px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                        border: none;
+                        font-size: 1rem;
+                    " onmouseover="
+                        this.style.background='#b91c1c';
+                        this.style.transform='translateY(-1px)';
+                        this.style.boxShadow='0 20px 25px -5px rgba(0, 0, 0, 0.1)';
+                    " onmouseout="
+                        this.style.background='#dc2626';
+                        this.style.transform='translateY(0)';
+                        this.style.boxShadow='0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+                    ">
+                        🚨 Send to All Expired Users
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <style>
         /* Modal Animation */
-        #backupModal.show, #clearLogsModal.show, #notificationsModal.show {
+        #backupModal.show, #clearLogsModal.show, #notificationsModal.show, #notifyAllExpiredModal.show {
             display: flex !important;
         }
 
-        #backupModal.show > div, #clearLogsModal.show > div, #notificationsModal.show > div {
+        #backupModal.show > div, #clearLogsModal.show > div, #notificationsModal.show > div, #notifyAllExpiredModal.show > div {
             transform: scale(1) !important;
         }
 
@@ -711,13 +845,14 @@
         @media (min-width: 640px) {
             #backupModal > div > div:last-child > div,
             #clearLogsModal > div > div:last-child > div,
-            #notificationsModal > div > div:last-child > div {
+            #notificationsModal > div > div:last-child > div,
+            #notifyAllExpiredModal > div > div:last-child > div {
                 flex-direction: row !important;
             }
         }
 
         /* Focus states for accessibility */
-        #backupModal button:focus, #clearLogsModal button:focus, #notificationsModal button:focus {
+        #backupModal button:focus, #clearLogsModal button:focus, #notificationsModal button:focus, #notifyAllExpiredModal button:focus {
             outline: 2px solid #3b82f6;
             outline-offset: 2px;
         }
@@ -773,6 +908,22 @@
             }, 300);
         }
 
+        function showNotifyAllExpiredModal() {
+            const modal = document.getElementById('notifyAllExpiredModal');
+            modal.classList.add('show');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeNotifyAllExpiredModal() {
+            const modal = document.getElementById('notifyAllExpiredModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
         // Confirmation Functions
         function confirmBackup() {
             closeBackupModal();
@@ -787,6 +938,11 @@
         function confirmSendNotifications() {
             closeNotificationsModal();
             sendBulkNotifications();
+        }
+
+        function confirmNotifyAllExpired() {
+            closeNotifyAllExpiredModal();
+            sendNotifyAllExpired();
         }
 
         function showNotification(message, type) {
@@ -934,6 +1090,58 @@
             });
         }
 
+        function sendNotifyAllExpired() {
+            const button = document.getElementById('notify-all-expired-btn');
+            const originalText = button.innerHTML;
+            
+            // Show loading state
+            button.innerHTML = '⏳ Sending to All Expired Users...';
+            button.disabled = true;
+            
+            fetch('/admin/notifications/bulk-send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    target: 'expired_only'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const message = `✅ Successfully sent ${data.sent_count} personalized notifications to expired users!` + 
+                                  (data.failed_count > 0 ? ` (${data.failed_count} failed)` : '');
+                    showNotification(message, 'success');
+                    
+                    // Show detailed results
+                    console.log('Expired users notification results:', data.results);
+                    
+                    // Update button to show success
+                    button.innerHTML = `✅ Sent ${data.sent_count} Emails!`;
+                    button.style.background = '#28a745';
+                    
+                    // Reset after 5 seconds
+                    setTimeout(() => {
+                        button.innerHTML = originalText;
+                        button.style.background = '#dc3545';
+                        button.disabled = false;
+                    }, 5000);
+                } else {
+                    showNotification('Failed to send notifications: ' + (data.message || data.error || 'Unknown error'), 'error');
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error sending notifications: ' + error.message, 'error');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        }
+
         async function sendRenewalNotification(renewalId) {
             const button = document.getElementById(`notify-btn-${renewalId}`);
             const originalText = button.innerHTML;
@@ -1018,6 +1226,7 @@
                     closeBackupModal();
                     closeClearLogsModal();
                     closeNotificationsModal();
+                    closeNotifyAllExpiredModal();
                 }
             });
 
@@ -1032,6 +1241,10 @@
 
             document.getElementById('notificationsModal').addEventListener('click', function(e) {
                 if (e.target === this) closeNotificationsModal();
+            });
+
+            document.getElementById('notifyAllExpiredModal').addEventListener('click', function(e) {
+                if (e.target === this) closeNotifyAllExpiredModal();
             });
         });
     </script>
