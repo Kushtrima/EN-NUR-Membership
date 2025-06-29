@@ -4196,3 +4196,86 @@ require __DIR__.'/auth.php';
         
         return response($output);
     });
+
+    // Debug user dashboard logic for infinitdizzajn
+    Route::get('/debug-user-dashboard', function() {
+        $user = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+        if (!$user) {
+            return response('<h2>User not found</h2>');
+        }
+        
+        // Test the exact same logic as user dashboard
+        $membershipService = new \App\Services\MembershipService();
+        $userStats = $membershipService->getUserDashboardStats($user);
+        
+        $output = "<h2>🔍 User Dashboard Logic Debug</h2>";
+        $output .= "<p><strong>User:</strong> {$user->name} ({$user->email})</p>";
+        
+        $output .= "<h3>MembershipService Results:</h3>";
+        $output .= "<ul>";
+        $output .= "<li>has_membership: " . ($userStats['has_membership'] ? 'true' : 'false') . "</li>";
+        $output .= "<li>active_membership_renewal: " . ($userStats['active_membership_renewal'] ? 'found' : 'null') . "</li>";
+        $output .= "</ul>";
+        
+        if ($userStats['has_membership'] && $userStats['active_membership_renewal']) {
+            $renewal = $userStats['active_membership_renewal'];
+            $daysLeft = $renewal->calculateDaysUntilExpiry();
+            $membershipStart = $renewal->membership_start_date;
+            $membershipEnd = $renewal->membership_end_date;
+            
+            // Exact same logic as user dashboard view
+            $isExpired = $daysLeft <= 0;
+            $isExpiringSoon = $daysLeft > 0 && $daysLeft <= 30;
+            $isActive = $daysLeft > 30;
+            
+            $output .= "<h3>Dashboard Calculations:</h3>";
+            $output .= "<ul>";
+            $output .= "<li>Renewal ID: {$renewal->id}</li>";
+            $output .= "<li>Start Date: {$membershipStart}</li>";
+            $output .= "<li>End Date: {$membershipEnd}</li>";
+            $output .= "<li>Days Left: {$daysLeft}</li>";
+            $output .= "<li>isExpired: " . ($isExpired ? 'true' : 'false') . "</li>";
+            $output .= "<li>isExpiringSoon: " . ($isExpiringSoon ? 'true' : 'false') . "</li>";
+            $output .= "<li>isActive: " . ($isActive ? 'true' : 'false') . "</li>";
+            $output .= "</ul>";
+            
+            if ($isExpired) {
+                $statusColor = '#dc3545';
+                $statusText = 'Membership Expired';
+                $statusIcon = '❌';
+                $bgColor = 'rgba(220, 53, 69, 0.1)';
+                $message = 'Your membership has expired. Please renew to continue accessing services.';
+            } elseif ($isExpiringSoon) {
+                $statusColor = '#ff6c37';
+                $statusText = 'Membership Expiring Soon';
+                $statusIcon = '⚠️';
+                $bgColor = 'rgba(255, 108, 55, 0.1)';
+                $message = 'Your membership expires soon. Consider renewing to avoid interruption.';
+            } else {
+                $statusColor = '#1F6E38';
+                $statusText = 'Active Member';
+                $statusIcon = '✓';
+                $bgColor = 'rgba(31, 110, 56, 0.1)';
+                $message = 'Your membership is active and valid';
+            }
+            
+            $output .= "<h3>Dashboard Display:</h3>";
+            $output .= "<div style='background: {$bgColor}; border-radius: 8px; padding: 1.5rem; border-left: 4px solid {$statusColor}; margin: 1rem 0;'>";
+            $output .= "<div style='display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;'>";
+            $output .= "<div style='background: {$statusColor}; color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;'>{$statusIcon}</div>";
+            $output .= "<div><h3 style='margin: 0; color: {$statusColor};'>{$statusText}</h3>";
+            $output .= "<p style='margin: 0; color: #666;'>{$message}</p></div></div>";
+            
+            $daysDisplay = $daysLeft > 0 ? $daysLeft . ' days' : 'EXPIRED (' . abs($daysLeft) . ' days ago)';
+            $output .= "<p><strong>Days Display:</strong> <span style='color: {$statusColor};'>{$daysDisplay}</span></p>";
+            $output .= "</div>";
+            
+        } else {
+            $output .= "<h3>No Active Membership Found</h3>";
+            $output .= "<p>Should show 'No Active Membership' message</p>";
+        }
+        
+        $output .= "<br><a href='/dashboard' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Compare with Actual Dashboard</a>";
+        
+        return response($output);
+    });
