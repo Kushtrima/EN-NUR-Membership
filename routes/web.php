@@ -4136,3 +4136,63 @@ require __DIR__.'/auth.php';
         
         return response($output);
     });
+
+    // Make infinitdizzajn@gmail.com user EXPIRED for testing
+    Route::get('/expire-infinit-membership', function() {
+        $user = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+        if (!$user) {
+            return response('<h2>User not found</h2>');
+        }
+        
+        $renewal = \App\Models\MembershipRenewal::where('user_id', $user->id)->first();
+        if (!$renewal) {
+            return response('<h2>No renewal found</h2>');
+        }
+        
+        $output = "<h2>⏰ Making User EXPIRED for Testing</h2>";
+        $output .= "<p><strong>User:</strong> {$user->name} ({$user->email})</p>";
+        
+        $output .= "<h3>BEFORE:</h3>";
+        $output .= "<ul>";
+        $output .= "<li>Start Date: {$renewal->membership_start_date}</li>";
+        $output .= "<li>End Date: {$renewal->membership_end_date}</li>";
+        $output .= "<li>Days Until Expiry: " . $renewal->calculateDaysUntilExpiry() . "</li>";
+        $output .= "<li>Status: " . ($renewal->calculateDaysUntilExpiry() <= 0 ? 'EXPIRED' : 'ACTIVE') . "</li>";
+        $output .= "</ul>";
+        
+        // Update to make expired (ended 15 days ago)
+        $expiredEndDate = now()->subDays(15)->format('Y-m-d');
+        $expiredStartDate = now()->subYear()->format('Y-m-d');
+        
+        $renewal->membership_start_date = $expiredStartDate;
+        $renewal->membership_end_date = $expiredEndDate;
+        $renewal->is_expired = true;
+        $renewal->is_hidden = false;
+        $renewal->is_renewed = false;
+        $renewal->save();
+        
+        // Recalculate
+        $newDays = $renewal->calculateDaysUntilExpiry();
+        
+        $output .= "<h3>AFTER:</h3>";
+        $output .= "<ul>";
+        $output .= "<li>Start Date: {$renewal->membership_start_date}</li>";
+        $output .= "<li>End Date: {$renewal->membership_end_date}</li>";
+        $output .= "<li>Days Until Expiry: {$newDays}</li>";
+        $output .= "<li>Status: " . ($newDays <= 0 ? 'EXPIRED' : 'ACTIVE') . "</li>";
+        $output .= "</ul>";
+        
+        $output .= "<h3>🧪 Testing Results:</h3>";
+        $output .= "<ul>";
+        $output .= "<li>User should now show as <strong>EXPIRED</strong> in user dashboard</li>";
+        $output .= "<li>User should <strong>APPEAR</strong> in super admin expired users section</li>";
+        $output .= "<li>User should show as <strong>EXPIRED</strong> in users list with red border</li>";
+        $output .= "<li>Bulk notifications should now <strong>INCLUDE</strong> this user</li>";
+        $output .= "<li>Perfect for testing expired user functionality!</li>";
+        $output .= "</ul>";
+        
+        $output .= "<br><a href='/admin/users' style='background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Check Users List (Should show EXPIRED)</a>";
+        $output .= "<br><br><a href='/dashboard' style='background: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Check Dashboard (Should appear in expired section)</a>";
+        
+        return response($output);
+    });
