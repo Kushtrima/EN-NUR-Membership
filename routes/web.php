@@ -3527,3 +3527,53 @@ require __DIR__.'/auth.php';
             ');
         }
     })->name('expire.infinit.user');
+
+    // EMERGENCY: Simple password setup for login issues
+    Route::get('/emergency-simple-password', function() {
+        if (env('APP_ENV') !== 'production') {
+            return response('Only available in production', 403);
+        }
+        
+        try {
+            $email = 'kushtrim.m.arifi@gmail.com';
+            $simplePassword = 'SuperAdmin2025'; // Simple password without special characters
+            
+            // Update user with simple password
+            $user = DB::table('users')->where('email', $email)->first();
+            
+            if (!$user) {
+                return response('User not found', 404);
+            }
+            
+            $newHash = Hash::make($simplePassword);
+            DB::table('users')
+                ->where('email', $email)
+                ->update([
+                    'password' => $newHash,
+                    'updated_at' => now(),
+                ]);
+            
+            // Test the password immediately
+            $testResult = Hash::check($simplePassword, $newHash);
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Emergency simple password set successfully',
+                'credentials' => [
+                    'email' => $email,
+                    'password' => $simplePassword
+                ],
+                'password_test' => $testResult ? 'WORKING' : 'FAILED',
+                'instructions' => 'Use these credentials to login immediately',
+                'note' => 'This is a temporary simple password for emergency access'
+            ]);
+            
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    });
+
+    require __DIR__.'/auth.php';
