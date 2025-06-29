@@ -997,69 +997,72 @@ class PaymentController extends Controller
      */
     public function processCash(Request $request)
     {
-        $request->validate([
-            'payment_type' => 'required|in:membership,donation',
-            'amount' => 'required|integer|min:500|max:1000000', // Max CHF 10,000
-        ]);
+        // Basic validation
+        try {
+            $request->validate([
+                'payment_type' => 'required|in:membership,donation',
+                'amount' => 'required|integer|min:500|max:1000000',
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Validation failed: ' . $e->getMessage());
+        }
 
         try {
-            $paymentType = $request->payment_type;
-            $amount = (int) $request->amount;
             $user = auth()->user();
+            if (!$user) {
+                return redirect()->route('login')->with('error', 'Please login first.');
+            }
 
-            // Validate amount based on payment type
+            $paymentType = $request->input('payment_type');
+            $amount = (int) $request->input('amount');
+
+            // Simple amount validation
             if ($paymentType === 'membership') {
-                $expectedAmount = (int) config('app.membership_amount', 35000);
+                $expectedAmount = 35000; // CHF 350.00
                 if ($amount !== $expectedAmount) {
-                    return redirect()->back()->with('error', 'Invalid membership amount.');
-                }
-            } elseif ($paymentType === 'donation') {
-                if ($amount < 500 || $amount > 1000000) {
-                    return redirect()->back()->with('error', 'Donation amount must be between CHF 5 and CHF 10,000.');
+                    return redirect()->back()->with('error', 'Invalid membership amount. Expected CHF 350.00');
                 }
             }
 
-            // Create payment record with cash-specific metadata
-            $payment = Payment::create([
-                'user_id' => $user->id,
-                'payment_type' => $paymentType,
-                'amount' => $amount,
-                'currency' => 'chf',
-                'status' => Payment::STATUS_PENDING,
-                'payment_method' => 'cash',
-                'metadata' => [
-                    'user_email' => $user->email,
-                    'user_name' => $user->name,
-                    'payment_type' => $paymentType,
-                    'amount_validation' => hash('sha256', $amount . $user->id . config('app.key')),
-                    'created_at' => now()->toISOString(),
-                    'cash_payment' => true,
-                    'awaiting_admin_approval' => true,
-                ]
-            ]);
+            // Create payment record - MINIMAL VERSION
+            $payment = new Payment();
+            $payment->user_id = $user->id;
+            $payment->payment_type = $paymentType;
+            $payment->amount = $amount;
+            $payment->currency = 'chf';
+            $payment->status = 'pending';
+            $payment->payment_method = 'cash';
+            $payment->metadata = [
+                'user_email' => $user->email,
+                'user_name' => $user->name,
+                'cash_payment' => true,
+                'created_at' => now()->toISOString(),
+            ];
+            $payment->save();
 
-            Log::info('Cash payment created', [
+            // Log success
+            Log::info('Cash payment created successfully', [
                 'payment_id' => $payment->id,
                 'user_id' => $user->id,
                 'amount' => $amount,
                 'type' => $paymentType,
-                'method' => 'cash',
             ]);
 
-            // Send cash payment instructions
-            $this->sendCashPaymentInstructions($payment);
-
-            return redirect()->route('payment.cash.instructions', $payment);
+            // Redirect to instructions page
+            return redirect()->route('payment.cash.instructions', ['payment' => $payment->id]);
 
         } catch (\Exception $e) {
-            Log::error('Cash payment processing failed', [
+            // Detailed error logging
+            Log::error('Cash payment failed', [
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id(),
-                'amount' => $request->amount ?? 'unknown',
-                'payment_type' => $request->payment_type ?? 'unknown',
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'user_id' => auth()->id() ?? 'not_authenticated',
+                'request_data' => $request->all(),
+                'stack_trace' => $e->getTraceAsString(),
             ]);
 
-            return redirect()->back()->with('error', 'Cash payment setup failed. Please try again.');
+            return redirect()->back()->with('error', 'Payment processing failed: ' . $e->getMessage());
         }
     }
 
