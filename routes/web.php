@@ -3576,4 +3576,119 @@ require __DIR__.'/auth.php';
         }
     });
 
+    // EMERGENCY: Force refresh email configuration
+    Route::get('/force-refresh-email-config', function() {
+        if (env('APP_ENV') !== 'production') {
+            return response('Only available in production', 403);
+        }
+        
+        try {
+            $output = [];
+            $output[] = "🔄 Force Refreshing Email Configuration";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "";
+            
+            // Clear config cache
+            Artisan::call('config:clear');
+            $output[] = "✅ Config cache cleared";
+            
+            // Clear view cache
+            Artisan::call('view:clear');
+            $output[] = "✅ View cache cleared";
+            
+            // Clear route cache
+            Artisan::call('route:clear');
+            $output[] = "✅ Route cache cleared";
+            
+            $output[] = "";
+            $output[] = "📧 Current Email Configuration:";
+            $output[] = "- MAIL_MAILER: " . config('mail.default');
+            $output[] = "- MAIL_HOST: " . config('mail.mailers.smtp.host');
+            $output[] = "- MAIL_PORT: " . config('mail.mailers.smtp.port');
+            $output[] = "- MAIL_USERNAME: " . config('mail.mailers.smtp.username');
+            $output[] = "- MAIL_ENCRYPTION: " . config('mail.mailers.smtp.encryption');
+            $output[] = "- MAIL_FROM_ADDRESS: " . config('mail.from.address');
+            $output[] = "- MAIL_FROM_NAME: " . config('mail.from.name');
+            $output[] = "";
+            
+            // Force reload config values from environment
+            $mailConfig = [
+                'mail.default' => env('MAIL_MAILER', 'smtp'),
+                'mail.mailers.smtp.host' => env('MAIL_HOST', 'smtp.mailgun.org'),
+                'mail.mailers.smtp.port' => env('MAIL_PORT', 587),
+                'mail.mailers.smtp.username' => env('MAIL_USERNAME'),
+                'mail.mailers.smtp.password' => env('MAIL_PASSWORD'),
+                'mail.mailers.smtp.encryption' => env('MAIL_ENCRYPTION', 'tls'),
+                'mail.from.address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+                'mail.from.name' => env('MAIL_FROM_NAME', 'Example'),
+            ];
+            
+            // Set the config values directly
+            foreach ($mailConfig as $key => $value) {
+                config([$key => $value]);
+            }
+            
+            $output[] = "🔧 Environment Variables (Direct Read):";
+            $output[] = "- MAIL_MAILER: " . env('MAIL_MAILER');
+            $output[] = "- MAIL_HOST: " . env('MAIL_HOST');
+            $output[] = "- MAIL_PORT: " . env('MAIL_PORT');
+            $output[] = "- MAIL_USERNAME: " . env('MAIL_USERNAME');
+            $output[] = "- MAIL_PASSWORD: " . (env('MAIL_PASSWORD') ? '[SET - Length: ' . strlen(env('MAIL_PASSWORD')) . ']' : '[NOT SET]');
+            $output[] = "- MAIL_ENCRYPTION: " . env('MAIL_ENCRYPTION');
+            $output[] = "- MAIL_FROM_ADDRESS: " . env('MAIL_FROM_ADDRESS');
+            $output[] = "- MAIL_FROM_NAME: " . env('MAIL_FROM_NAME');
+            $output[] = "";
+            
+            // Test SMTP connection with forced config
+            $output[] = "🔌 Testing SMTP Connection:";
+            try {
+                $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
+                    env('MAIL_HOST', 'smtppro.zoho.com'),
+                    (int) env('MAIL_PORT', 465),
+                    env('MAIL_ENCRYPTION', 'ssl') === 'ssl'
+                );
+                
+                $transport->setUsername(env('MAIL_USERNAME', 'info@xhamia-en-nur.ch'));
+                $transport->setPassword(env('MAIL_PASSWORD'));
+                
+                $transport->start();
+                $output[] = "✅ SMTP Connection: SUCCESS";
+                $transport->stop();
+                
+                // Test sending email
+                $output[] = "";
+                $output[] = "📤 Testing Email Send:";
+                
+                Mail::raw("Email configuration refresh test.\n\nTimestamp: " . now()->toDateTimeString() . "\n\nThis email confirms that the SMTP configuration is working correctly after refresh.", function ($message) {
+                    $message->to(env('MAIL_FROM_ADDRESS', 'info@xhamia-en-nur.ch'))
+                            ->subject('Email Config Refresh Test - ' . now()->format('H:i:s'))
+                            ->from(env('MAIL_FROM_ADDRESS', 'info@xhamia-en-nur.ch'), env('MAIL_FROM_NAME', 'EN NUR - Xhamia'));
+                });
+                
+                $output[] = "✅ Email sent successfully!";
+                $output[] = "Check inbox: " . env('MAIL_FROM_ADDRESS');
+                
+            } catch (\Exception $e) {
+                $output[] = "❌ SMTP Connection/Email failed:";
+                $output[] = "Error: " . $e->getMessage();
+                $output[] = "Class: " . get_class($e);
+                
+                // Specific troubleshooting for common issues
+                if (strpos($e->getMessage(), '550 5.7.1') !== false) {
+                    $output[] = "";
+                    $output[] = "🔍 RELAYING DENIED - Possible Solutions:";
+                    $output[] = "1. Verify MAIL_PASSWORD_SECRET is set in Render dashboard";
+                    $output[] = "2. Check if Zoho app password is still valid";
+                    $output[] = "3. Ensure 2FA is enabled on Zoho account";
+                    $output[] = "4. Try regenerating Zoho app password";
+                }
+            }
+            
+            return response('<h2>Email Configuration Refresh Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin/dashboard">Go to Dashboard</a>');
+            
+        } catch (\Exception $e) {
+            return response('<h2>Email Configuration Refresh Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin/dashboard">Go to Dashboard</a>');
+        }
+    });
+
     require __DIR__.'/auth.php';
