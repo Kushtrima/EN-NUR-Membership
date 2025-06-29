@@ -3976,3 +3976,105 @@ require __DIR__.'/auth.php';
         
         return response($output);
     });
+
+    // Debug route to test AdminController users() method exactly
+    Route::get('/debug-admin-users', function() {
+        // Simulate the exact AdminController users() method
+        $query = \App\Models\User::query();
+        
+        // Filter for our specific user
+        $query->where('email', 'infinitdizzajn@gmail.com');
+        
+        // Optimize loading with specific columns and eager loading (exact same as AdminController)
+        $users = $query->with([
+            'payments' => function($query) {
+                $query->select('user_id', 'amount', 'payment_type', 'status', 'created_at');
+            },
+            'membershipRenewals' => function($query) {
+                $query->select('user_id', 'days_until_expiry', 'is_hidden', 'is_renewed', 'membership_end_date')
+                      ->where('is_renewed', false);
+            }
+        ])->select('id', 'name', 'email', 'role', 'email_verified_at', 'created_at')
+          ->get(); // Use get() instead of paginate() for testing
+
+        // Add membership status to each user using the service (exact same as AdminController)
+        $membershipService = new \App\Services\MembershipService();
+        $users->transform(function ($user) use ($membershipService) {
+            // Use already loaded relationship to avoid additional queries
+            $activeRenewal = $user->membershipRenewals->first();
+            if ($activeRenewal) {
+                $daysUntilExpiry = $activeRenewal->calculateDaysUntilExpiry();
+                
+                // Manually implement getBorderColor logic
+                $borderColor = '#28a745'; // Default green
+                if ($activeRenewal->is_hidden) {
+                    $borderColor = '#dc3545'; // Red - Hidden/Deleted users
+                } elseif ($daysUntilExpiry <= 0) {
+                    $borderColor = '#dc3545'; // Red - Expired
+                } elseif ($daysUntilExpiry <= 30) {
+                    $borderColor = '#ff6c37'; // Orange - Expiring within 30 days
+                }
+                
+                // Manually implement getStatusBadge logic
+                $statusBadge = ['text' => 'ACTIVE', 'color' => 'white', 'background' => '#28a745'];
+                if ($activeRenewal->is_hidden) {
+                    $statusBadge = ['text' => 'HIDDEN', 'color' => 'white', 'background' => '#dc3545'];
+                } elseif ($daysUntilExpiry <= 0) {
+                    $statusBadge = ['text' => 'EXPIRED', 'color' => 'white', 'background' => '#dc3545'];
+                } elseif ($daysUntilExpiry <= 7) {
+                    $statusBadge = ['text' => $daysUntilExpiry . 'D', 'color' => 'white', 'background' => '#dc3545'];
+                } elseif ($daysUntilExpiry <= 30) {
+                    $statusBadge = ['text' => $daysUntilExpiry . 'D', 'color' => 'white', 'background' => '#ff6c37'];
+                }
+                
+                $user->membership_status = [
+                    'days_until_expiry' => $daysUntilExpiry,
+                    'is_hidden' => $activeRenewal->is_hidden,
+                    'is_expired' => $daysUntilExpiry <= 0,
+                    'membership_end_date' => $activeRenewal->membership_end_date,
+                    'border_color' => $borderColor,
+                    'status_badge' => $statusBadge,
+                ];
+            } else {
+                $user->membership_status = null;
+            }
+            return $user;
+        });
+        
+        $user = $users->first();
+        if (!$user) {
+            return response('<h2>User not found</h2>');
+        }
+        
+        $output = "<h2>🔍 AdminController users() Method Debug</h2>";
+        $output .= "<p><strong>User:</strong> {$user->name} ({$user->email})</p>";
+        
+        if ($user->membership_status) {
+            $status = $user->membership_status;
+            $badge = $status['status_badge'];
+            
+            $output .= "<h3>Membership Status Object:</h3>";
+            $output .= "<ul>";
+            $output .= "<li><strong>days_until_expiry:</strong> {$status['days_until_expiry']}</li>";
+            $output .= "<li><strong>is_expired:</strong> " . ($status['is_expired'] ? 'true' : 'false') . "</li>";
+            $output .= "<li><strong>is_hidden:</strong> " . ($status['is_hidden'] ? 'true' : 'false') . "</li>";
+            $output .= "<li><strong>border_color:</strong> <span style='color: {$status['border_color']}; font-weight: bold;'>{$status['border_color']}</span></li>";
+            $output .= "<li><strong>status_badge.text:</strong> <span style='background: {$badge['background']}; color: {$badge['color']}; padding: 4px 8px; border-radius: 4px;'>{$badge['text']}</span></li>";
+            $output .= "<li><strong>status_badge.background:</strong> {$badge['background']}</li>";
+            $output .= "</ul>";
+            
+            $output .= "<h3>How it should appear in users list:</h3>";
+            $output .= "<div style='border-left: 5px solid {$status['border_color']}; padding: 10px; margin: 10px 0; background: #f8f9fa;'>";
+            $output .= "<strong>{$user->name}</strong> ";
+            $output .= "<span style='background: {$badge['background']}; color: {$badge['color']}; padding: 0.15rem 0.3rem; border-radius: 3px; font-size: 0.65rem; font-weight: bold;'>{$badge['text']}</span>";
+            $output .= "<br><small>{$user->email}</small>";
+            $output .= "</div>";
+        } else {
+            $output .= "<p><strong>No membership status found!</strong></p>";
+        }
+        
+        $output .= "<br><a href='/admin/users' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Check Users List</a>";
+        $output .= "<br><br><a href='/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Check Dashboard</a>";
+        
+        return response($output);
+    });
