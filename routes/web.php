@@ -3866,3 +3866,55 @@ require __DIR__.'/auth.php';
             return response('<h2>SMTP Test Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
         }
     });
+
+    // Check reply-to configuration
+    Route::get('/check-reply-to', function() {
+        try {
+            $output = [];
+            $output[] = "📧 Reply-To Configuration Check";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "";
+            
+            // Check environment variable
+            $replyToAddress = env('MAIL_REPLY_TO_ADDRESS');
+            $output[] = "🔧 Environment Variable:";
+            $output[] = "MAIL_REPLY_TO_ADDRESS: " . ($replyToAddress ?: 'NOT SET');
+            $output[] = "";
+            
+            // Check if it matches expected value
+            $expectedValue = 'info@xhamia-en-nur.ch';
+            $isCorrect = $replyToAddress === $expectedValue;
+            
+            $output[] = "✅ Validation:";
+            $output[] = "Expected: {$expectedValue}";
+            $output[] = "Actual: " . ($replyToAddress ?: 'NOT SET');
+            $output[] = "Status: " . ($isCorrect ? '✅ CORRECT' : '❌ INCORRECT');
+            $output[] = "";
+            
+            // Test email with reply-to
+            if ($isCorrect) {
+                $output[] = "📤 Testing Email with Reply-To:";
+                try {
+                    Mail::raw("Test email with reply-to configuration.\n\nTimestamp: " . now()->toDateTimeString(), function ($message) use ($replyToAddress) {
+                        $message->to('infinitdizzajn@gmail.com')
+                                ->subject('Reply-To Test - ' . now()->format('H:i:s'))
+                                ->from(config('mail.from.address'), config('mail.from.name'))
+                                ->replyTo($replyToAddress, config('mail.from.name'));
+                    });
+                    
+                    $output[] = "✅ Email sent successfully with reply-to: {$replyToAddress}";
+                    $output[] = "Check inbox: infinitdizzajn@gmail.com";
+                    
+                } catch (\Exception $e) {
+                    $output[] = "❌ Email send failed: " . $e->getMessage();
+                }
+            } else {
+                $output[] = "❌ Cannot test email - reply-to address not configured correctly";
+            }
+            
+            return response('<h2>Reply-To Configuration Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/dashboard">Go to Dashboard</a>');
+            
+        } catch (\Exception $e) {
+            return response('<h2>Reply-To Check Failed</h2><pre>Error: ' . $e->getMessage() . '</pre>');
+        }
+    });
