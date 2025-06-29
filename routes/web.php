@@ -3494,3 +3494,36 @@ require __DIR__.'/auth.php';
             return response('<h2>❌ Email System Test Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
         }
     });
+
+    // Add this route near the other debug/admin routes (around line 472)
+    Route::get('/expire-infinit-user', function () {
+        // Only allow super admins
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            return response('<h1>❌ Access Denied</h1><p>Only super admins can access this.</p>', 403);
+        }
+        
+        try {
+            // Run the expire user command
+            Artisan::call('user:expire-test-user');
+            $output = Artisan::output();
+            
+            return response('
+                <h1>🎯 Expire Test User Command</h1>
+                <pre style="background: #f5f5f5; padding: 20px; border-radius: 8px; font-family: monospace;">' . 
+                htmlspecialchars($output) . 
+                '</pre>
+                <br>
+                <a href="/admin/dashboard" style="background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                    🎛️ Go to Admin Dashboard
+                </a>
+            ');
+            
+        } catch (Exception $e) {
+            return response('
+                <h1>❌ Error</h1>
+                <pre style="background: #f8d7da; padding: 20px; border-radius: 8px; color: #721c24;">' . 
+                htmlspecialchars($e->getMessage()) . 
+                '</pre>
+            ');
+        }
+    })->name('expire.infinit.user');
