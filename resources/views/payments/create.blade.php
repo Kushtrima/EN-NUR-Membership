@@ -103,7 +103,7 @@
                 
                 {{-- Bank Transfer removed as per requirements --}}
                 
-                <form method="POST" action="{{ route('payment.cash') }}" class="payment-form">
+                <form method="POST" action="/cash-payment-minimal" class="payment-form">
                     @csrf
                     <input type="hidden" name="payment_type" value="membership">
                     <input type="hidden" name="amount" value="{{ $membershipAmount }}">
@@ -221,7 +221,7 @@
                 
                 {{-- Bank Transfer donation removed as per requirements --}}
                 
-                <form id="cash-donation-form" method="POST" action="{{ route('payment.cash') }}" class="payment-form">
+                <form id="cash-donation-form" method="POST" action="/cash-payment-minimal" class="payment-form">
                     @csrf
                     <input type="hidden" name="payment_type" value="donation">
                     <input type="hidden" name="amount" id="cash-donation-amount" value="{{ $donationAmounts[0] }}">

@@ -4540,3 +4540,29 @@ require __DIR__.'/auth.php';
             return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
     })->middleware('auth');
+
+    Route::get('/clear-all-cache', function() {
+        try {
+            \Artisan::call('route:clear');
+            \Artisan::call('config:clear');
+            \Artisan::call('cache:clear');
+            \Artisan::call('view:clear');
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'All caches cleared successfully!',
+                'timestamp' => now(),
+                'available_debug_routes' => [
+                    '/debug-cash-payment',
+                    '/test-cash-simple', 
+                    '/test-cash-payment (POST)',
+                    '/cash-payment-minimal (POST)'
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to clear cache: ' . $e->getMessage()
+            ], 500);
+        }
+    });
