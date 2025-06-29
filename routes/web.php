@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
+
 Route::get('/debug-info', function() {
     $info = [
         'laravel_working' => 'YES - Laravel is booting successfully!',
@@ -3921,3 +3922,57 @@ require __DIR__.'/auth.php';
     
 
     require __DIR__.'/auth.php';
+
+    // Temporary debug route to test user status logic
+    Route::get('/debug-user-status', function() {
+        $user = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+        if (!$user) {
+            return response('<h2>User not found</h2>');
+        }
+        
+        $renewal = \App\Models\MembershipRenewal::where('user_id', $user->id)->first();
+        if (!$renewal) {
+            return response('<h2>No renewal found</h2>');
+        }
+        
+        $calculated = $renewal->calculateDaysUntilExpiry();
+        
+            // Test AdminController logic manually
+    $borderColor = '#dc3545'; // Red for expired
+    if ($renewal->is_hidden) {
+        $borderColor = '#dc3545';
+    } elseif ($calculated <= 0) {
+        $borderColor = '#dc3545';
+    } elseif ($calculated <= 30) {
+        $borderColor = '#ff6c37';
+    } else {
+        $borderColor = '#28a745';
+    }
+    
+    $statusBadge = ['text' => 'EXPIRED', 'background' => '#dc3545', 'color' => 'white'];
+    if ($renewal->is_hidden) {
+        $statusBadge = ['text' => 'HIDDEN', 'background' => '#dc3545', 'color' => 'white'];
+    } elseif ($calculated <= 0) {
+        $statusBadge = ['text' => 'EXPIRED', 'background' => '#dc3545', 'color' => 'white'];
+    } elseif ($calculated <= 7) {
+        $statusBadge = ['text' => $calculated . 'D', 'background' => '#dc3545', 'color' => 'white'];
+    } elseif ($calculated <= 30) {
+        $statusBadge = ['text' => $calculated . 'D', 'background' => '#ff6c37', 'color' => 'white'];
+    } else {
+        $statusBadge = ['text' => 'ACTIVE', 'background' => '#28a745', 'color' => 'white'];
+    }
+        
+        $output = "<h2>🔍 User Status Debug</h2>";
+        $output .= "<p><strong>User:</strong> {$user->name} ({$user->email})</p>";
+        $output .= "<p><strong>Membership End Date:</strong> {$renewal->membership_end_date}</p>";
+        $output .= "<p><strong>Stored days_until_expiry:</strong> {$renewal->days_until_expiry}</p>";
+        $output .= "<p><strong>CALCULATED days_until_expiry:</strong> {$calculated}</p>";
+        $output .= "<p><strong>Is Expired:</strong> " . ($calculated <= 0 ? 'YES' : 'NO') . "</p>";
+        $output .= "<p><strong>Should Show As:</strong> " . ($calculated <= 0 ? 'EXPIRED' : 'ACTIVE') . "</p>";
+        $output .= "<p><strong>Border Color:</strong> <span style='color: {$borderColor}; font-weight: bold;'>{$borderColor}</span></p>";
+        $output .= "<p><strong>Status Badge:</strong> <span style='background: {$statusBadge['background']}; color: {$statusBadge['color']}; padding: 4px 8px; border-radius: 4px;'>{$statusBadge['text']}</span></p>";
+        $output .= "<br><a href='/admin/users' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Check Users List</a>";
+        $output .= "<br><br><a href='/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Check Dashboard</a>";
+        
+        return response($output);
+    });
