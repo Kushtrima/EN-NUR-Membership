@@ -3692,3 +3692,71 @@ require __DIR__.'/auth.php';
     });
 
     require __DIR__.'/auth.php';
+
+    // Simple email diagnostic route
+    Route::get('/email-diagnosis', function() {
+        try {
+            $output = [];
+            $output[] = "📧 Email Configuration Diagnosis";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "";
+            
+            // Direct environment variable check
+            $output[] = "🔧 Environment Variables:";
+            $output[] = "MAIL_MAILER: " . (env('MAIL_MAILER') ?: 'NOT SET');
+            $output[] = "MAIL_HOST: " . (env('MAIL_HOST') ?: 'NOT SET');
+            $output[] = "MAIL_PORT: " . (env('MAIL_PORT') ?: 'NOT SET');
+            $output[] = "MAIL_USERNAME: " . (env('MAIL_USERNAME') ?: 'NOT SET');
+            $output[] = "MAIL_PASSWORD: " . (env('MAIL_PASSWORD') ? '[SET]' : 'NOT SET');
+            $output[] = "MAIL_ENCRYPTION: " . (env('MAIL_ENCRYPTION') ?: 'NOT SET');
+            $output[] = "MAIL_FROM_ADDRESS: " . (env('MAIL_FROM_ADDRESS') ?: 'NOT SET');
+            $output[] = "MAIL_FROM_NAME: " . (env('MAIL_FROM_NAME') ?: 'NOT SET');
+            $output[] = "";
+            
+            // Laravel config check
+            $output[] = "📋 Laravel Config:";
+            $output[] = "mail.default: " . config('mail.default');
+            $output[] = "mail.mailers.smtp.host: " . config('mail.mailers.smtp.host');
+            $output[] = "mail.mailers.smtp.port: " . config('mail.mailers.smtp.port');
+            $output[] = "mail.mailers.smtp.username: " . config('mail.mailers.smtp.username');
+            $output[] = "mail.mailers.smtp.encryption: " . config('mail.mailers.smtp.encryption');
+            $output[] = "mail.from.address: " . config('mail.from.address');
+            $output[] = "mail.from.name: " . config('mail.from.name');
+            $output[] = "";
+            
+            // Environment check
+            $output[] = "🌍 Environment Info:";
+            $output[] = "APP_ENV: " . env('APP_ENV');
+            $output[] = "APP_DEBUG: " . env('APP_DEBUG');
+            $output[] = "";
+            
+            // Expected vs Actual comparison
+            $expected = [
+                'MAIL_HOST' => 'smtppro.zoho.com',
+                'MAIL_PORT' => '465',
+                'MAIL_USERNAME' => 'info@xhamia-en-nur.ch',
+                'MAIL_ENCRYPTION' => 'ssl',
+                'MAIL_FROM_ADDRESS' => 'info@xhamia-en-nur.ch',
+            ];
+            
+            $output[] = "🎯 Expected vs Actual:";
+            foreach ($expected as $key => $expectedValue) {
+                $actual = env($key);
+                $status = ($actual === $expectedValue) ? '✅' : '❌';
+                $output[] = "{$status} {$key}: Expected '{$expectedValue}', Got '" . ($actual ?: 'NOT SET') . "'";
+            }
+            
+            return response()->json([
+                'success' => true,
+                'diagnosis' => implode("\n", $output),
+                'raw_output' => $output
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
+    });
