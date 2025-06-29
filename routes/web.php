@@ -3760,3 +3760,109 @@ require __DIR__.'/auth.php';
             ]);
         }
     });
+
+    // Test SMTP authentication
+    Route::get('/test-smtp-auth', function() {
+        try {
+            $output = [];
+            $output[] = "🔐 Testing SMTP Authentication";
+            $output[] = "Timestamp: " . now()->toDateTimeString();
+            $output[] = "";
+            
+            // Current settings
+            $host = env('MAIL_HOST', 'smtppro.zoho.com');
+            $port = (int) env('MAIL_PORT', 465);
+            $username = env('MAIL_USERNAME', 'info@xhamia-en-nur.ch');
+            $password = env('MAIL_PASSWORD');
+            $encryption = env('MAIL_ENCRYPTION', 'ssl');
+            
+            $output[] = "📋 Current Settings:";
+            $output[] = "Host: {$host}";
+            $output[] = "Port: {$port}";
+            $output[] = "Username: {$username}";
+            $output[] = "Password: " . ($password ? '[SET - Length: ' . strlen($password) . ']' : '[NOT SET]');
+            $output[] = "Encryption: {$encryption}";
+            $output[] = "";
+            
+            if (!$password) {
+                $output[] = "❌ Password not set! Check MAIL_PASSWORD environment variable.";
+                return response('<h2>SMTP Auth Test</h2><pre>' . implode("\n", $output) . '</pre>');
+            }
+            
+            // Test different configurations
+            $configs = [
+                'Current Config' => [
+                    'host' => $host,
+                    'port' => $port,
+                    'encryption' => $encryption === 'ssl'
+                ],
+                'Zoho TLS 587' => [
+                    'host' => 'smtp.zoho.com',
+                    'port' => 587,
+                    'encryption' => false // TLS
+                ],
+                'Zoho EU TLS 587' => [
+                    'host' => 'smtp.zoho.eu', 
+                    'port' => 587,
+                    'encryption' => false // TLS
+                ]
+            ];
+            
+            foreach ($configs as $name => $config) {
+                $output[] = "🔌 Testing {$name}:";
+                $output[] = "  Host: {$config['host']}:{$config['port']}";
+                $output[] = "  SSL: " . ($config['encryption'] ? 'Yes' : 'No (TLS)');
+                
+                try {
+                    $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
+                        $config['host'],
+                        $config['port'],
+                        $config['encryption']
+                    );
+                    
+                    $transport->setUsername($username);
+                    $transport->setPassword($password);
+                    
+                    // Test connection and authentication
+                    $transport->start();
+                    $output[] = "  ✅ SUCCESS: Authentication passed!";
+                    $transport->stop();
+                    
+                    // If this works, show the recommended settings
+                    if ($name !== 'Current Config') {
+                        $output[] = "";
+                        $output[] = "🎯 RECOMMENDED SETTINGS FOR RENDER:";
+                        $output[] = "MAIL_HOST = {$config['host']}";
+                        $output[] = "MAIL_PORT = {$config['port']}";
+                        $output[] = "MAIL_ENCRYPTION = " . ($config['encryption'] ? 'ssl' : 'tls');
+                        $output[] = "";
+                    }
+                    break; // Stop testing once we find a working config
+                    
+                } catch (\Exception $e) {
+                    $output[] = "  ❌ FAILED: " . $e->getMessage();
+                    
+                    // Check for specific error codes
+                    if (strpos($e->getMessage(), '535') !== false) {
+                        $output[] = "  → Authentication failed (wrong password/username)";
+                    } elseif (strpos($e->getMessage(), '534') !== false) {
+                        $output[] = "  → Authentication mechanism not supported";
+                    } elseif (strpos($e->getMessage(), 'Connection refused') !== false) {
+                        $output[] = "  → Cannot connect to server (wrong host/port)";
+                    }
+                }
+                $output[] = "";
+            }
+            
+            $output[] = "💡 TROUBLESHOOTING TIPS:";
+            $output[] = "1. Generate a NEW Zoho app password";
+            $output[] = "2. Make sure 2FA is enabled on your Zoho account";
+            $output[] = "3. Enable IMAP/SMTP access in Zoho settings";
+            $output[] = "4. Try the working configuration above";
+            
+            return response('<h2>SMTP Authentication Test Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin/dashboard">Go to Dashboard</a>');
+            
+        } catch (\Exception $e) {
+            return response('<h2>SMTP Test Failed</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
+        }
+    });
