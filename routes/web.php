@@ -4468,3 +4468,42 @@ require __DIR__.'/auth.php';
             ], 500);
         }
     })->middleware('auth');
+
+    Route::get('/test-cash-simple', function() {
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return response()->json(['error' => 'Not authenticated']);
+            }
+            
+            // Test creating a payment exactly like the cash payment does
+            $payment = new \App\Models\Payment();
+            $payment->user_id = $user->id;
+            $payment->payment_type = 'membership';
+            $payment->amount = 35000;
+            $payment->currency = 'chf';
+            $payment->status = 'pending';
+            $payment->payment_method = 'cash';
+            $payment->metadata = [
+                'user_email' => $user->email,
+                'user_name' => $user->name,
+                'cash_payment' => true,
+                'created_at' => now()->toISOString(),
+            ];
+            $payment->save();
+            
+            return response()->json([
+                'success' => true,
+                'payment_id' => $payment->id,
+                'redirect_url' => route('payment.cash.instructions', ['payment' => $payment->id])
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    })->middleware('auth');
