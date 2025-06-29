@@ -4507,3 +4507,36 @@ require __DIR__.'/auth.php';
             ], 500);
         }
     })->middleware('auth');
+
+    Route::post('/cash-payment-minimal', function(\Illuminate\Http\Request $request) {
+        try {
+            // Validate
+            $request->validate([
+                'payment_type' => 'required|in:membership,donation',
+                'amount' => 'required|integer|min:500',
+            ]);
+            
+            $user = auth()->user();
+            if (!$user) {
+                return redirect()->route('login');
+            }
+            
+            // Create payment
+            $payment = \App\Models\Payment::create([
+                'user_id' => $user->id,
+                'payment_type' => $request->payment_type,
+                'amount' => (int) $request->amount,
+                'currency' => 'chf',
+                'status' => 'pending',
+                'payment_method' => 'cash',
+                'metadata' => ['minimal_test' => true]
+            ]);
+            
+            // Redirect to a simple success page instead of the complex instructions
+            return redirect('/dashboard')->with('success', 'Cash payment created! Payment ID: ' . $payment->id);
+            
+        } catch (\Exception $e) {
+            \Log::error('Minimal cash payment error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        }
+    })->middleware('auth');
