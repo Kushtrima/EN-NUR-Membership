@@ -30,12 +30,30 @@ class ExpireTestUser extends Command
         }
         
         $this->info("Current end date: {$renewal->membership_end_date}");
+        $this->info("Current days until expiry: {$renewal->days_until_expiry}");
+        $this->info("Current is_expired: " . ($renewal->is_expired ? 'YES' : 'NO'));
         
-        // Make expired (1 year ago)
-        $renewal->membership_end_date = '2024-01-01';
+        // Make expired exactly 15 days ago (within dashboard filter range)
+        $expiredDate = now()->subDays(15)->format('Y-m-d');
+        $renewal->membership_end_date = $expiredDate;
+        $renewal->days_until_expiry = -15;
+        $renewal->is_expired = true;
+        $renewal->is_hidden = false;
+        $renewal->is_renewed = false;
         $renewal->save();
         
         $this->info("✅ Updated end date: {$renewal->membership_end_date}");
+        $this->info("✅ Updated days until expiry: {$renewal->days_until_expiry}");
+        $this->info("✅ Updated is_expired: " . ($renewal->is_expired ? 'YES' : 'NO'));
+        
+        // Test dashboard filter logic
+        $calculated = $renewal->calculateDaysUntilExpiry();
+        $willAppear = ($calculated <= 30 && $calculated > -30 && !$renewal->is_hidden && !$renewal->is_renewed);
+        
+        $this->info("🔍 Dashboard filter test:");
+        $this->info("- Calculated days: {$calculated}");
+        $this->info("- Will appear in dashboard: " . ($willAppear ? 'YES ✅' : 'NO ❌'));
+        
         $this->info('🎉 User is now EXPIRED and ready for testing!');
         
         return 0;
