@@ -71,16 +71,7 @@
                     </button>
                 </form>
                 
-                <form method="POST" action="{{ route('payment.paypal') }}" class="payment-form">
-                    @csrf
-                    <input type="hidden" name="payment_type" value="membership">
-                    <input type="hidden" name="amount" value="{{ $membershipAmount }}">
-                    <button type="submit" class="payment-btn paypal-btn">
-                        <svg class="payment-icon icon" fill="white" viewBox="0 0 384 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M111.4 295.9c-3.5 19.2-17.4 108.7-21.5 134-.3 1.8-1 2.5-3 2.5H12.3c-7.6 0-13.1-6.6-12.1-13.9L58.8 46.6c1.5-9.6 10.1-16.9 20-16.9 152.3 0 165.1-3.7 204 11.4 60.1 23.3 65.6 79.5 44 140.3-21.5 62.6-72.5 89.5-140.1 90.3-43.4 .7-69.5-7-75.3 24.2zM357.1 152c-1.8-1.3-2.5-1.8-3 1.3-2 11.4-5.1 22.5-8.8 33.6-39.9 113.8-150.5 103.9-204.5 103.9-6.1 0-10.1 3.3-10.9 9.4-22.6 140.4-27.1 169.7-27.1 169.7-1 7.1 3.5 12.9 10.6 12.9h63.5c8.6 0 15.7-6.3 17.4-14.9 .7-5.4-1.1 6.1 14.4-91.3 4.6-22 14.3-19.7 29.3-19.7 71 0 126.4-28.8 142.9-112.3 6.5-34.8 4.6-71.4-23.8-92.6z"/></svg>
-                        <span class="payment-text">Pay with PayPal</span>
-                        <span class="payment-cards">PayPal Balance • Cards</span>
-                    </button>
-                </form>
+                {{-- PayPal removed as per requirements --}}
                 
                 <form method="POST" action="{{ route('payment.twint') }}" class="payment-form">
                     @csrf
@@ -110,14 +101,18 @@
                     </button>
                 </form>
                 
-                <form method="POST" action="{{ route('payment.bank') }}" class="payment-form">
+                {{-- Bank Transfer removed as per requirements --}}
+                
+                <form method="POST" action="{{ route('payment.cash') }}" class="payment-form">
                     @csrf
                     <input type="hidden" name="payment_type" value="membership">
                     <input type="hidden" name="amount" value="{{ $membershipAmount }}">
-                    <button type="submit" class="payment-btn bank-btn">
-                        <svg class="payment-icon icon" fill="white" viewBox="0 0 512 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M243.4 2.6l-224 96c-14 6-21.8 21-18.7 35.8S16.8 160 32 160l0 8c0 13.3 10.7 24 24 24l400 0c13.3 0 24-10.7 24-24l0-8c15.2 0 28.3-10.7 31.3-25.6s-4.8-29.9-18.7-35.8l-224-96c-8-3.4-17.2-3.4-25.2 0zM128 224l-64 0 0 196.3c-.6 .3-1.2 .7-1.8 1.1l-48 32c-11.7 7.8-17 22.4-12.9 35.9S17.9 512 32 512l448 0c14.1 0 26.5-9.2 30.6-22.7s-1.1-28.1-12.9-35.9l-48-32c-.6-.4-1.2-.7-1.8-1.1L448 224l-64 0 0 192-40 0 0-192-64 0 0 192-48 0 0-192-64 0 0 192-40 0 0-192zM256 64a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></svg>
-                        <span class="payment-text">Bank Transfer</span>
-                        <span class="payment-cards">Direct Bank Payment</span>
+                    <button type="submit" class="payment-btn cash-btn">
+                        <svg class="payment-icon icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M21,4H3A2,2 0 0,0 1,6V18A2,2 0 0,0 3,20H21A2,2 0 0,0 23,18V6A2,2 0 0,0 21,4M21,18H3V6H21V18Z"/>
+                        </svg>
+                        <span class="payment-text">Pay with Cash</span>
+                        <span class="payment-cards">Pay on delivery or in person</span>
                     </button>
                 </form>
             </div>
@@ -194,16 +189,7 @@
                     </button>
                 </form>
                 
-                <form id="paypal-donation-form" method="POST" action="{{ route('payment.paypal') }}" class="payment-form">
-                    @csrf
-                    <input type="hidden" name="payment_type" value="donation">
-                    <input type="hidden" name="amount" id="paypal-donation-amount" value="{{ $donationAmounts[0] }}">
-                    <button type="submit" class="payment-btn paypal-btn">
-                        <svg class="payment-icon icon" fill="white" viewBox="0 0 384 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M111.4 295.9c-3.5 19.2-17.4 108.7-21.5 134-.3 1.8-1 2.5-3 2.5H12.3c-7.6 0-13.1-6.6-12.1-13.9L58.8 46.6c1.5-9.6 10.1-16.9 20-16.9 152.3 0 165.1-3.7 204 11.4 60.1 23.3 65.6 79.5 44 140.3-21.5 62.6-72.5 89.5-140.1 90.3-43.4 .7-69.5-7-75.3 24.2zM357.1 152c-1.8-1.3-2.5-1.8-3 1.3-2 11.4-5.1 22.5-8.8 33.6-39.9 113.8-150.5 103.9-204.5 103.9-6.1 0-10.1 3.3-10.9 9.4-22.6 140.4-27.1 169.7-27.1 169.7-1 7.1 3.5 12.9 10.6 12.9h63.5c8.6 0 15.7-6.3 17.4-14.9 .7-5.4-1.1 6.1 14.4-91.3 4.6-22 14.3-19.7 29.3-19.7 71 0 126.4-28.8 142.9-112.3 6.5-34.8 4.6-71.4-23.8-92.6z"/></svg>
-                        <span class="payment-text">Donate with PayPal</span>
-                        <span class="payment-cards">PayPal Balance • Cards</span>
-                    </button>
-                </form>
+                {{-- PayPal donation removed as per requirements --}}
                 
                 <form id="twint-donation-form" method="POST" action="{{ route('payment.twint') }}" class="payment-form">
                     @csrf
@@ -233,14 +219,18 @@
                     </button>
                 </form>
                 
-                <form id="bank-donation-form" method="POST" action="{{ route('payment.bank') }}" class="payment-form">
+                {{-- Bank Transfer donation removed as per requirements --}}
+                
+                <form id="cash-donation-form" method="POST" action="{{ route('payment.cash') }}" class="payment-form">
                     @csrf
                     <input type="hidden" name="payment_type" value="donation">
-                    <input type="hidden" name="amount" id="bank-donation-amount" value="{{ $donationAmounts[0] }}">
-                    <button type="submit" class="payment-btn bank-btn">
-                        <svg class="payment-icon icon" fill="white" viewBox="0 0 512 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M243.4 2.6l-224 96c-14 6-21.8 21-18.7 35.8S16.8 160 32 160l0 8c0 13.3 10.7 24 24 24l400 0c13.3 0 24-10.7 24-24l0-8c15.2 0 28.3-10.7 31.3-25.6s-4.8-29.9-18.7-35.8l-224-96c-8-3.4-17.2-3.4-25.2 0zM128 224l-64 0 0 196.3c-.6 .3-1.2 .7-1.8 1.1l-48 32c-11.7 7.8-17 22.4-12.9 35.9S17.9 512 32 512l448 0c14.1 0 26.5-9.2 30.6-22.7s-1.1-28.1-12.9-35.9l-48-32c-.6-.4-1.2-.7-1.8-1.1L448 224l-64 0 0 192-40 0 0-192-64 0 0 192-48 0 0-192-64 0 0 192-40 0 0-192zM256 64a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></svg>
-                        <span class="payment-text">Donate via Bank Transfer</span>
-                        <span class="payment-cards">Direct Bank Payment</span>
+                    <input type="hidden" name="amount" id="cash-donation-amount" value="{{ $donationAmounts[0] }}">
+                    <button type="submit" class="payment-btn cash-btn">
+                        <svg class="payment-icon icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M21,4H3A2,2 0 0,0 1,6V18A2,2 0 0,0 3,20H21A2,2 0 0,0 23,18V6A2,2 0 0,0 21,4M21,18H3V6H21V18Z"/>
+                        </svg>
+                        <span class="payment-text">Donate with Cash</span>
+                        <span class="payment-cards">Pay on delivery or in person</span>
                     </button>
                 </form>
             </div>
@@ -328,16 +318,15 @@
             color: #FF6B35 !important;
         }
         
-        .bank-btn svg.payment-icon {
-            fill: #6c757d !important;
-            color: #6c757d !important;
+        .cash-btn svg.payment-icon {
+            fill: #28a745 !important;
+            color: #28a745 !important;
         }
         
         /* White icons on hover */
         .stripe-btn:hover svg.payment-icon,
-        .paypal-btn:hover svg.payment-icon,
         .twint-btn:hover svg.payment-icon,
-        .bank-btn:hover svg.payment-icon {
+        .cash-btn:hover svg.payment-icon {
             fill: white !important;
             color: white !important;
         }
@@ -861,16 +850,16 @@
             box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
         }
 
-        .bank-btn {
-            border-color: #2c3e50;
-            color: #2c3e50;
+        .cash-btn {
+            border-color: #28a745;
+            color: #28a745;
         }
 
-        .bank-btn:hover {
-            background: #2c3e50;
+        .cash-btn:hover {
+            background: #28a745;
             color: white;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
         }
 
         .payment-icon {
@@ -1014,9 +1003,8 @@
         function selectDonation(amount, element, updateProgress = true) {
             // Update hidden inputs
             document.getElementById('stripe-donation-amount').value = amount;
-            document.getElementById('paypal-donation-amount').value = amount;
             document.getElementById('twint-donation-amount').value = amount;
-            document.getElementById('bank-donation-amount').value = amount;
+            document.getElementById('cash-donation-amount').value = amount;
             
             // Update selected amount display
             document.getElementById('selected-amount').textContent = 'CHF ' + (amount / 100).toFixed(0);
@@ -1059,16 +1047,14 @@
             
             // Update hidden inputs
             const stripeAmountEl = document.getElementById('stripe-donation-amount');
-            const paypalAmountEl = document.getElementById('paypal-donation-amount');
             const twintAmountEl = document.getElementById('twint-donation-amount');
-            const bankAmountEl = document.getElementById('bank-donation-amount');
+            const cashAmountEl = document.getElementById('cash-donation-amount');
             const selectedAmountEl = document.getElementById('selected-amount');
             const impactTextEl = document.getElementById('impact-text');
             
             if (stripeAmountEl) stripeAmountEl.value = amount;
-            if (paypalAmountEl) paypalAmountEl.value = amount;
             if (twintAmountEl) twintAmountEl.value = amount;
-            if (bankAmountEl) bankAmountEl.value = amount;
+            if (cashAmountEl) cashAmountEl.value = amount;
             
             // Update selected amount display
             if (selectedAmountEl) selectedAmountEl.textContent = 'CHF ' + cleanValue.toFixed(0);

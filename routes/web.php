@@ -415,6 +415,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/payments/bank/success/{payment}', [PaymentController::class, 'bankSuccess'])->name('payment.bank.success');
     Route::post('/payments/bank/confirm/{payment}', [PaymentController::class, 'bankConfirm'])->name('payment.bank.confirm');
     
+    Route::post('/payments/cash', [PaymentController::class, 'processCash'])->name('payment.cash');
+    Route::get('/payments/cash/{payment}', [PaymentController::class, 'cashInstructions'])->name('payment.cash.instructions');
+    
     // User Payment Export Routes
     Route::get('/payments/export/form', [PaymentExportController::class, 'showUserExportForm'])->name('exports.user.form');
     Route::post('/payments/export/user', [PaymentExportController::class, 'exportUserPayments'])->name('exports.user');
@@ -449,6 +452,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/payments/bulk-notify', [AdminController::class, 'bulkSendPaymentNotifications'])->name('payments.bulk-notify');
         Route::get('/payments/{payment}/receipt', [AdminController::class, 'generatePaymentReceipt'])->name('payments.receipt');
         Route::delete('/payments/{payment}', [AdminController::class, 'deletePayment'])->name('payments.delete');
+        Route::post('/payments/cash/confirm/{payment}', [PaymentController::class, 'cashConfirm'])->name('payments.cash.confirm');
         
         // Admin Payment Export Routes
         Route::get('/payments/export/{user}/form', [PaymentExportController::class, 'showAdminExportForm'])->name('exports.admin.form');

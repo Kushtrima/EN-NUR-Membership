@@ -995,6 +995,146 @@ class PaymentController extends Controller
     /**
      * Process Bank Transfer payment.
      */
+    public function processCash(Request $request)
+    {
+        $request->validate([
+            'payment_type' => 'required|in:membership,donation',
+            'amount' => 'required|integer|min:500|max:1000000', // Max CHF 10,000
+        ]);
+
+        try {
+            $paymentType = $request->payment_type;
+            $amount = (int) $request->amount;
+            $user = auth()->user();
+
+            // Validate amount based on payment type
+            if ($paymentType === 'membership') {
+                $expectedAmount = (int) config('app.membership_amount', 35000);
+                if ($amount !== $expectedAmount) {
+                    return redirect()->back()->with('error', 'Invalid membership amount.');
+                }
+            } elseif ($paymentType === 'donation') {
+                if ($amount < 500 || $amount > 1000000) {
+                    return redirect()->back()->with('error', 'Donation amount must be between CHF 5 and CHF 10,000.');
+                }
+            }
+
+            // Create payment record with cash-specific metadata
+            $payment = Payment::create([
+                'user_id' => $user->id,
+                'payment_type' => $paymentType,
+                'amount' => $amount,
+                'currency' => 'chf',
+                'status' => Payment::STATUS_PENDING,
+                'payment_method' => 'cash',
+                'metadata' => [
+                    'user_email' => $user->email,
+                    'user_name' => $user->name,
+                    'payment_type' => $paymentType,
+                    'amount_validation' => hash('sha256', $amount . $user->id . config('app.key')),
+                    'created_at' => now()->toISOString(),
+                    'cash_payment' => true,
+                    'awaiting_admin_approval' => true,
+                ]
+            ]);
+
+            Log::info('Cash payment created', [
+                'payment_id' => $payment->id,
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'type' => $paymentType,
+                'method' => 'cash',
+            ]);
+
+            // Send cash payment instructions
+            $this->sendCashPaymentInstructions($payment);
+
+            return redirect()->route('payment.cash.instructions', $payment);
+
+        } catch (\Exception $e) {
+            Log::error('Cash payment processing failed', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+                'amount' => $request->amount ?? 'unknown',
+                'payment_type' => $request->payment_type ?? 'unknown',
+            ]);
+
+            return redirect()->back()->with('error', 'Cash payment setup failed. Please try again.');
+        }
+    }
+
+    /**
+     * Show cash payment instructions.
+     */
+    public function cashInstructions(Payment $payment)
+    {
+        // Verify the payment belongs to the authenticated user
+        if ($payment->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized access to payment instructions.');
+        }
+
+        // Verify it's a cash payment
+        if ($payment->payment_method !== 'cash') {
+            abort(404, 'Payment method not found.');
+        }
+
+        return view('payments.cash-instructions', compact('payment'));
+    }
+
+    /**
+     * Admin confirms cash payment received.
+     */
+    public function cashConfirm(Request $request, Payment $payment)
+    {
+        // Only admins can confirm cash payments
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            // Update payment status
+            $payment->update([
+                'status' => Payment::STATUS_COMPLETED,
+                'transaction_id' => 'CASH_' . now()->format('YmdHis') . '_' . $payment->id,
+                'metadata' => array_merge($payment->metadata ?? [], [
+                    'admin_confirmed_at' => now()->toISOString(),
+                    'admin_confirmed_by' => auth()->user()->id,
+                    'admin_notes' => $request->notes,
+                    'cash_confirmed' => true,
+                ])
+            ]);
+
+            Log::info('Cash payment confirmed by admin', [
+                'payment_id' => $payment->id,
+                'admin_id' => auth()->id(),
+                'user_id' => $payment->user_id,
+                'amount' => $payment->amount,
+                'notes' => $request->notes,
+            ]);
+
+            // Handle successful payment (membership renewal, etc.)
+            $this->handleSuccessfulPayment($payment);
+
+            return redirect()->back()->with('success', 'Cash payment confirmed successfully. User has been notified.');
+
+        } catch (\Exception $e) {
+            Log::error('Cash payment confirmation failed', [
+                'payment_id' => $payment->id,
+                'admin_id' => auth()->id(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to confirm cash payment. Please try again.');
+        }
+    }
+
+    /**
+     * Process bank transfer payment.
+     */
     public function processBank(Request $request)
     {
         $request->validate([
@@ -1433,6 +1573,52 @@ class PaymentController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Failed to send bank transfer instructions: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send cash payment instructions email.
+     */
+    private function sendCashPaymentInstructions(Payment $payment)
+    {
+        try {
+            $user = $payment->user;
+            $subject = 'Cash Payment Instructions - ' . config('app.name');
+            
+            $message = "Dear {$user->name},\n\n";
+            $message .= "Thank you for choosing to pay with cash.\n\n";
+            $message .= "Payment Details:\n";
+            $message .= "- Payment ID: {$payment->id}\n";
+            $message .= "- Amount to Pay: {$payment->formatted_amount}\n";
+            $message .= "- Type: " . ucfirst($payment->payment_type) . "\n\n";
+            
+            $message .= "Cash Payment Instructions:\n";
+            $message .= "- Payment can be made in person at the mosque\n";
+            $message .= "- Office Hours: Monday-Friday 9:00 AM - 5:00 PM\n";
+            $message .= "- Saturday-Sunday: After prayer times\n";
+            $message .= "- Please bring this payment reference: CASH-{$payment->id}\n\n";
+            
+            $message .= "Alternative Arrangements:\n";
+            $message .= "- Contact us to arrange payment pickup\n";
+            $message .= "- Phone: +41 XX XXX XX XX\n";
+            $message .= "- Email: info@mosque.ch\n\n";
+            
+            $message .= "Important Notes:\n";
+            $message .= "- Your payment is currently marked as PENDING\n";
+            $message .= "- Once we receive your cash payment, we will update your account\n";
+            $message .= "- You will receive a confirmation email and receipt\n";
+            $message .= "- Please keep this email as proof of your payment request\n\n";
+            
+            $message .= "Best regards,\n" . config('app.name') . " Team\n";
+            $message .= "📧 info@mosque.ch | 📞 +41 XX XXX XX XX";
+
+            Log::info("Cash payment instructions sent to {$user->email}", [
+                'payment_id' => $payment->id,
+                'subject' => $subject
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send cash payment instructions: ' . $e->getMessage());
         }
     }
 

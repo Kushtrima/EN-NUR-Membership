@@ -156,6 +156,42 @@
     </div>
 @endif
 
+@if($payment->payment_method === 'cash' && $payment->status === 'pending')
+    <div style="margin-top: 2rem; padding: 1rem; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 6px;">
+        <h5 style="color: #0c5460; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <svg style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M21,4H3A2,2 0 0,0 1,6V18A2,2 0 0,0 3,20H21A2,2 0 0,0 23,18V6A2,2 0 0,0 21,4M21,18H3V6H21V18Z"/>
+            </svg>
+            Cash Payment Pending
+        </h5>
+        <p style="margin: 0 0 1rem 0; color: #0c5460; font-size: 0.9rem;">
+            This payment is awaiting cash collection. User should pay 
+            <strong>{{ $payment->formatted_amount }}</strong> with reference 
+            <code>CASH-{{ $payment->id }}</code>
+        </p>
+        
+        @if(auth()->user()->isSuperAdmin())
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button onclick="confirmCashPayment({{ $payment->id }})" 
+                        style="background: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem;">
+                    <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
+                    </svg>
+                    Confirm Cash Received
+                </button>
+                
+                <button onclick="showCashPaymentForm({{ $payment->id }})" 
+                        style="background: #17a2b8; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem;">
+                    <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"/>
+                    </svg>
+                    Add Notes & Confirm
+                </button>
+            </div>
+        @endif
+    </div>
+@endif
+
 <!-- Admin Actions -->
 @if(auth()->user()->isSuperAdmin())
     <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #dee2e6;">

@@ -259,6 +259,8 @@
                                         {{ ucfirst($payment->status) }}
                                         @if($payment->status === 'pending' && $payment->payment_method === 'bank_transfer')
                                             <span style="margin-left: 0.25rem;">⏳</span>
+                                        @elseif($payment->status === 'pending' && $payment->payment_method === 'cash')
+                                            <span style="margin-left: 0.25rem;">💰</span>
                                         @endif
                                     </span>
                                 </td>
@@ -649,5 +651,59 @@
                 // Subtle refresh without full page reload
             }
         }, 30000);
+
+        // Cash Payment Functions
+        async function confirmCashPayment(paymentId) {
+            const confirmed = confirm('Are you sure you want to confirm this cash payment as received?');
+            if (!confirmed) return;
+            
+            try {
+                const response = await fetch(`/admin/payments/cash/confirm/${paymentId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                if (response.ok) {
+                    alert('Cash payment confirmed successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to confirm cash payment');
+                }
+            } catch (error) {
+                alert('Error confirming cash payment');
+            }
+        }
+
+        function showCashPaymentForm(paymentId) {
+            const notes = prompt('Add notes about the cash payment (optional):');
+            if (notes === null) return; // User cancelled
+            
+            confirmCashPaymentWithNotes(paymentId, notes);
+        }
+
+        async function confirmCashPaymentWithNotes(paymentId, notes) {
+            try {
+                const response = await fetch(`/admin/payments/cash/confirm/${paymentId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ notes })
+                });
+                
+                if (response.ok) {
+                    alert('Cash payment confirmed successfully with notes!');
+                    location.reload();
+                } else {
+                    alert('Failed to confirm cash payment');
+                }
+            } catch (error) {
+                alert('Error confirming cash payment');
+            }
+        }
     </script>
 </x-app-layout> 
