@@ -26,6 +26,7 @@ class TermsController extends Controller
     public function accept(Request $request)
     {
         try {
+            // Validate checkboxes
             $request->validate([
                 'accept_terms' => 'required|accepted',
                 'accept_privacy' => 'required|accepted',
@@ -38,20 +39,40 @@ class TermsController extends Controller
 
             $user = auth()->user();
             
-            // Update terms acceptance manually to avoid any model issues
-            $user->update([
-                'terms_accepted_at' => now(),
-                'terms_version' => '1.0',
-                'terms_accepted_ip' => $request->ip(),
-            ]);
+            if (!$user) {
+                return redirect()->route('login')->with('error', 'Please log in to continue.');
+            }
+            
+            // Check if user has already accepted terms
+            if ($user->hasAcceptedTerms()) {
+                return redirect()->route('dashboard')->with('info', 'You have already accepted the terms.');
+            }
+            
+            // Update terms acceptance using direct database update
+            \DB::table('users')
+                ->where('id', $user->id)
+                ->update([
+                    'terms_accepted_at' => now(),
+                    'terms_version' => '1.0',
+                    'terms_accepted_ip' => $request->ip(),
+                    'updated_at' => now(),
+                ]);
+
+            // Clear any cached user data
+            auth()->user()->refresh();
 
             // Redirect to dashboard with success message
             return redirect()->route('dashboard')->with('success', 'Welcome! Your account is now fully activated.');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return back()->withErrors($e->errors())->withInput();
             
         } catch (\Exception $e) {
             // Log the error for debugging
             \Log::error('Terms acceptance error: ' . $e->getMessage(), [
                 'user_id' => auth()->id(),
+                'user_email' => auth()->user()->email ?? 'unknown',
                 'error' => $e->getTraceAsString()
             ]);
             

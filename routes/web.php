@@ -4569,6 +4569,35 @@ Route::get('/debug-terms', function() {
     ];
 });
 
+// Debug route to manually accept terms for infinit user
+Route::get('/debug-accept-terms-infinit', function() {
+    $user = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+    
+    if (!$user) {
+        return response()->json(['error' => 'User not found']);
+    }
+    
+    try {
+        $user->update([
+            'terms_accepted_at' => now(),
+            'terms_version' => '1.0',
+            'terms_accepted_ip' => request()->ip(),
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Terms accepted for infinit user',
+            'user_email' => $user->email,
+            'terms_accepted_at' => $user->fresh()->terms_accepted_at,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
 Route::get('/clear-all-cache', function() {
         try {
             \Artisan::call('route:clear');
