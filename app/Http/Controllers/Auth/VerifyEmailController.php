@@ -15,13 +15,19 @@ class VerifyEmailController extends Controller
     public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
+            // If already verified, check if terms are accepted
+            if ($request->user()->hasAcceptedTerms()) {
+                return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
+            } else {
+                return redirect()->route('terms.show')->with('success', 'Email verified! Please accept our terms to continue.');
+            }
         }
 
         if ($request->user()->markEmailAsVerified()) {
             event(new Verified($request->user()));
         }
 
-        return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
+        // After email verification, redirect to terms acceptance
+        return redirect()->route('terms.show')->with('success', 'Email verified successfully! Please accept our terms to continue.');
     }
 } 

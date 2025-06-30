@@ -388,9 +388,18 @@ Route::get('/health-check', function() {
     return response("<h2 style='color: {$statusColor};'>{$overallStatus}</h2><pre>" . implode("\n", $output) . "</pre><br><br><a href='/app-diagnostic' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>🔍 Full Diagnostic</a><br><br><a href='/dashboard' style='background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>👑 Admin Dashboard</a>");
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified', 'terms.accepted'])->name('dashboard');
 
-Route::middleware(['auth'])->group(function () {
+// Terms and Conditions routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/terms/accept', [App\Http\Controllers\TermsController::class, 'show'])->name('terms.show');
+    Route::post('/terms/accept', [App\Http\Controllers\TermsController::class, 'accept'])->name('terms.accept');
+});
+
+Route::get('/terms', [App\Http\Controllers\TermsController::class, 'terms'])->name('terms.full');
+Route::get('/privacy', [App\Http\Controllers\TermsController::class, 'privacy'])->name('terms.privacy');
+
+Route::middleware(['auth', 'verified', 'terms.accepted'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

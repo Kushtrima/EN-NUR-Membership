@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable // implements MustVerifyEmail - Temporarily disabled for easier setup
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
@@ -21,6 +21,9 @@ class User extends Authenticatable // implements MustVerifyEmail - Temporarily d
         'email',
         'password',
         'role',
+        'terms_accepted_at',
+        'terms_version',
+        'terms_accepted_ip',
     ];
 
     /**
@@ -42,6 +45,7 @@ class User extends Authenticatable // implements MustVerifyEmail - Temporarily d
     {
         return [
             'email_verified_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -103,5 +107,33 @@ class User extends Authenticatable // implements MustVerifyEmail - Temporarily d
     public function membershipRenewals()
     {
         return $this->hasMany(MembershipRenewal::class);
+    }
+
+    /**
+     * Check if user has accepted terms and conditions.
+     */
+    public function hasAcceptedTerms(): bool
+    {
+        return !is_null($this->terms_accepted_at);
+    }
+
+    /**
+     * Accept terms and conditions.
+     */
+    public function acceptTerms(string $version = '1.0', string $ipAddress = null): void
+    {
+        $this->update([
+            'terms_accepted_at' => now(),
+            'terms_version' => $version,
+            'terms_accepted_ip' => $ipAddress ?? request()->ip(),
+        ]);
+    }
+
+    /**
+     * Check if user is fully verified (email + terms).
+     */
+    public function isFullyVerified(): bool
+    {
+        return $this->hasVerifiedEmail() && $this->hasAcceptedTerms();
     }
 } 
