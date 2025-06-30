@@ -19,7 +19,7 @@ class VerifyEmailController extends Controller
             if ($request->user()->hasAcceptedTerms()) {
                 return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
             } else {
-                return redirect()->route('terms.show')->with('success', 'Email verified! Please accept our terms to continue.');
+                return redirect()->route('terms.show')->with('success', 'Email-i u verifikua! Ju lutemi pranoni kushtet tona për të vazhduar.');
             }
         }
 
@@ -28,6 +28,6 @@ class VerifyEmailController extends Controller
         }
 
         // After email verification, redirect to terms acceptance
-        return redirect()->route('terms.show')->with('success', 'Email verified successfully! Please accept our terms to continue.');
+        return redirect()->route('terms.show')->with('success', 'Email-i u verifikua me sukses! Ju lutemi pranoni kushtet tona për të vazhduar.');
     }
 } 

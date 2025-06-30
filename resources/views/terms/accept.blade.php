@@ -1,25 +1,25 @@
 <x-app-layout>
     <div class="card" style="max-width: 800px; margin: 2rem auto;">
         <div style="text-align: center; margin-bottom: 2rem;">
-            <h1 style="color: #1F6E38; margin-bottom: 0.5rem;">Welcome to EN NUR!</h1>
-            <p style="color: #666; font-size: 1.1rem;">Please review and accept our terms to complete your registration</p>
+            <h1 style="color: #1F6E38; margin-bottom: 0.5rem;">Mirë se vini në EN NUR!</h1>
+            <p style="color: #666; font-size: 1.1rem;">Ju lutemi rishikoni dhe pranoni kushtet tona për të përfunduar regjistrimin tuaj</p>
         </div>
 
         <!-- Progress Indicator -->
         <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
             <div style="display: flex; align-items: center; gap: 1rem;">
                 <div style="width: 30px; height: 30px; background: #28a745; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">✓</div>
-                <span style="color: #28a745; font-weight: 500;">Email Verified</span>
+                <span style="color: #28a745; font-weight: 500;">Email-i u Verifikua</span>
                 
                 <div style="width: 40px; height: 2px; background: #dee2e6;"></div>
                 
                 <div style="width: 30px; height: 30px; background: #1F6E38; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">2</div>
-                <span style="color: #1F6E38; font-weight: 500;">Accept Terms</span>
+                <span style="color: #1F6E38; font-weight: 500;">Pranoni Kushtet</span>
                 
                 <div style="width: 40px; height: 2px; background: #dee2e6;"></div>
                 
                 <div style="width: 30px; height: 30px; background: #dee2e6; color: #6c757d; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">3</div>
-                <span style="color: #6c757d; font-weight: 500;">Dashboard Access</span>
+                <span style="color: #6c757d; font-weight: 500;">Hyrja në Dashboard</span>
             </div>
         </div>
 
@@ -82,15 +82,15 @@
                         style="background: #1F6E38; color: white; border: none; padding: 1rem 2rem; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
                         onmouseover="this.style.background='#0d4d1f'"
                         onmouseout="this.style.background='#1F6E38'">
-                    Accept and Continue to Dashboard
+                    Pranoni dhe Vazhdoni në Dashboard
                 </button>
             </div>
         </form>
 
         <!-- Footer Note -->
         <div style="text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #dee2e6; color: #666; font-size: 0.9rem;">
-            <p>By accepting these terms, you confirm that you are at least 18 years old and have the legal capacity to enter into this agreement.</p>
-            <p>If you have any questions, please contact us at <a href="mailto:info@en-nur.org" style="color: #1F6E38;">info@en-nur.org</a></p>
+            <p>Duke pranuar këto kushte, ju konfirmoni se jeni të paktën 18 vjeç dhe keni kapacitetin ligjor për të hyrë në këtë marrëveshje.</p>
+            <p>Nëse keni ndonjë pyetje, ju lutemi na kontaktoni në <a href="mailto:info@en-nur.org" style="color: #1F6E38;">info@en-nur.org</a></p>
         </div>
     </div>
 </x-app-layout> 
