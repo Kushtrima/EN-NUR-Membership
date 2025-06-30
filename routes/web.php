@@ -4665,3 +4665,25 @@ Route::get('/clear-all-cache', function() {
             'terms_accepted_at' => $user->fresh()->terms_accepted_at,
         ]);
     });
+
+// Emergency super admin login route (bypasses all middleware)
+Route::get('/emergency-superadmin-login', function () {
+    // Find super admin
+    $user = \App\Models\User::where('email', 'kushtrim.m.arifi@gmail.com')->first();
+    
+    if (!$user) {
+        return 'Super admin user not found';
+    }
+    
+    // Force accept terms
+    $user->update([
+        'terms_accepted_at' => now(),
+        'terms_version' => '1.0',
+        'terms_accepted_ip' => request()->ip(),
+    ]);
+    
+    // Log the user in
+    auth()->login($user);
+    
+    return redirect('/dashboard')->with('success', 'Emergency login successful - terms auto-accepted');
+})->withoutMiddleware(['auth', 'verified', App\Http\Middleware\EnsureTermsAccepted::class]);
