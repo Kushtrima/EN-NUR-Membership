@@ -27,15 +27,12 @@ class TermsController extends Controller
     public function accept(Request $request)
     {
         try {
-            // Validate checkboxes
+            // Validate checkbox
             $request->validate([
                 'accept_terms' => 'required|accepted',
-                'accept_privacy' => 'required|accepted',
             ], [
-                'accept_terms.required' => 'You must accept the Terms and Conditions to continue.',
-                'accept_terms.accepted' => 'You must accept the Terms and Conditions to continue.',
-                'accept_privacy.required' => 'You must accept the Privacy Policy to continue.',
-                'accept_privacy.accepted' => 'You must accept the Privacy Policy to continue.',
+                'accept_terms.required' => 'Duhet të pranoni Kushtet e përgjithshme të Kontratës për të vazhduar.',
+                'accept_terms.accepted' => 'Duhet të pranoni Kushtet e përgjithshme të Kontratës për të vazhduar.',
             ]);
 
             $user = auth()->user();
@@ -66,7 +63,7 @@ class TermsController extends Controller
             $this->sendNewUserNotification($user);
 
             // Redirect to dashboard with success message
-            return redirect()->route('dashboard')->with('success', 'Welcome! Your account is now fully activated.');
+            return redirect()->route('dashboard')->with('success', 'Mirë se vini! Llogaria juaj është aktivizuar plotësisht.');
             
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Handle validation errors
