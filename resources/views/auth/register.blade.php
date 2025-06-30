@@ -7,33 +7,33 @@
                         <path d="M15,14C12.33,14 7,15.33 7,18V20H23V18C23,15.33 17.67,14 15,14M6,10V7H4V10H1V12H4V15H6V12H9V10M15,12A4,4 0 0,0 19,8A4,4 0 0,0 15,4A4,4 0 0,0 11,8A4,4 0 0,0 15,12Z"/>
                     </svg>
                 </div>
-                <h1 class="auth-title">Konto erstellen</h1>
-                <p class="auth-subtitle">Werden Sie Mitglied der EN NUR Gemeinschaft</p>
+                <h1 class="auth-title">Krijo Llogari</h1>
+                <p class="auth-subtitle">Bashkohu me komunitetin EN NUR</p>
             </div>
             
             <form method="POST" action="{{ route('register') }}" class="auth-form">
                 @csrf
 
-                <!-- Row 1: Vorname, Nachname, Geburtsdatum -->
+                <!-- Row 1: Emri, Mbiemri, Data e Lindjes -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="first_name" class="form-label">Vorname</label>
-                        <input id="first_name" class="form-control" type="text" name="first_name" value="{{ old('first_name') }}" required autofocus autocomplete="given-name" placeholder="Vorname">
+                        <label for="first_name" class="form-label">Emri</label>
+                        <input id="first_name" class="form-control" type="text" name="first_name" value="{{ old('first_name') }}" required autofocus autocomplete="given-name" placeholder="Emri">
                         @error('first_name')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="name" class="form-label">Nachname</label>
-                        <input id="name" class="form-control" type="text" name="name" value="{{ old('name') }}" required autocomplete="family-name" placeholder="Nachname">
+                        <label for="name" class="form-label">Mbiemri</label>
+                        <input id="name" class="form-control" type="text" name="name" value="{{ old('name') }}" required autocomplete="family-name" placeholder="Mbiemri">
                         @error('name')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="date_of_birth" class="form-label">Geburtsdatum</label>
+                        <label for="date_of_birth" class="form-label">Data e Lindjes</label>
                         <input id="date_of_birth" class="form-control" type="date" name="date_of_birth" value="{{ old('date_of_birth') }}" required autocomplete="bday">
                         @error('date_of_birth')
                             <div class="error-message">{{ $message }}</div>
@@ -41,41 +41,41 @@
                     </div>
                 </div>
 
-                <!-- Row 2: Adresse, PLZ, Ort -->
+                <!-- Row 2: Adresa, Kodi Postar, Qyteti -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="address" class="form-label">Adresse</label>
-                        <input id="address" class="form-control" type="text" name="address" value="{{ old('address') }}" required autocomplete="street-address" placeholder="Straße und Hausnummer">
+                        <label for="address" class="form-label">Adresa</label>
+                        <input id="address" class="form-control" type="text" name="address" value="{{ old('address') }}" required autocomplete="street-address" placeholder="Rruga dhe numri">
                         @error('address')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="postal_code" class="form-label">PLZ</label>
-                        <input id="postal_code" class="form-control" type="text" name="postal_code" value="{{ old('postal_code') }}" required autocomplete="postal-code" placeholder="PLZ" maxlength="10">
+                        <label for="postal_code" class="form-label">Kodi Postar</label>
+                        <input id="postal_code" class="form-control" type="text" name="postal_code" value="{{ old('postal_code') }}" required autocomplete="postal-code" placeholder="Kodi Postar" maxlength="10">
                         @error('postal_code')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="city" class="form-label">Ort</label>
-                        <input id="city" class="form-control" type="text" name="city" value="{{ old('city') }}" required autocomplete="address-level2" placeholder="Ort">
+                        <label for="city" class="form-label">Qyteti</label>
+                        <input id="city" class="form-control" type="text" name="city" value="{{ old('city') }}" required autocomplete="address-level2" placeholder="Qyteti">
                         @error('city')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
 
-                <!-- Row 3: Familienstand -->
+                <!-- Row 3: Gjendja Civile -->
                 <div class="form-row">
                     <div class="form-group form-group-full">
-                        <label for="marital_status" class="form-label">Familienstand</label>
+                        <label for="marital_status" class="form-label">Gjendja Civile</label>
                         <select id="marital_status" class="form-control" name="marital_status" required>
-                            <option value="">Familienstand auswählen</option>
-                            <option value="married" {{ old('marital_status') == 'married' ? 'selected' : '' }}>Verheiratet</option>
-                            <option value="single" {{ old('marital_status') == 'single' ? 'selected' : '' }}>Ledig</option>
+                            <option value="">Zgjidh gjendjen civile</option>
+                            <option value="married" {{ old('marital_status') == 'married' ? 'selected' : '' }}>I/E martuar</option>
+                            <option value="single" {{ old('marital_status') == 'single' ? 'selected' : '' }}>Beqar/e</option>
                         </select>
                         @error('marital_status')
                             <div class="error-message">{{ $message }}</div>
@@ -83,18 +83,18 @@
                     </div>
                 </div>
 
-                <!-- Row 4: E-Mail, Telefonnummer -->
+                <!-- Row 4: Email, Numri i Telefonit -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="email" class="form-label">E-Mail</label>
-                        <input id="email" class="form-control" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="email@beispiel.com">
+                        <label for="email" class="form-label">Email</label>
+                        <input id="email" class="form-control" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="email@shembull.com">
                         @error('email')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="phone_number" class="form-label">Telefonnummer</label>
+                        <label for="phone_number" class="form-label">Numri i Telefonit</label>
                         <input id="phone_number" class="form-control" type="tel" name="phone_number" value="{{ old('phone_number') }}" required autocomplete="tel" placeholder="+41 XX XXX XX XX">
                         @error('phone_number')
                             <div class="error-message">{{ $message }}</div>
@@ -102,30 +102,30 @@
                     </div>
                 </div>
 
-                <!-- Row 5: Passwort, Passwort bestätigen -->
+                <!-- Row 5: Fjalëkalimi, Konfirmo Fjalëkalimin -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="password" class="form-label">Passwort</label>
-                        <input id="password" class="form-control" type="password" name="password" required autocomplete="new-password" placeholder="Passwort erstellen">
+                        <label for="password" class="form-label">Fjalëkalimi</label>
+                        <input id="password" class="form-control" type="password" name="password" required autocomplete="new-password" placeholder="Krijo fjalëkalimin">
                         @error('password')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label for="password_confirmation" class="form-label">Passwort bestätigen</label>
-                        <input id="password_confirmation" class="form-control" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Passwort bestätigen">
+                        <label for="password_confirmation" class="form-label">Konfirmo Fjalëkalimin</label>
+                        <input id="password_confirmation" class="form-control" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Konfirmo fjalëkalimin">
                         @error('password_confirmation')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
 
-                <button type="submit" class="auth-btn">Konto erstellen</button>
+                <button type="submit" class="auth-btn">Krijo Llogari</button>
             </form>
 
             <div class="auth-footer">
-                <p>Haben Sie bereits ein Konto? <a href="{{ route('login') }}" class="auth-link">Hier anmelden</a></p>
+                <p>Keni një llogari? <a href="{{ route('login') }}" class="auth-link">Kyçuni këtu</a></p>
             </div>
         </div>
     </div>
