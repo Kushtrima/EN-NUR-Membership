@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class TermsController extends Controller
 {
@@ -61,6 +62,9 @@ class TermsController extends Controller
             // Clear any cached user data
             auth()->user()->refresh();
 
+            // Send notification email to super admin
+            $this->sendNewUserNotification($user);
+
             // Redirect to dashboard with success message
             return redirect()->route('dashboard')->with('success', 'Welcome! Your account is now fully activated.');
             
@@ -94,5 +98,41 @@ class TermsController extends Controller
     public function privacy()
     {
         return view('terms.privacy');
+    }
+
+    /**
+     * Send notification email to super admin about new user activation.
+     */
+    private function sendNewUserNotification($user)
+    {
+        try {
+            $adminEmail = 'info@xhamia-en-nur.ch';
+            
+            // Send email notification
+            Mail::send('emails.new-user-activated', [
+                'user' => $user,
+                'activatedAt' => now(),
+                'userAgent' => request()->userAgent(),
+                'ipAddress' => request()->ip()
+            ], function ($message) use ($adminEmail, $user) {
+                $message->to($adminEmail)
+                        ->subject('🎉 New User Activated - ' . $user->name)
+                        ->from(config('mail.from.address'), config('mail.from.name'));
+            });
+
+            \Log::info('New user activation notification sent', [
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'admin_email' => $adminEmail
+            ]);
+
+        } catch (\Exception $e) {
+            // Don't fail the terms acceptance if email fails
+            \Log::error('Failed to send new user notification email: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'error' => $e->getTraceAsString()
+            ]);
+        }
     }
 }
