@@ -120,7 +120,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Accept terms and conditions.
      */
-    public function acceptTerms(string $version = '1.0', string $ipAddress = null): void
+    public function acceptTerms(string $version = '1.0', ?string $ipAddress = null): void
     {
         $this->update([
             'terms_accepted_at' => now(),

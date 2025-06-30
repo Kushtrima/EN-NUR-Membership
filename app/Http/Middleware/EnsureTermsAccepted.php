@@ -31,12 +31,19 @@ class EnsureTermsAccepted
             'logout',
             'verification.*',
             'password.*',
+            'debug-terms',
         ];
 
         foreach ($exemptRoutes as $route) {
             if ($request->routeIs($route)) {
                 return $next($request);
             }
+        }
+        
+        // Also exempt specific paths
+        $exemptPaths = ['/terms', '/privacy', '/terms/accept', '/debug-terms'];
+        if (in_array($request->path(), $exemptPaths)) {
+            return $next($request);
         }
 
         // Check if user has verified email

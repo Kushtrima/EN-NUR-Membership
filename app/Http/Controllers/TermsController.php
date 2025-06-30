@@ -25,21 +25,38 @@ class TermsController extends Controller
      */
     public function accept(Request $request)
     {
-        $request->validate([
-            'accept_terms' => 'required|accepted',
-            'accept_privacy' => 'required|accepted',
-        ], [
-            'accept_terms.required' => 'You must accept the Terms and Conditions to continue.',
-            'accept_terms.accepted' => 'You must accept the Terms and Conditions to continue.',
-            'accept_privacy.required' => 'You must accept the Privacy Policy to continue.',
-            'accept_privacy.accepted' => 'You must accept the Privacy Policy to continue.',
-        ]);
+        try {
+            $request->validate([
+                'accept_terms' => 'required|accepted',
+                'accept_privacy' => 'required|accepted',
+            ], [
+                'accept_terms.required' => 'You must accept the Terms and Conditions to continue.',
+                'accept_terms.accepted' => 'You must accept the Terms and Conditions to continue.',
+                'accept_privacy.required' => 'You must accept the Privacy Policy to continue.',
+                'accept_privacy.accepted' => 'You must accept the Privacy Policy to continue.',
+            ]);
 
-        // Accept terms with current version and IP
-        auth()->user()->acceptTerms('1.0', $request->ip());
+            $user = auth()->user();
+            
+            // Update terms acceptance manually to avoid any model issues
+            $user->update([
+                'terms_accepted_at' => now(),
+                'terms_version' => '1.0',
+                'terms_accepted_ip' => $request->ip(),
+            ]);
 
-        // Redirect to dashboard with success message
-        return redirect()->route('dashboard')->with('success', 'Welcome! Your account is now fully activated.');
+            // Redirect to dashboard with success message
+            return redirect()->route('dashboard')->with('success', 'Welcome! Your account is now fully activated.');
+            
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Log::error('Terms acceptance error: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'error' => $e->getTraceAsString()
+            ]);
+            
+            return back()->with('error', 'An error occurred while processing your request. Please try again.');
+        }
     }
 
     /**

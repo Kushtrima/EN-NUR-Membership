@@ -4550,7 +4550,26 @@ require __DIR__.'/auth.php';
         }
     })->middleware('auth');
 
-    Route::get('/clear-all-cache', function() {
+    // Debug route for terms acceptance
+Route::get('/debug-terms', function() {
+    if (!auth()->check()) {
+        return "Not logged in";
+    }
+    
+    $user = auth()->user();
+    return [
+        'user_id' => $user->id,
+        'email' => $user->email,
+        'email_verified' => $user->hasVerifiedEmail(),
+        'terms_accepted' => $user->hasAcceptedTerms(),
+        'terms_accepted_at' => $user->terms_accepted_at,
+        'terms_version' => $user->terms_version,
+        'terms_accepted_ip' => $user->terms_accepted_ip,
+        'is_fully_verified' => $user->isFullyVerified(),
+    ];
+});
+
+Route::get('/clear-all-cache', function() {
         try {
             \Artisan::call('route:clear');
             \Artisan::call('config:clear');
