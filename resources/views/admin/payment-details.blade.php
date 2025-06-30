@@ -154,32 +154,7 @@
     </div>
 @endif
 
-@if($payment->payment_method === 'cash' && $payment->status === 'pending')
-    <div style="margin-top: 2rem; padding: 1rem; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 6px;">
-        <h5 style="color: #0c5460; margin-bottom: 0.5rem;">
-            Cash Payment Pending
-        </h5>
-        <p style="margin: 0 0 1rem 0; color: #0c5460; font-size: 0.9rem;">
-            This payment is awaiting cash collection. User should pay 
-            <strong>{{ $payment->formatted_amount }}</strong> with reference 
-            <code>CASH-{{ $payment->id }}</code>
-        </p>
-        
-        @if(auth()->user()->isSuperAdmin())
-            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                <button onclick="confirmCashPayment({{ $payment->id }})" 
-                        style="background: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">
-                    Confirm Cash Received
-                </button>
-                
-                <button onclick="showCashPaymentForm({{ $payment->id }})" 
-                        style="background: #17a2b8; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.875rem;">
-                    Add Notes & Confirm
-                </button>
-            </div>
-        @endif
-    </div>
-@endif
+
 
 <!-- Admin Actions -->
 @if(auth()->user()->isSuperAdmin())
