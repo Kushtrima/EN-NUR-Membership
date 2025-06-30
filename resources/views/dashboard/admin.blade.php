@@ -1254,10 +1254,7 @@
 
     <!-- Pending Cash Payments Management -->
     <div class="card">
-        <h2 class="card-title" style="display: flex; align-items: center; gap: 0.5rem;">
-            <svg style="width: 1.2em; height: 1.2em; color: #C19A61;" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M21,4H3A2,2 0 0,0 1,6V18A2,2 0 0,0 3,20H21A2,2 0 0,0 23,18V6A2,2 0 0,0 21,4M21,18H3V6H21V18Z"/>
-            </svg>
+        <h2 class="card-title">
             Pending Cash Payments 
             @if($pendingCashPayments->count() > 0)
                 <span style="background: #dc3545; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: normal;">
@@ -1324,11 +1321,11 @@
                                 <td style="padding: 1rem;">
                                     @if($payment->payment_type === 'membership')
                                         <span style="background: #1F6E38; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 500;">
-                                            💎 Membership
+                                            Membership
                                         </span>
                                     @else
                                         <span style="background: #C19A61; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 500;">
-                                            ❤️ Donation
+                                            Donation
                                         </span>
                                     @endif
                                 </td>
@@ -1351,7 +1348,7 @@
                                                 style="background: #28a745; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.3s ease;"
                                                 onmouseover="this.style.background='#218838'"
                                                 onmouseout="this.style.background='#28a745'">
-                                            ✅ Confirm
+                                            Confirm
                                         </button>
                                         
                                         <!-- View Details Button -->
@@ -1359,7 +1356,7 @@
                                            style="background: #6c757d; color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.85rem; font-weight: 500; transition: all 0.3s ease;"
                                            onmouseover="this.style.background='#5a6268'"
                                            onmouseout="this.style.background='#6c757d'">
-                                            👁️ Details
+                                            Details
                                         </a>
                                     </div>
                                 </td>
@@ -1369,31 +1366,11 @@
                 </table>
             </div>
             
-            <!-- Quick Actions -->
-            <div style="margin-top: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #C19A61;">
-                <h4 style="margin: 0 0 0.5rem 0; color: #C19A61;">💡 Quick Actions</h4>
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <a href="{{ route('admin.payments') }}" 
-                       style="background: #1F6E38; color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9rem;">
-                        📊 View All Payments
-                    </a>
-                    <a href="{{ route('admin.payments') }}?method=cash" 
-                       style="background: #C19A61; color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9rem;">
-                        💰 All Cash Payments
-                    </a>
-                </div>
-            </div>
+
         @else
             <div style="text-align: center; padding: 3rem; color: #666; background: rgba(31, 110, 56, 0.1); border-radius: 8px;">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
                 <h3 style="color: #1F6E38; margin-bottom: 0.5rem;">All Caught Up!</h3>
                 <p>No pending cash payments require confirmation at this time.</p>
-                <div style="margin-top: 1.5rem;">
-                    <a href="{{ route('admin.payments') }}" 
-                       style="background: #1F6E38; color: white; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 4px; font-weight: 500;">
-                        📊 View All Payments
-                    </a>
-                </div>
             </div>
         @endif
     </div>
@@ -1419,7 +1396,7 @@
                     </button>
                     <button type="submit" 
                             style="background: #28a745; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: 500;">
-                        ✅ Confirm Payment Received
+                        Confirm Payment Received
                     </button>
                 </div>
             </form>
