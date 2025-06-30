@@ -4911,3 +4911,95 @@ Route::post('/test-terms-form-submission', function(\Illuminate\Http\Request $re
     
     return response('<pre>' . implode("\n", $output) . '</pre>');
 })->middleware(['auth', 'verified']);
+
+// Emergency route to run terms acceptance migration
+Route::get('/run-terms-migration', function() {
+    // Only allow super admin to run this
+    if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+        abort(403, 'Only super admin can run migrations');
+    }
+    
+    $output = [];
+    $output[] = "🔧 RUNNING TERMS ACCEPTANCE MIGRATION";
+    $output[] = "=" . str_repeat("=", 40);
+    $output[] = "";
+    
+    try {
+        // Check if columns already exist
+        $hasColumns = false;
+        try {
+            \DB::select("SELECT terms_accepted_at FROM users LIMIT 1");
+            $hasColumns = true;
+            $output[] = "✅ Terms columns already exist - no migration needed";
+        } catch (\Exception $e) {
+            $output[] = "📋 Terms columns don't exist - running migration...";
+        }
+        
+        if (!$hasColumns) {
+            // Run the specific migration
+            \Artisan::call('migrate', [
+                '--path' => 'database/migrations/2025_06_30_070140_add_terms_acceptance_to_users_table.php',
+                '--force' => true
+            ]);
+            
+            $migrationOutput = \Artisan::output();
+            $output[] = "✅ Migration executed successfully";
+            $output[] = "Migration output: " . $migrationOutput;
+            
+            // Verify columns were created
+            try {
+                \DB::select("SELECT terms_accepted_at, terms_version, terms_accepted_ip FROM users LIMIT 1");
+                $output[] = "✅ Verification: Terms columns now exist!";
+            } catch (\Exception $e) {
+                $output[] = "❌ Verification failed: " . $e->getMessage();
+            }
+        }
+        
+    } catch (\Exception $e) {
+        $output[] = "❌ Migration failed: " . $e->getMessage();
+        $output[] = "Trace: " . $e->getTraceAsString();
+    }
+    
+    $output[] = "";
+    $output[] = "🎯 NEXT STEPS:";
+    $output[] = "1. Check if migration was successful above";
+    $output[] = "2. Test terms acceptance again";
+    $output[] = "3. Visit /test-terms-acceptance-process to verify";
+    
+    return response('<pre>' . implode("\n", $output) . '</pre>');
+});
+
+// Alternative manual migration route
+Route::get('/manual-add-terms-columns', function() {
+    // Only allow super admin to run this
+    if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+        abort(403, 'Only super admin can run this operation');
+    }
+    
+    $output = [];
+    $output[] = "🔧 MANUAL TERMS COLUMNS CREATION";
+    $output[] = "=" . str_repeat("=", 35);
+    $output[] = "";
+    
+    try {
+        // Add columns manually using raw SQL
+        \DB::statement('ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP NULL');
+        \DB::statement('ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_version VARCHAR(255) NULL');
+        \DB::statement('ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_ip INET NULL');
+        
+        $output[] = "✅ Manual column creation completed";
+        
+        // Test the columns
+        $result = \DB::select("SELECT terms_accepted_at, terms_version, terms_accepted_ip FROM users LIMIT 1");
+        $output[] = "✅ Verification: Columns accessible";
+        
+        $output[] = "";
+        $output[] = "🎉 SUCCESS! Terms acceptance should now work.";
+        $output[] = "Test it at: /test-terms-acceptance-process";
+        
+    } catch (\Exception $e) {
+        $output[] = "❌ Manual creation failed: " . $e->getMessage();
+    }
+    
+    return response('<pre>' . implode("\n", $output) . '</pre>');
+});
