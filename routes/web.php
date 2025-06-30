@@ -4716,3 +4716,198 @@ Route::get('/emergency-superadmin-login', function () {
     
     return redirect('/dashboard')->with('success', 'Emergency login successful - terms auto-accepted');
 })->withoutMiddleware(['auth', 'verified', App\Http\Middleware\EnsureTermsAccepted::class]);
+
+// Debug route to manually accept terms for infinit user
+Route::get('/debug-accept-terms-infinit', function() {
+    $user = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+    
+    if (!$user) {
+        return response()->json(['error' => 'User not found']);
+    }
+    
+    try {
+        $user->update([
+            'terms_accepted_at' => now(),
+            'terms_version' => '1.0',
+            'terms_accepted_ip' => request()->ip(),
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Terms accepted for infinit user',
+            'user_email' => $user->email,
+            'terms_accepted_at' => $user->fresh()->terms_accepted_at,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
+// Comprehensive test route to simulate terms acceptance process
+Route::get('/test-terms-acceptance-process', function() {
+    $output = [];
+    $output[] = "🧪 COMPREHENSIVE TERMS ACCEPTANCE TEST";
+    $output[] = "=" . str_repeat("=", 50);
+    $output[] = "";
+    
+    // Test 1: Find infinit user
+    $user = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+    if (!$user) {
+        $output[] = "❌ Test 1: User not found";
+        return response('<pre>' . implode("\n", $output) . '</pre>');
+    }
+    $output[] = "✅ Test 1: User found - ID: {$user->id}, Email: {$user->email}";
+    
+    // Test 2: Check current terms status
+    $output[] = "";
+    $output[] = "📋 Current Status:";
+    $output[] = "   - terms_accepted_at: " . ($user->terms_accepted_at ?? 'NULL');
+    $output[] = "   - terms_version: " . ($user->terms_version ?? 'NULL');
+    $output[] = "   - terms_accepted_ip: " . ($user->terms_accepted_ip ?? 'NULL');
+    $output[] = "   - hasAcceptedTerms(): " . ($user->hasAcceptedTerms() ? 'TRUE' : 'FALSE');
+    
+    // Test 3: Check database table structure
+    try {
+        $columns = \DB::select("DESCRIBE users");
+        $termsColumns = array_filter($columns, function($col) {
+            return strpos($col->Field, 'terms_') === 0;
+        });
+        
+        $output[] = "";
+        $output[] = "🗄️ Database Structure:";
+        foreach ($termsColumns as $col) {
+            $output[] = "   - {$col->Field}: {$col->Type} ({$col->Null}, Default: {$col->Default})";
+        }
+    } catch (\Exception $e) {
+        $output[] = "❌ Database structure check failed: " . $e->getMessage();
+    }
+    
+    // Test 4: Try direct database update
+    try {
+        $affected = \DB::table('users')
+            ->where('id', $user->id)
+            ->update([
+                'terms_accepted_at' => now(),
+                'terms_version' => '1.0',
+                'terms_accepted_ip' => request()->ip(),
+                'updated_at' => now(),
+            ]);
+        
+        $output[] = "";
+        $output[] = "✅ Test 4: Direct DB update successful - Rows affected: {$affected}";
+        
+        // Refresh user
+        $user = $user->fresh();
+        $output[] = "   - New terms_accepted_at: " . $user->terms_accepted_at;
+        $output[] = "   - hasAcceptedTerms(): " . ($user->hasAcceptedTerms() ? 'TRUE' : 'FALSE');
+        
+    } catch (\Exception $e) {
+        $output[] = "❌ Test 4: Direct DB update failed: " . $e->getMessage();
+    }
+    
+    // Test 5: Try model update
+    try {
+        $user->update([
+            'terms_accepted_at' => now()->addMinute(),
+            'terms_version' => '1.1',
+            'terms_accepted_ip' => request()->ip(),
+        ]);
+        
+        $output[] = "";
+        $output[] = "✅ Test 5: Model update successful";
+        $output[] = "   - New terms_accepted_at: " . $user->fresh()->terms_accepted_at;
+        
+    } catch (\Exception $e) {
+        $output[] = "❌ Test 5: Model update failed: " . $e->getMessage();
+    }
+    
+    // Test 6: Check middleware logic
+    $output[] = "";
+    $output[] = "🛡️ Middleware Logic Test:";
+    $output[] = "   - User is super admin: " . ($user->isSuperAdmin() ? 'TRUE' : 'FALSE');
+    $output[] = "   - User role: " . $user->role;
+    $output[] = "   - Created at: " . $user->created_at;
+    $output[] = "   - Is older than 1 day: " . ($user->created_at < now()->subDays(1) ? 'TRUE' : 'FALSE');
+    
+    $output[] = "";
+    $output[] = "🎯 CONCLUSION: Check the output above to identify the issue.";
+    
+    return response('<pre>' . implode("\n", $output) . '</pre>');
+});
+
+// Test POST route to simulate form submission
+Route::post('/test-terms-form-submission', function(\Illuminate\Http\Request $request) {
+    $output = [];
+    $output[] = "📝 FORM SUBMISSION TEST";
+    $output[] = "=" . str_repeat("=", 30);
+    $output[] = "";
+    
+    // Check if user is logged in
+    if (!auth()->check()) {
+        $output[] = "❌ User not logged in";
+        return response('<pre>' . implode("\n", $output) . '</pre>');
+    }
+    
+    $user = auth()->user();
+    $output[] = "✅ User logged in: {$user->email}";
+    
+    // Check form data
+    $output[] = "";
+    $output[] = "📋 Form Data:";
+    $output[] = "   - accept_terms: " . ($request->has('accept_terms') ? $request->accept_terms : 'MISSING');
+    $output[] = "   - accept_privacy: " . ($request->has('accept_privacy') ? $request->accept_privacy : 'MISSING');
+    $output[] = "   - _token: " . ($request->has('_token') ? 'PRESENT' : 'MISSING');
+    
+    // Try validation
+    try {
+        $request->validate([
+            'accept_terms' => 'required|accepted',
+            'accept_privacy' => 'required|accepted',
+        ]);
+        $output[] = "";
+        $output[] = "✅ Validation passed";
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        $output[] = "";
+        $output[] = "❌ Validation failed:";
+        foreach ($e->errors() as $field => $errors) {
+            foreach ($errors as $error) {
+                $output[] = "   - {$field}: {$error}";
+            }
+        }
+        return response('<pre>' . implode("\n", $output) . '</pre>');
+    }
+    
+    // Try database update
+    try {
+        \DB::table('users')
+            ->where('id', $user->id)
+            ->update([
+                'terms_accepted_at' => now(),
+                'terms_version' => '1.0',
+                'terms_accepted_ip' => $request->ip(),
+                'updated_at' => now(),
+            ]);
+        
+        $output[] = "";
+        $output[] = "✅ Database update successful";
+        
+        // Check if it worked
+        $updatedUser = \App\Models\User::find($user->id);
+        $output[] = "   - New terms_accepted_at: " . $updatedUser->terms_accepted_at;
+        $output[] = "   - hasAcceptedTerms(): " . ($updatedUser->hasAcceptedTerms() ? 'TRUE' : 'FALSE');
+        
+        $output[] = "";
+        $output[] = "🎉 SUCCESS! Terms acceptance would work normally.";
+        $output[] = "    User would be redirected to dashboard.";
+        
+    } catch (\Exception $e) {
+        $output[] = "";
+        $output[] = "❌ Database update failed: " . $e->getMessage();
+        $output[] = "   Trace: " . $e->getTraceAsString();
+    }
+    
+    return response('<pre>' . implode("\n", $output) . '</pre>');
+})->middleware(['auth', 'verified']);
