@@ -4594,3 +4594,31 @@ Route::get('/clear-all-cache', function() {
             ], 500);
         }
     });
+
+    // One-time route to auto-accept terms for existing users
+    Route::get('/auto-accept-existing-users-terms', function () {
+        // Only allow super admin to run this
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            abort(403, 'Only super admin can run this operation');
+        }
+        
+        $usersUpdated = 0;
+        $users = \App\Models\User::whereNull('terms_accepted_at')
+            ->where('created_at', '<', now()->subDays(1))
+            ->get();
+        
+        foreach ($users as $user) {
+            $user->update([
+                'terms_accepted_at' => $user->created_at,
+                'terms_version' => '1.0',
+                'terms_accepted_ip' => request()->ip(),
+            ]);
+            $usersUpdated++;
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => "Auto-accepted terms for {$usersUpdated} existing users",
+            'users_updated' => $usersUpdated
+        ]);
+    })->name('auto-accept-existing-users-terms');

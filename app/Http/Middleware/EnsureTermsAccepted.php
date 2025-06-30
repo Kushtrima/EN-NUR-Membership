@@ -51,7 +51,19 @@ class EnsureTermsAccepted
             return redirect()->route('verification.notice');
         }
 
-        // Check if user has accepted terms
+        // Auto-accept terms for existing users (created before terms requirement)
+        // This handles existing users who were using the platform before terms were required
+        if (!$user->hasAcceptedTerms() && $user->created_at < now()->subDays(1)) {
+            $user->update([
+                'terms_accepted_at' => $user->created_at, // Use their registration date
+                'terms_version' => '1.0',
+                'terms_accepted_ip' => $request->ip(),
+            ]);
+            // Refresh the user model to reflect the changes
+            $user->refresh();
+        }
+
+        // Check if user has accepted terms (after potential auto-acceptance)
         if (!$user->hasAcceptedTerms()) {
             return redirect()->route('terms.show')
                 ->with('info', 'Please accept our Terms and Conditions to continue using the platform.');
