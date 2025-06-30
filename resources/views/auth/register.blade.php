@@ -14,36 +14,111 @@
             <form method="POST" action="{{ route('register') }}" class="auth-form">
                 @csrf
 
-                <div class="form-group">
-                    <label for="name" class="form-label">Full Name</label>
-                    <input id="name" class="form-control" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name" placeholder="Enter your full name">
-                    @error('name')
-                        <div class="error-message">{{ $message }}</div>
-                    @enderror
+                <!-- Row 1: Name, First Name, Date of Birth -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name" class="form-label">Name</label>
+                        <input id="name" class="form-control" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="family-name" placeholder="Nachname">
+                        @error('name')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="first_name" class="form-label">First Name (Vorname)</label>
+                        <input id="first_name" class="form-control" type="text" name="first_name" value="{{ old('first_name') }}" required autocomplete="given-name" placeholder="Vorname">
+                        @error('first_name')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date_of_birth" class="form-label">Date of Birth (Geburtsdatum)</label>
+                        <input id="date_of_birth" class="form-control" type="date" name="date_of_birth" value="{{ old('date_of_birth') }}" required autocomplete="bday">
+                        @error('date_of_birth')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="email" class="form-label">Email Address</label>
-                    <input id="email" class="form-control" type="email" name="email" value="{{ old('email') }}" required autocomplete="username" placeholder="Enter your email">
-                    @error('email')
-                        <div class="error-message">{{ $message }}</div>
-                    @enderror
+                <!-- Row 2: Address, Postal Code, City -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="address" class="form-label">Address (Adresse)</label>
+                        <input id="address" class="form-control" type="text" name="address" value="{{ old('address') }}" required autocomplete="street-address" placeholder="Straße und Hausnummer">
+                        @error('address')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="postal_code" class="form-label">Postal Code (PLZ)</label>
+                        <input id="postal_code" class="form-control" type="text" name="postal_code" value="{{ old('postal_code') }}" required autocomplete="postal-code" placeholder="PLZ" maxlength="10">
+                        @error('postal_code')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="city" class="form-label">City (Ort)</label>
+                        <input id="city" class="form-control" type="text" name="city" value="{{ old('city') }}" required autocomplete="address-level2" placeholder="Ort">
+                        @error('city')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <input id="password" class="form-control" type="password" name="password" required autocomplete="new-password" placeholder="Create a password">
-                    @error('password')
-                        <div class="error-message">{{ $message }}</div>
-                    @enderror
+                <!-- Row 3: Marital Status -->
+                <div class="form-row">
+                    <div class="form-group form-group-full">
+                        <label for="marital_status" class="form-label">Marital Status</label>
+                        <select id="marital_status" class="form-control" name="marital_status" required>
+                            <option value="">Select marital status</option>
+                            <option value="married" {{ old('marital_status') == 'married' ? 'selected' : '' }}>Married (Verheiratet)</option>
+                            <option value="single" {{ old('marital_status') == 'single' ? 'selected' : '' }}>Single (Ledig)</option>
+                        </select>
+                        @error('marital_status')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="password_confirmation" class="form-label">Confirm Password</label>
-                    <input id="password_confirmation" class="form-control" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Confirm your password">
-                    @error('password_confirmation')
-                        <div class="error-message">{{ $message }}</div>
-                    @enderror
+                <!-- Row 4: Email, Phone Number -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email</label>
+                        <input id="email" class="form-control" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="email@example.com">
+                        @error('email')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone_number" class="form-label">Phone Number (Tel)</label>
+                        <input id="phone_number" class="form-control" type="tel" name="phone_number" value="{{ old('phone_number') }}" required autocomplete="tel" placeholder="+41 XX XXX XX XX">
+                        @error('phone_number')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Row 5: Password, Confirm Password -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password" class="form-label">Password</label>
+                        <input id="password" class="form-control" type="password" name="password" required autocomplete="new-password" placeholder="Create a password">
+                        @error('password')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password_confirmation" class="form-label">Confirm Password</label>
+                        <input id="password_confirmation" class="form-control" type="password" name="password_confirmation" required autocomplete="new-password" placeholder="Confirm your password">
+                        @error('password_confirmation')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
                 <button type="submit" class="auth-btn">Create Account</button>
@@ -71,7 +146,7 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             padding: 2rem;
             width: 100%;
-            max-width: 420px;
+            max-width: 800px;
             position: relative;
             overflow: hidden;
         }
@@ -120,8 +195,19 @@
             margin-bottom: 1.5rem;
         }
 
-        .form-group {
+        .form-row {
+            display: flex;
+            gap: 1rem;
             margin-bottom: 1.25rem;
+        }
+
+        .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .form-group-full {
+            flex: 1;
         }
 
         .form-label {
@@ -214,10 +300,20 @@
 
             .auth-card {
                 padding: 2rem 1.5rem;
+                max-width: 100%;
             }
 
             .auth-title {
                 font-size: 1.75rem;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .form-group {
+                margin-bottom: 1.25rem;
             }
         }
     </style>
