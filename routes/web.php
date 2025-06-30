@@ -374,6 +374,71 @@ Route::post('/test-registration', function (Illuminate\Http\Request $request) {
     }
 });
 
+// Test email configuration
+Route::get('/test-email', function () {
+    try {
+        $user = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found'
+            ]);
+        }
+        
+        // Test sending verification email
+        $user->sendEmailVerificationNotification();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Verification email sent successfully!',
+            'user_email' => $user->email,
+            'email_verified' => $user->hasVerifiedEmail(),
+            'mail_config' => [
+                'MAIL_MAILER' => env('MAIL_MAILER'),
+                'MAIL_HOST' => env('MAIL_HOST'),
+                'MAIL_PORT' => env('MAIL_PORT'),
+                'MAIL_FROM_ADDRESS' => env('MAIL_FROM_ADDRESS'),
+                'MAIL_FROM_NAME' => env('MAIL_FROM_NAME'),
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
+// Manual email verification (bypass email)
+Route::get('/manual-verify/{user}', function (\App\Models\User $user) {
+    try {
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                'status' => 'already_verified',
+                'message' => 'Email already verified'
+            ]);
+        }
+        
+        $user->markEmailAsVerified();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Email manually verified!',
+            'user_email' => $user->email,
+            'redirect_url' => route('terms.show')
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+});
+
 // Simple test route for form submission
 Route::post('/simple-test', function (Illuminate\Http\Request $request) {
     return response()->json([
