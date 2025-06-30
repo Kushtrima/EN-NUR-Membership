@@ -162,9 +162,9 @@ Route::get('/debug-registration', function () {
         // Test database connection
         $dbTest = DB::connection()->getPdo();
         
-        // Check if users table has new columns
-        $columns = DB::select("DESCRIBE users");
-        $columnNames = collect($columns)->pluck('Field')->toArray();
+        // Check if users table has new columns (PostgreSQL compatible)
+        $columns = DB::select("SELECT column_name FROM information_schema.columns WHERE table_name = 'users' AND table_schema = 'public'");
+        $columnNames = collect($columns)->pluck('column_name')->toArray();
         
         // Test validation rules
         $testData = [
@@ -204,6 +204,98 @@ Route::get('/debug-registration', function () {
             'message' => $e->getMessage(),
             'trace' => $e->getTraceAsString()
         ], 500, [], JSON_PRETTY_PRINT);
+    }
+});
+
+// Temporary registration fix (make new fields optional)
+Route::post('/temp-register', function (Illuminate\Http\Request $request) {
+    try {
+        \Log::info('Temporary registration attempt:', $request->all());
+        
+        // Basic validation (only required fields)
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+        
+        // Create user with only basic fields first
+        $user = \App\Models\User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => \Hash::make($validated['password']),
+            'role' => 'user',
+        ]);
+        
+        \Log::info('Basic user created successfully:', ['user_id' => $user->id]);
+        
+        // Try to add extended fields if they exist in database
+        $extendedData = [];
+        if ($request->has('first_name')) $extendedData['first_name'] = $request->first_name;
+        if ($request->has('date_of_birth')) $extendedData['date_of_birth'] = $request->date_of_birth;
+        if ($request->has('address')) $extendedData['address'] = $request->address;
+        if ($request->has('postal_code')) $extendedData['postal_code'] = $request->postal_code;
+        if ($request->has('city')) $extendedData['city'] = $request->city;
+        if ($request->has('marital_status')) $extendedData['marital_status'] = $request->marital_status;
+        if ($request->has('phone_number')) $extendedData['phone_number'] = $request->phone_number;
+        
+        if (!empty($extendedData)) {
+            try {
+                $user->update($extendedData);
+                \Log::info('Extended fields updated successfully');
+            } catch (\Exception $e) {
+                \Log::warning('Extended fields failed to update (columns might not exist yet)', [
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        // Log in the user
+        \Auth::login($user);
+        
+        return redirect()->route('dashboard')->with('success', 'Registration completed successfully!');
+        
+    } catch (\Exception $e) {
+        \Log::error('Registration failed:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return back()->withErrors(['error' => 'Registration failed: ' . $e->getMessage()])->withInput();
+    }
+});
+
+// Force run migration on production
+Route::get('/force-migration', function () {
+    try {
+        \Log::info('Force migration started');
+        
+        // Run the specific migration
+        Artisan::call('migrate', [
+            '--path' => 'database/migrations/2025_06_30_110104_add_extended_registration_fields_to_users_table.php',
+            '--force' => true
+        ]);
+        
+        $output = Artisan::output();
+        \Log::info('Migration completed', ['output' => $output]);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Migration completed successfully',
+            'output' => $output
+        ]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Migration failed', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
     }
 });
 
