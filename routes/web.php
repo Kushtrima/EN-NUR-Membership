@@ -156,6 +156,121 @@ Route::get('/test-route', function () {
     ]);
 });
 
+// Debug registration form
+Route::get('/debug-registration', function () {
+    try {
+        // Test database connection
+        $dbTest = DB::connection()->getPdo();
+        
+        // Check if users table has new columns
+        $columns = DB::select("DESCRIBE users");
+        $columnNames = collect($columns)->pluck('Field')->toArray();
+        
+        // Test validation rules
+        $testData = [
+            'name' => 'Test User',
+            'first_name' => 'Test',
+            'date_of_birth' => '1990-01-01',
+            'address' => 'Test Address 123',
+            'postal_code' => '12345',
+            'city' => 'Test City',
+            'marital_status' => 'single',
+            'phone_number' => '+41 123 456 789',
+            'email' => 'test@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123'
+        ];
+        
+        return response()->json([
+            'status' => 'success',
+            'database_connection' => 'OK',
+            'users_table_columns' => $columnNames,
+            'required_columns_present' => [
+                'first_name' => in_array('first_name', $columnNames),
+                'date_of_birth' => in_array('date_of_birth', $columnNames),
+                'address' => in_array('address', $columnNames),
+                'postal_code' => in_array('postal_code', $columnNames),
+                'city' => in_array('city', $columnNames),
+                'marital_status' => in_array('marital_status', $columnNames),
+                'phone_number' => in_array('phone_number', $columnNames),
+            ],
+            'test_data' => $testData,
+            'user_model_fillable' => (new \App\Models\User())->getFillable()
+        ], 200, [], JSON_PRETTY_PRINT);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500, [], JSON_PRETTY_PRINT);
+    }
+});
+
+// Test registration process
+Route::post('/test-registration', function (Illuminate\Http\Request $request) {
+    try {
+        // Log the incoming data
+        \Log::info('Registration attempt:', $request->all());
+        
+        // Test validation
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'date_of_birth' => ['required', 'date', 'before:today'],
+            'address' => ['required', 'string', 'max:255'],
+            'postal_code' => ['required', 'string', 'max:10'],
+            'city' => ['required', 'string', 'max:255'],
+            'marital_status' => ['required', 'in:married,single'],
+            'phone_number' => ['required', 'string', 'max:20'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+        
+        \Log::info('Validation passed');
+        
+        // Test user creation
+        $user = \App\Models\User::create([
+            'name' => $validated['name'],
+            'first_name' => $validated['first_name'],
+            'date_of_birth' => $validated['date_of_birth'],
+            'address' => $validated['address'],
+            'postal_code' => $validated['postal_code'],
+            'city' => $validated['city'],
+            'marital_status' => $validated['marital_status'],
+            'phone_number' => $validated['phone_number'],
+            'email' => $validated['email'],
+            'password' => \Hash::make($validated['password']),
+            'role' => 'user',
+        ]);
+        
+        \Log::info('User created successfully:', ['user_id' => $user->id]);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User created successfully',
+            'user_id' => $user->id,
+            'user_email' => $user->email
+        ]);
+        
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        \Log::error('Validation failed:', $e->errors());
+        return response()->json([
+            'status' => 'validation_error',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        \Log::error('Registration failed:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+});
+
 // Force disable debug mode in production (emergency fix)
 Route::get('/force-disable-debug', function () {
     if (env('APP_ENV') === 'production') {
