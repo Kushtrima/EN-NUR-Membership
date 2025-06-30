@@ -4622,3 +4622,46 @@ Route::get('/clear-all-cache', function() {
             'users_updated' => $usersUpdated
         ]);
     })->name('auto-accept-existing-users-terms');
+
+    // Debug route to check super admin terms status
+    Route::get('/debug-superadmin-terms', function () {
+        $user = \App\Models\User::where('email', 'kushtrim.m.arifi@gmail.com')->first();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Super admin user not found']);
+        }
+        
+        return response()->json([
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'role' => $user->role,
+            'created_at' => $user->created_at,
+            'terms_accepted_at' => $user->terms_accepted_at,
+            'hasAcceptedTerms' => $user->hasAcceptedTerms(),
+            'days_since_creation' => $user->created_at->diffInDays(now()),
+            'is_older_than_1_day' => $user->created_at < now()->subDays(1),
+        ]);
+    });
+
+    // Direct fix for super admin terms acceptance
+    Route::get('/fix-superadmin-terms', function () {
+        $user = \App\Models\User::where('email', 'kushtrim.m.arifi@gmail.com')->first();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Super admin user not found']);
+        }
+        
+        // Force accept terms for super admin
+        $user->update([
+            'terms_accepted_at' => $user->created_at ?? now(),
+            'terms_version' => '1.0',
+            'terms_accepted_ip' => request()->ip(),
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Super admin terms accepted successfully',
+            'user_email' => $user->email,
+            'terms_accepted_at' => $user->fresh()->terms_accepted_at,
+        ]);
+    });
