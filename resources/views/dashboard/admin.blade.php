@@ -1352,12 +1352,12 @@
                                         </button>
                                         
                                         <!-- View Details Button -->
-                                        <a href="{{ route('admin.payments.details', $payment) }}" 
-                                           style="background: #6c757d; color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.85rem; font-weight: 500; transition: all 0.3s ease;"
-                                           onmouseover="this.style.background='#5a6268'"
-                                           onmouseout="this.style.background='#6c757d'">
+                                        <button onclick="showPaymentDetails({{ $payment->id }})" 
+                                                style="background: #6c757d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.3s ease;"
+                                                onmouseover="this.style.background='#5a6268'"
+                                                onmouseout="this.style.background='#6c757d'">
                                             Details
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -1439,7 +1439,46 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeCashConfirmModal();
+                closePaymentDetails();
             }
         });
+        
+        // Payment Details Functions
+        function showPaymentDetails(paymentId) {
+            fetch(`/admin/payments/${paymentId}/details`)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('payment-details-content').innerHTML = data;
+                    document.getElementById('payment-details-modal').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to load payment details');
+                });
+        }
+        
+        function closePaymentDetails() {
+            document.getElementById('payment-details-modal').style.display = 'none';
+        }
     </script>
+    
+    <!-- Payment Details Modal -->
+    <div id="payment-details-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;" onclick="closePaymentDetails()">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; padding: 0; max-width: 90%; max-height: 90%; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);" onclick="event.stopPropagation()">
+            <!-- Modal Header -->
+            <div style="background: #1F6E38; color: white; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 1.2rem;">Payment Details</h3>
+                <button onclick="closePaymentDetails()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.3s ease;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='none'">
+                    ×
+                </button>
+            </div>
+            
+            <!-- Modal Content -->
+            <div style="padding: 1.5rem; max-height: 70vh; overflow-y: auto;">
+                <div id="payment-details-content">
+                    <!-- Payment details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
 </x-app-layout> 
