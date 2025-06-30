@@ -7,24 +7,24 @@
                         <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
                     </svg>
                 </div>
-                <h1 class="auth-title">Welcome Back</h1>
-                <p class="auth-subtitle">Sign in to your account</p>
+                <h1 class="auth-title">Mirë se erdhe përsëri</h1>
+                <p class="auth-subtitle">Kyçu në llogarinë tënde</p>
             </div>
             
             <form method="POST" action="{{ route('login') }}" class="auth-form">
                 @csrf
 
                 <div class="form-group">
-                    <label for="email" class="form-label">Email Address</label>
-                    <input id="email" class="form-control" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" placeholder="Enter your email">
+                    <label for="email" class="form-label">Email</label>
+                    <input id="email" class="form-control" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" placeholder="Shkruaj email-in tënd">
                     @error('email')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <input id="password" class="form-control" type="password" name="password" required autocomplete="current-password" placeholder="Enter your password">
+                    <label for="password" class="form-label">Fjalëkalimi</label>
+                    <input id="password" class="form-control" type="password" name="password" required autocomplete="current-password" placeholder="Shkruaj fjalëkalimin tënd">
                     @error('password')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
@@ -34,21 +34,21 @@
                     <label class="checkbox-label">
                         <input type="checkbox" name="remember" class="checkbox">
                         <span class="checkmark"></span>
-                        <span>Remember me</span>
+                        <span>Më mbaj mend</span>
                     </label>
                     
                     @if (Route::has('password.request'))
                         <a href="{{ route('password.request') }}" class="forgot-link">
-                            Forgot your password?
+                            Harrove fjalëkalimin?
                         </a>
                     @endif
                 </div>
 
-                <button type="submit" class="auth-btn">Log in</button>
+                <button type="submit" class="auth-btn">Kyçu</button>
             </form>
 
             <div class="auth-footer">
-                <p>Don't have an account? <a href="{{ route('register') }}" class="auth-link">Register here</a></p>
+                <p>Nuk ke llogari? <a href="{{ route('register') }}" class="auth-link">Regjistrohu këtu</a></p>
             </div>
         </div>
     </div>
