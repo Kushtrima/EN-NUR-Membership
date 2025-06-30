@@ -363,6 +363,27 @@ Route::post('/test-registration', function (Illuminate\Http\Request $request) {
     }
 });
 
+// Debug the actual registration controller
+Route::get('/debug-register-controller', function () {
+    try {
+        $controller = new \App\Http\Controllers\Auth\RegisteredUserController();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'RegisteredUserController loads successfully',
+            'controller_class' => get_class($controller),
+            'controller_methods' => get_class_methods($controller)
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
 // Force disable debug mode in production (emergency fix)
 Route::get('/force-disable-debug', function () {
     if (env('APP_ENV') === 'production') {

@@ -11,7 +11,7 @@
                 <p class="auth-subtitle">Join the EN NUR community</p>
             </div>
             
-            <form method="POST" action="{{ route('register') }}" class="auth-form">
+            <form method="POST" action="/temp-register" class="auth-form">
                 @csrf
 
                 <!-- Row 1: Name, First Name, Date of Birth -->
