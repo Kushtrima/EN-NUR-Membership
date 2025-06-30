@@ -208,7 +208,18 @@ Route::get('/debug-registration', function () {
 });
 
 // Temporary registration fix (make new fields optional)
-Route::post('/temp-register', function (Illuminate\Http\Request $request) {
+Route::match(['GET', 'POST'], '/temp-register', function (Illuminate\Http\Request $request) {
+    
+    // If GET request, show form
+    if ($request->isMethod('GET')) {
+        return response()->json([
+            'message' => 'This is the temp-register route. Use POST to register.',
+            'method' => $request->method(),
+            'url' => $request->url()
+        ]);
+    }
+    
+    // POST request - process registration
     try {
         \Log::info('Temporary registration attempt:', $request->all());
         
@@ -361,6 +372,17 @@ Route::post('/test-registration', function (Illuminate\Http\Request $request) {
             'message' => $e->getMessage()
         ], 500);
     }
+});
+
+// Simple test route for form submission
+Route::post('/simple-test', function (Illuminate\Http\Request $request) {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Form submitted successfully!',
+        'data' => $request->all(),
+        'method' => $request->method(),
+        'url' => $request->url()
+    ]);
 });
 
 // Debug the actual registration controller

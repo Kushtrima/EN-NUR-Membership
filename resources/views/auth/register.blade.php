@@ -121,8 +121,34 @@
                     </div>
                 </div>
 
-                <button type="submit" class="auth-btn">Create Account</button>
+                <button type="submit" class="auth-btn" id="submit-btn">Create Account</button>
             </form>
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const form = document.querySelector('.auth-form');
+                    const submitBtn = document.getElementById('submit-btn');
+                    
+                    form.addEventListener('submit', function(e) {
+                        console.log('Form submitted!');
+                        console.log('Form action:', form.action);
+                        console.log('Form method:', form.method);
+                        
+                        // Disable submit button to prevent double submission
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Creating Account...';
+                        
+                        // Re-enable after 5 seconds in case of error
+                        setTimeout(() => {
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = 'Create Account';
+                        }, 5000);
+                    });
+                    
+                    console.log('Form loaded:', form);
+                    console.log('Form action:', form.action);
+                });
+            </script>
 
             <div class="auth-footer">
                 <p>Already have an account? <a href="{{ route('login') }}" class="auth-link">Sign in here</a></p>
