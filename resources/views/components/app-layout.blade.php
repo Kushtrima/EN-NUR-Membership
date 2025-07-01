@@ -411,23 +411,23 @@
                 
                 <nav class="nav">
                     @auth
-                        <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
-                        <a href="{{ route('payment.create') }}" class="{{ request()->routeIs('payment.*') && !request()->routeIs('exports.*') ? 'active' : '' }}">Make Payment</a>
-                        <a href="{{ route('payment.index') }}" class="{{ request()->routeIs('payment.index') || request()->routeIs('admin.payments*') ? 'active' : '' }}">Payments</a>
+                        <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Paneli</a>
+                        <a href="{{ route('payment.create') }}" class="{{ request()->routeIs('payment.*') && !request()->routeIs('exports.*') ? 'active' : '' }}">Krijo Pagesë</a>
+                        <a href="{{ route('payment.index') }}" class="{{ request()->routeIs('payment.index') || request()->routeIs('admin.payments*') ? 'active' : '' }}">Pagesat</a>
                         
                         @if(auth()->user()->isAdmin())
-                            <a href="{{ route('admin.users') }}" class="{{ request()->routeIs('admin.users*') ? 'active' : '' }}">Users</a>
+                            <a href="{{ route('admin.users') }}" class="{{ request()->routeIs('admin.users*') ? 'active' : '' }}">Anëtarët</a>
                         @endif
                         
-                        <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.*') ? 'active' : '' }}">Profile</a>
+                        <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.*') ? 'active' : '' }}">Profili</a>
                         
                         <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                             @csrf
-                            <button type="submit" class="btn btn-danger">Logout</button>
+                            <button type="submit" class="btn btn-danger">Dil</button>
                         </form>
                     @else
-                        <a href="{{ route('login') }}" class="{{ request()->routeIs('login') ? 'active' : '' }}">Login</a>
-                        <a href="{{ route('register') }}" class="btn">Register</a>
+                        <a href="{{ route('login') }}" class="{{ request()->routeIs('login') ? 'active' : '' }}">Hyr</a>
+                        <a href="{{ route('register') }}" class="btn">Regjistrohu</a>
                     @endauth
                 </nav>
             </div>

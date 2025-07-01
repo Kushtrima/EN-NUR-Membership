@@ -301,33 +301,33 @@
                 <nav style="display: flex; gap: 1rem; align-items: center;">
                     @auth
                         <a href="{{ route('dashboard') }}" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; transition: background-color 0.2s;">
-                            🏠 Dashboard
+                            🏠 Paneli
                         </a>
                         
                         <a href="{{ route('payment.create') }}" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; transition: background-color 0.2s;">
-                            💳 Payments
+                            💳 Pagesat
                         </a>
                         
                         @if(auth()->user()->isAdmin())
                             <a href="{{ route('admin.users') }}" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; transition: background-color 0.2s; background-color: rgba(255,255,255,0.1);">
-                                🛡️ Admin Panel
+                                🛡️ Paneli Admin
                             </a>
                             <a href="{{ route('testing-dashboard') }}" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; transition: background-color 0.2s; background-color: rgba(255,255,255,0.15);">
-                                🧪 Testing
+                                🧪 Testimi
                             </a>
                         @endif
                         
                         <a href="{{ route('profile.edit') }}" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; transition: background-color 0.2s;">
-                            ⚙️ Profile
+                            ⚙️ Profili
                         </a>
                         
                         <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                             @csrf
-                            <button type="submit" style="display: inline-block; padding: 0.75rem 1.5rem; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; border: none; cursor: pointer; font-size: 1rem;">Logout</button>
+                            <button type="submit" style="display: inline-block; padding: 0.75rem 1.5rem; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; border: none; cursor: pointer; font-size: 1rem;">Dil</button>
                         </form>
                     @else
-                        <a href="{{ route('login') }}" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px;">Login</a>
-                        <a href="{{ route('register') }}" style="display: inline-block; padding: 0.75rem 1.5rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; border: none; cursor: pointer; font-size: 1rem;">Register</a>
+                        <a href="{{ route('login') }}" style="color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px;">Hyr</a>
+                        <a href="{{ route('register') }}" style="display: inline-block; padding: 0.75rem 1.5rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; border: none; cursor: pointer; font-size: 1rem;">Regjistrohu</a>
                     @endauth
                 </nav>
             </div>

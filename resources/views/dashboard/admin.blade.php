@@ -1,17 +1,17 @@
 <x-app-layout>
     <div class="card">
         <h1 class="card-title">
-            Admin Dashboard
+            Paneli i Administratorit
             <span style="font-size: 0.8rem; color: #666; font-weight: normal;">
                 ({{ auth()->user()->isSuperAdmin() ? 'Super Admin' : 'Admin' }})
             </span>
         </h1>
-        <p>Welcome back, <strong>{{ auth()->user()->name }}</strong>! Here's your community overview.</p>
+        <p>Mirë se u kthyet, <strong>{{ auth()->user()->name }}</strong>! Ky është përmbledhja e komunitetit tuaj.</p>
     </div>
 
     <!-- Admin Quick Actions -->
     <div class="card">
-        <h2 class="card-title">Quick Actions</h2>
+        <h2 class="card-title">Veprime të Shpejta</h2>
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
             <!-- System Backup -->
             <button onclick="showBackupModal();" style="background: #1F6E38; color: white; padding: 1rem 1.5rem; border-radius: 12px; border: none; text-align: center; transition: all 0.3s ease; cursor: pointer; width: 100%;" 
@@ -22,8 +22,8 @@
                     <svg style="width: 32px; height: 32px;" fill="white" viewBox="0 0 24 24">
                         <path d="M12,1L8,5H11V14H13V5H16M18,23H6C4.89,23 4,22.1 4,21V9A2,2 0 0,1 6,7H9V9H6V21H18V9H15V7H18A2,2 0 0,1 20,9V21A2,2 0 0,1 18,23Z"/>
                     </svg>
-                    <div style="font-weight: bold; font-size: 0.95rem;">System Backup</div>
-                    <div style="font-size: 0.75rem; opacity: 0.9;">Create backup</div>
+                    <div style="font-weight: bold; font-size: 0.95rem;">Kopje Rezervë e Sistemit</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9;">Krijo kopje rezervë</div>
                 </div>
             </button>
 
@@ -36,8 +36,8 @@
                     <svg style="width: 32px; height: 32px;" fill="white" viewBox="0 0 24 24">
                         <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
                     </svg>
-                    <div style="font-weight: bold; font-size: 0.95rem;">Clear Logs</div>
-                    <div style="font-size: 0.75rem; opacity: 0.9;">Clean system logs</div>
+                    <div style="font-weight: bold; font-size: 0.95rem;">Pastro Regjistrimet</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9;">Pastro regjistrimet e sistemit</div>
                 </div>
             </button>
 
@@ -50,8 +50,8 @@
                     <svg style="width: 32px; height: 32px;" fill="white" viewBox="0 0 24 24">
                         <path d="M7,2V4H8V18A4,4 0 0,0 12,22A4,4 0 0,0 16,18V4H17V2H7M11,16C10.4,16 10,15.6 10,15C10,14.4 10.4,14 11,14C11.6,14 12,14.4 12,15C12,15.6 11.6,16 11,16M13,12C12.4,12 12,11.6 12,11C12,10.4 12.4,10 13,10C13.6,10 14,10.4 14,11C14,11.6 13.6,12 13,12M14,7H10V9H14V7Z"/>
                     </svg>
-                    <div style="font-weight: bold; font-size: 0.95rem;">Testing Dashboard</div>
-                    <div style="font-size: 0.75rem; opacity: 0.9;">Run system tests</div>
+                    <div style="font-weight: bold; font-size: 0.95rem;">Paneli i Testimit</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9;">Zbato testet e sistemit</div>
                 </div>
             </button>
         </div>
@@ -59,55 +59,55 @@
 
     <!-- Community Statistics -->
     <div class="card">
-        <h2 class="card-title">Community Overview</h2>
+        <h2 class="card-title">Përmbledhje e Komunitetit</h2>
         
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem;">
             <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1.5rem; text-align: center;">
-                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 600;">Total Users</h3>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 600;">Gjithsej Anëtarë</h3>
                 <div style="font-size: 2rem; font-weight: bold; color: #1F6E38;">
                     {{ $stats['total_users'] }}
                 </div>
-                <small style="color: #666;">Registered members</small>
+                <small style="color: #666;">Anëtarë të regjistruar</small>
             </div>
 
             <div style="background: rgba(193, 154, 97, 0.1); border-radius: 8px; padding: 1.5rem; text-align: center;">
-                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 600;">Active Members</h3>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 600;">Anëtarë Aktivë</h3>
                 <div style="font-size: 2rem; font-weight: bold; color: #C19A61;">
                     {{ $stats['membership_payments'] }}
                 </div>
-                <small style="color: #666;">CHF 350 memberships</small>
+                <small style="color: #666;">Anëtarësi CHF 350</small>
             </div>
 
             <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1.5rem; text-align: center;">
-                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 600;">Total Revenue</h3>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 600;">Të Ardhurat Totale</h3>
                 <div style="font-size: 2rem; font-weight: bold; color: #1F6E38;">
                     CHF {{ number_format($stats['total_revenue'], 2) }}
                 </div>
-                <small style="color: #666;">All completed payments</small>
+                <small style="color: #666;">Të gjitha pagesat e përfunduara</small>
             </div>
 
             <div style="background: rgba(193, 154, 97, 0.1); border-radius: 8px; padding: 1.5rem; text-align: center;">
-                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 600;">Total Donations</h3>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 600;">Dhurimet Totale</h3>
                 <div style="font-size: 2rem; font-weight: bold; color: #C19A61;">
                     CHF {{ number_format($stats['total_donations'], 2) }}
                 </div>
-                <small style="color: #666;">Donation contributions</small>
+                <small style="color: #666;">Kontributet e dhurimit</small>
             </div>
 
             <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1.5rem; text-align: center;">
-                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 600;">New Users</h3>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 600;">Anëtarë të Rinj</h3>
                 <div style="font-size: 2rem; font-weight: bold; color: #1F6E38;">
                     {{ $stats['recent_registrations'] }}
                 </div>
-                <small style="color: #666;">Last 30 days</small>
+                <small style="color: #666;">30 ditët e fundit</small>
             </div>
 
             <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1.5rem; text-align: center;">
-                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 600;">Pending</h3>
+                <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; font-weight: 600;">Në Pritje</h3>
                 <div style="font-size: 2rem; font-weight: bold; color: #dc3545;">
                     {{ $stats['pending_payments'] }}
                 </div>
-                <small style="color: #666;">Awaiting payment</small>
+                <small style="color: #666;">Në pritje të pagesës</small>
             </div>
         </div>
     </div>
@@ -116,7 +116,7 @@
     @if(auth()->user()->isSuperAdmin() && $renewals)
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 class="card-title" style="margin: 0;">Membership Renewal Notifications</h2>
+            <h2 class="card-title" style="margin: 0;">Njoftimet për Rinovimin e Anëtarësisë</h2>
             
             <!-- NOTIFY ALL EXPIRED USERS Button -->
             @if($renewals['stats']['expired'] > 0)
@@ -125,7 +125,7 @@
                     onmouseover="this.style.background='#c82333'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(220, 53, 69, 0.4)'" 
                     onmouseout="this.style.background='#dc3545'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(220, 53, 69, 0.3)'"
                     id="notify-all-expired-btn">
-                🚨 NOTIFY ALL EXPIRED USERS ({{ $renewals['stats']['expired'] }})
+                🚨 NJOFTO TË GJITHË ANËTARËT E SKADUAR ({{ $renewals['stats']['expired'] }})
             </button>
             @endif
         </div>
@@ -134,19 +134,19 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
             <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #1F6E38;">{{ $renewals['stats']['total_active_memberships'] }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Active Memberships</div>
+                <div style="font-size: 0.9rem; color: #666;">Anëtarësi Aktive</div>
             </div>
             <div style="background: rgba(255, 193, 7, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #ffc107;">{{ $renewals['stats']['expiring_within_30_days'] }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Expiring (30 days)</div>
+                <div style="font-size: 0.9rem; color: #666;">Skadon (30 ditë)</div>
             </div>
             <div style="background: rgba(255, 108, 55, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #ff6c37;">{{ $renewals['stats']['expiring_within_7_days'] }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Urgent (7 days)</div>
+                <div style="font-size: 0.9rem; color: #666;">Urgjent (7 ditë)</div>
             </div>
             <div style="background: rgba(220, 53, 69, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #dc3545;">{{ $renewals['stats']['expired'] }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Expired</div>
+                <div style="font-size: 0.9rem; color: #666;">Ka skaduar</div>
             </div>
         </div>
 
