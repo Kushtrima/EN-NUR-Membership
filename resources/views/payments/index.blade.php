@@ -13,98 +13,36 @@
                 <div style="font-size: 1.5rem; font-weight: bold; color: #1F6E38;">{{ $stats['total'] }}</div>
                 <div style="font-size: 0.9rem; color: #666;">Gjithsej Pagesat</div>
             </div>
-            <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
-                <div style="font-size: 1.5rem; font-weight: bold; color: #1F6E38;">{{ $stats['completed'] }}</div>
+            <div style="background: rgba(40, 167, 69, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #28a745;">{{ $stats['completed'] }}</div>
                 <div style="font-size: 0.9rem; color: #666;">E Përfunduar</div>
             </div>
-            <div style="background: rgba(193, 154, 97, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
-                <div style="font-size: 1.5rem; font-weight: bold; color: #C19A61;">{{ $stats['pending'] }}</div>
+            <div style="background: rgba(255, 193, 7, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #ffc107;">{{ $stats['pending'] }}</div>
                 <div style="font-size: 0.9rem; color: #666;">Në Pritje</div>
             </div>
-            @if($stats['failed'] > 0)
             <div style="background: rgba(220, 53, 69, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #dc3545;">{{ $stats['failed'] }}</div>
                 <div style="font-size: 0.9rem; color: #666;">Dështuar</div>
             </div>
-            @endif
-            <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
-                <div style="font-size: 1.5rem; font-weight: bold; color: #1F6E38;">CHF {{ number_format($stats['total_amount'], 2) }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Gjithsej i Paguar</div>
-            </div>
-            @if($stats['membership_payments'] > 0)
-            <div style="background: rgba(193, 154, 97, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
-                <div style="font-size: 1.5rem; font-weight: bold; color: #C19A61;">{{ $stats['membership_payments'] }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Anëtarësi</div>
-            </div>
-            @endif
-            @if($stats['donation_total'] > 0)
-            <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
-                <div style="font-size: 1.5rem; font-weight: bold; color: #1F6E38;">CHF {{ number_format($stats['donation_total'], 2) }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Dhurime</div>
-            </div>
-            @endif
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="card">
-        <h2 class="card-title">Mundësitë e Eksportimit</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
-            <!-- Quick Export Current View -->
-            <div>
-                <h4 style="color: #1F6E38; margin-bottom: 0.5rem;">Eksporto Pamjen Aktuale</h4>
-                <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Eksporto pagesat e shfaqura aktualisht me filtrat e aplikuar.</p>
-                <form method="POST" action="{{ route('exports.user') }}" style="display: inline;">
-                    @csrf
-                    <!-- Pass current filters as hidden inputs -->
-                    @if(request('status'))
-                        <input type="hidden" name="status" value="{{ request('status') }}">
-                    @endif
-                    @if(request('type'))
-                        <input type="hidden" name="type" value="{{ request('type') }}">
-                    @endif
-                    @if(request('date_from'))
-                        <input type="hidden" name="start_date" value="{{ request('date_from') }}">
-                    @endif
-                    @if(request('date_to'))
-                        <input type="hidden" name="end_date" value="{{ request('date_to') }}">
-                    @endif
-                    <button type="submit" style="background: #1F6E38; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;"
-                            onmouseover="this.style.background='#165029'" onmouseout="this.style.background='#1F6E38'">
-                        <svg style="width: 16px; height: 16px;" fill="white" viewBox="0 0 24 24">
-                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-                        </svg>
-                        Eksporto Rezultatet e Filtruar ({{ $payments->total() }} pagesat)
-                    </button>
-                </form>
-            </div>
-            
-            <!-- Advanced Export Options -->
-            <div>
-                <h4 style="color: #1F6E38; margin-bottom: 0.5rem;">Eksportim i Avancuar</h4>
-                <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Zgjidh intervale datash dhe filtra specifikë për eksportimin tënd.</p>
-                <a href="{{ route('exports.user.form') }}" 
-                   style="background: #C19A61; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;"
-                   onmouseover="this.style.background='#a67c52'" onmouseout="this.style.background='#C19A61'">
-                    <svg style="width: 16px; height: 16px;" fill="white" viewBox="0 0 24 24">
-                        <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
-                    </svg>
-                    Opsionet e Eksportimit të Personalizuar
-                </a>
-            </div>
-            
-            <!-- Export Summary -->
-            <div>
-                <h4 style="color: #1F6E38; margin-bottom: 0.5rem;">Përmbledhja e Pagesave Tuaja</h4>
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; border-left: 4px solid #1F6E38;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem;">
-                        <div><strong>Gjithsej Pagesat:</strong> {{ $stats['total'] }}</div>
-                        <div><strong>E Përfunduar:</strong> {{ $stats['completed'] }}</div>
-                        <div><strong>Shuma Totale:</strong> CHF {{ number_format($stats['total_amount'], 2) }}</div>
-                        <div><strong>Anëtarësi:</strong> {{ $stats['membership_payments'] }}</div>
-                    </div>
+            @if($stats['total_amount'] > 0)
+                <div style="background: rgba(193, 154, 97, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #C19A61;">CHF {{ number_format($stats['total_amount'], 2) }}</div>
+                    <div style="font-size: 0.9rem; color: #666;">Shuma Totale</div>
                 </div>
-            </div>
+            @endif
+            @if($stats['membership_payments'] > 0)
+                <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #1F6E38;">{{ $stats['membership_payments'] }}</div>
+                    <div style="font-size: 0.9rem; color: #666;">Anëtarësi</div>
+                </div>
+            @endif
+            @if($stats['donation_payments'] > 0)
+                <div style="background: rgba(193, 154, 97, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #C19A61;">{{ $stats['donation_payments'] }}</div>
+                    <div style="font-size: 0.9rem; color: #666;">Dhurime</div>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -192,44 +130,6 @@
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
             <h2 class="card-title" style="margin: 0;">Historiku i Pagesave ({{ $payments->total() }} pagesat)</h2>
-            @if($payments->count() > 0)
-                <div style="display: flex; gap: 1rem;">
-                    <!-- Export All Payments Button -->
-                    <form method="POST" action="{{ route('exports.user') }}" style="display: inline;">
-                        @csrf
-                        <!-- Include all current filters -->
-                        @if(request('status'))
-                            <input type="hidden" name="status" value="{{ request('status') }}">
-                        @endif
-                        @if(request('type'))
-                            <input type="hidden" name="type" value="{{ request('type') }}">
-                        @endif
-                        @if(request('date_from'))
-                            <input type="hidden" name="start_date" value="{{ request('date_from') }}">
-                        @endif
-                        @if(request('date_to'))
-                            <input type="hidden" name="end_date" value="{{ request('date_to') }}">
-                        @endif
-                        <button type="submit" style="background: #C19A61; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;"
-                                onmouseover="this.style.background='#a67c52'" onmouseout="this.style.background='#C19A61'">
-                            <svg style="width: 18px; height: 18px;" fill="white" viewBox="0 0 24 24">
-                                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-                            </svg>
-                            Eksporto Të Gjitha Pagesat ({{ $payments->total() }})
-                        </button>
-                    </form>
-                    
-                    <!-- Advanced Export Options -->
-                    <a href="{{ route('exports.user.form') }}" 
-                       style="background: #6c757d; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;"
-                       onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">
-                        <svg style="width: 18px; height: 18px;" fill="white" viewBox="0 0 24 24">
-                            <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
-                        </svg>
-                        Eksportim i Personalizuar
-                    </a>
-                </div>
-            @endif
         </div>
 
         @if($payments->count() > 0)
@@ -306,17 +206,6 @@
                                 <td style="padding: 1rem;">
                                     <div style="display: flex; gap: 0.5rem; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
                                         @if($payment->status === 'completed')
-                                            <!-- Individual PDF Receipt -->
-                                            <a href="{{ route('user.payments.receipt', $payment) }}" 
-                                               style="background: #1F6E38; color: white; padding: 0.5rem 0.75rem; border-radius: 4px; text-decoration: none; font-size: 0.8rem; font-weight: bold; display: flex; align-items: center; gap: 0.4rem; height: 32px; box-sizing: border-box; white-space: nowrap;"
-                                               target="_blank"
-                                               title="Shkarko faturë PDF për këtë pagesë">
-                                                <svg style="width: 14px; height: 14px;" fill="white" viewBox="0 0 24 24">
-                                                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-                                                </svg>
-                                                Fatura PDF
-                                            </a>
-                                            
                                             <!-- Quick Export This Payment -->
                                             <form method="POST" action="{{ route('exports.user') }}" style="display: inline; margin: 0;">
                                                 @csrf
