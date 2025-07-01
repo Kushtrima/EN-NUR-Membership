@@ -37,9 +37,9 @@
                     <div style="font-size: 0.9rem; color: #666;">Anëtarësi</div>
                 </div>
             @endif
-            @if($stats['donation_payments'] > 0)
+            @if($stats['donation_total'] > 0)
                 <div style="background: rgba(193, 154, 97, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: #C19A61;">{{ $stats['donation_payments'] }}</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #C19A61;">CHF {{ number_format($stats['donation_total'], 2) }}</div>
                     <div style="font-size: 0.9rem; color: #666;">Dhurime</div>
                 </div>
             @endif
