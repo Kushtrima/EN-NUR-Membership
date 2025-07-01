@@ -4,20 +4,20 @@
 
     <div class="card">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-            <h1 class="card-title" style="margin-bottom: 0;">Make a Payment</h1>
+            <h1 class="card-title" style="margin-bottom: 0;">Bëj një Pagesë</h1>
             <div class="trust-badge">
                 <svg class="icon" style="color: #1F6E38;" viewBox="0 0 24 24">
                     <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
                 </svg>
-                <span style="font-size: 0.75rem; color: #1F6E38;">SSL Secured</span>
+                <span style="font-size: 0.75rem; color: #1F6E38;">SSL i Sigurt</span>
             </div>
         </div>
-        <p>Choose from membership or donation options below. All payments are processed securely.</p>
+        <p>Zgjidh nga opsionet e anëtarësisë ose dhurimit më poshtë. Të gjitha pagesat përpunohen në mënyrë të sigurt.</p>
     </div>
 
     @if(request('cancelled'))
         <div class="alert alert-info">
-            Payment was cancelled. You can try again anytime.
+            Pagesa u anulua. Mund të provosh përsëri në çdo kohë.
         </div>
     @endif
 
@@ -29,7 +29,7 @@
                 <svg class="icon" style="color: #1F6E38;" viewBox="0 0 24 24">
                     <path d="M5 16L3 6l5.5 4L12 4l3.5 6L21 6l-2 10H5zm2.7-2h8.6l.9-5.4-2.1 1.7L12 8l-3.1 2.3-2.1-1.7L7.7 14z"/>
                 </svg>
-                Membership
+                Anëtarësia
             </h2>
             
             <div class="membership-price-card">
@@ -37,7 +37,7 @@
                     CHF {{ number_format($membershipAmount / 100, 2) }}
                 </div>
                 <div class="price-period">
-                    Annual Membership (1 Year)
+                    Anëtarësia Vjetore (1 Vit)
                 </div>
             </div>
             
@@ -47,18 +47,18 @@
                     <svg class="icon" style="color: #1F6E38;" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                     </svg>
-                    What's Included:
+                    Çfarë Përfshin:
                 </h3>
                 <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.9rem; color: #6c757d;">
-                    <li style="margin-bottom: 0.25rem;">• Access to all mosque activities</li>
-                    <li style="margin-bottom: 0.25rem;">• Member-only events and programs</li>
-                    <li style="margin-bottom: 0.25rem;">• Community support and networking</li>
-                    <li style="margin-bottom: 0.25rem;">• Prayer space priority access</li>
+                    <li style="margin-bottom: 0.25rem;">• Qasje në të gjitha aktivitetet e xhamisë</li>
+                    <li style="margin-bottom: 0.25rem;">• Ngjarje dhe programe vetëm për anëtarë</li>
+                    <li style="margin-bottom: 0.25rem;">• Mbështetje dhe rrjetëzim komuniteti</li>
+                    <li style="margin-bottom: 0.25rem;">• Qasje prioritare në hapësirën e lutjes</li>
                 </ul>
             </div>
             
             <div class="payment-methods">
-                <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: #333;">Choose Payment Method:</h4>
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: #333;">Zgjidh Metodën e Pagesës:</h4>
                 
                 <form method="POST" action="{{ route('payment.stripe') }}" class="payment-form">
                     @csrf
@@ -66,8 +66,8 @@
                     <input type="hidden" name="amount" value="{{ $membershipAmount }}">
                     <button type="submit" class="payment-btn stripe-btn">
                         <svg class="payment-icon icon" fill="white" viewBox="0 0 576 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M492.4 220.8c-8.9 0-18.7 6.7-18.7 22.7h36.7c0-16-9.3-22.7-18-22.7zM375 223.4c-8.2 0-13.3 2.9-17 7l.2 52.8c3.5 3.7 8.5 6.7 16.8 6.7 13.1 0 21.9-14.3 21.9-33.4 0-18.6-9-33.2-21.9-33.1zM528 32H48C21.5 32 0 53.5 0 80v352c0 26.5 21.5 48 48 48h480c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zM122.2 281.1c0 25.6-20.3 40.1-49.9 40.3-12.2 0-25.6-2.4-38.8-8.1v-33.9c12 6.4 27.1 11.3 38.9 11.3 7.9 0 13.6-2.1 13.6-8.7 0-17-54-10.6-54-49.9 0-25.2 19.2-40.2 48-40.2 11.8 0 23.5 1.8 35.3 6.5v33.4c-10.8-5.8-24.5-9.1-35.3-9.1-7.5 0-12.1 2.2-12.1 7.7 0 16 54.3 8.4 54.3 50.7zm68.8-56.6h-27V275c0 20.9 22.5 14.4 27 12.6v28.9c-4.7 2.6-13.3 4.7-24.9 4.7-21.1 0-36.9-15.5-36.9-36.5l.2-113.9 34.7-7.4v30.8H191zm74 2.4c-4.5-1.5-18.7-3.6-27.1 7.4v84.4h-35.5V194.2h30.7l2.2 10.5c8.3-15.3 24.9-12.2 29.6-10.5h.1zm44.1 91.8h-35.7V194.2h35.7zm0-142.9l-35.7 7.6v-28.9l35.7-7.6zm74.1 145.5c-12.4 0-20-5.3-25.1-9l-.1 40.2-35.5 7.5V194.2h31.3l1.8 8.8c4.9-4.5 13.9-11.1 27.8-11.1 24.9 0 48.4 22.5 48.4 63.8 0 45.1-23.2 65.5-48.6 65.6zm160.4-51.5h-69.5c1.6 16.6 13.8 21.5 27.6 21.5 14.1 0 25.2-3 34.9-7.9V312c-9.7 5.3-22.4 9.2-39.4 9.2-34.6 0-58.8-21.7-58.8-64.5 0-36.2 20.5-64.9 54.3-64.9 33.7 0 51.3 28.7 51.3 65.1 0 3.5-.3 10.9-.4 12.9z"/></svg>
-                        <span class="payment-text">Pay with Stripe</span>
-                        <span class="payment-cards">Cards • Apple Pay • Google Pay</span>
+                        <span class="payment-text">Paguaj me Stripe</span>
+                        <span class="payment-cards">Karta • Apple Pay • Google Pay</span>
                     </button>
                 </form>
                 
@@ -96,8 +96,8 @@
                                 <rect x="81.5" y="12" width="3" height="16"/>
                             </g>
                         </svg>
-                        <span class="payment-text">Pay with TWINT</span>
-                        <span class="payment-cards">Swiss Mobile Payment</span>
+                        <span class="payment-text">Paguaj me TWINT</span>
+                        <span class="payment-cards">Pagesa Mobile Zvicerane</span>
                     </button>
                 </form>
                 
@@ -111,8 +111,8 @@
                         <svg class="payment-icon icon" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M21,4H3A2,2 0 0,0 1,6V18A2,2 0 0,0 3,20H21A2,2 0 0,0 23,18V6A2,2 0 0,0 21,4M21,18H3V6H21V18Z"/>
                         </svg>
-                        <span class="payment-text">Pay with Cash</span>
-                        <span class="payment-cards">Pay on delivery or in person</span>
+                        <span class="payment-text">Paguaj me Para të Gatshme</span>
+                        <span class="payment-cards">Paguaj në dorëzim ose personalisht</span>
                     </button>
                 </form>
             </div>
@@ -122,7 +122,7 @@
                     <svg class="icon" style="color: #1F6E38;" viewBox="0 0 24 24">
                         <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
                     </svg>
-                    Your payment information is encrypted and secure. Processing time: 1-2 minutes
+                    Informacionet e pagesës tuaj janë të enkriptuara dhe të sigurta. Koha e përpunimit: 1-2 minuta
                 </small>
             </div>
         </div>
@@ -133,19 +133,19 @@
                 <svg class="icon" style="color: #1F6E38;" viewBox="0 0 24 24">
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                 </svg>
-                Donations
+                Dhurime
             </h2>
             <p style="margin-bottom: 1.5rem; color: #6c757d;">
-                Support our cause with a donation. Every contribution helps us achieve our mission.
+                Mbështet kauzën tonë me një dhurim. Çdo kontribut na ndihmon të arrijmë misionin tonë.
             </p>
             
             <!-- Donation Impact -->
             <div class="donation-impact" style="margin-bottom: 1.5rem;">
                 <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: #1F6E38;">
-                    Your Impact:
+                    Ndikimi Juaj:
                 </h4>
                 <div class="impact-list" style="font-size: 0.8rem; color: #6c757d;">
-                    <div id="impact-text">CHF 50 - Supports weekly community activities</div>
+                    <div id="impact-text">CHF 50 - Mbështet aktivitetet javore të komunitetit</div>
                 </div>
             </div>
             
@@ -156,7 +156,7 @@
                          data-amount="{{ $amount }}"
                          onclick="selectDonation({{ $amount }}, this)">
                         <div class="donation-amount">CHF {{ number_format($amount / 100, 0) }}</div>
-                        <div class="donation-frequency">One-time</div>
+                        <div class="donation-frequency">Një herë</div>
                     </div>
                 @endforeach
             </div>
@@ -164,7 +164,7 @@
             <!-- Custom Amount -->
             <div class="custom-amount" style="margin: 1rem 0;">
                 <label style="font-size: 0.9rem; color: #333; margin-bottom: 0.5rem; display: block;">
-                    Or enter custom amount:
+                    Ose shkruaj shumën e personalizuar:
                 </label>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                     <span style="font-weight: bold;">CHF</span>
@@ -176,7 +176,7 @@
             </div>
 
             <div class="payment-methods">
-                <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: #333;">Choose Payment Method:</h4>
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: #333;">Zgjidh Metodën e Pagesës:</h4>
                 
                 <form id="stripe-donation-form" method="POST" action="{{ route('payment.stripe') }}" class="payment-form">
                     @csrf
@@ -184,8 +184,8 @@
                     <input type="hidden" name="amount" id="stripe-donation-amount" value="{{ $donationAmounts[0] }}">
                     <button type="submit" class="payment-btn stripe-btn">
                         <svg class="payment-icon icon" fill="white" viewBox="0 0 576 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M492.4 220.8c-8.9 0-18.7 6.7-18.7 22.7h36.7c0-16-9.3-22.7-18-22.7zM375 223.4c-8.2 0-13.3 2.9-17 7l.2 52.8c3.5 3.7 8.5 6.7 16.8 6.7 13.1 0 21.9-14.3 21.9-33.4 0-18.6-9-33.2-21.9-33.1zM528 32H48C21.5 32 0 53.5 0 80v352c0 26.5 21.5 48 48 48h480c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zM122.2 281.1c0 25.6-20.3 40.1-49.9 40.3-12.2 0-25.6-2.4-38.8-8.1v-33.9c12 6.4 27.1 11.3 38.9 11.3 7.9 0 13.6-2.1 13.6-8.7 0-17-54-10.6-54-49.9 0-25.2 19.2-40.2 48-40.2 11.8 0 23.5 1.8 35.3 6.5v33.4c-10.8-5.8-24.5-9.1-35.3-9.1-7.5 0-12.1 2.2-12.1 7.7 0 16 54.3 8.4 54.3 50.7zm68.8-56.6h-27V275c0 20.9 22.5 14.4 27 12.6v28.9c-4.7 2.6-13.3 4.7-24.9 4.7-21.1 0-36.9-15.5-36.9-36.5l.2-113.9 34.7-7.4v30.8H191zm74 2.4c-4.5-1.5-18.7-3.6-27.1 7.4v84.4h-35.5V194.2h30.7l2.2 10.5c8.3-15.3 24.9-12.2 29.6-10.5h.1zm44.1 91.8h-35.7V194.2h35.7zm0-142.9l-35.7 7.6v-28.9l35.7-7.6zm74.1 145.5c-12.4 0-20-5.3-25.1-9l-.1 40.2-35.5 7.5V194.2h31.3l1.8 8.8c4.9-4.5 13.9-11.1 27.8-11.1 24.9 0 48.4 22.5 48.4 63.8 0 45.1-23.2 65.5-48.6 65.6zm160.4-51.5h-69.5c1.6 16.6 13.8 21.5 27.6 21.5 14.1 0 25.2-3 34.9-7.9V312c-9.7 5.3-22.4 9.2-39.4 9.2-34.6 0-58.8-21.7-58.8-64.5 0-36.2 20.5-64.9 54.3-64.9 33.7 0 51.3 28.7 51.3 65.1 0 3.5-.3 10.9-.4 12.9z"/></svg>
-                        <span class="payment-text">Donate with Stripe</span>
-                        <span class="payment-cards">Cards • Apple Pay • Google Pay</span>
+                        <span class="payment-text">Dhuro me Stripe</span>
+                        <span class="payment-cards">Karta • Apple Pay • Google Pay</span>
                     </button>
                 </form>
                 
@@ -214,8 +214,8 @@
                                 <rect x="81.5" y="12" width="3" height="16"/>
                             </g>
                         </svg>
-                        <span class="payment-text">Donate with TWINT</span>
-                        <span class="payment-cards">Swiss Mobile Payment</span>
+                        <span class="payment-text">Dhuro me TWINT</span>
+                        <span class="payment-cards">Pagesa Mobile Zvicerane</span>
                     </button>
                 </form>
                 
@@ -229,14 +229,14 @@
                         <svg class="payment-icon icon" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M21,4H3A2,2 0 0,0 1,6V18A2,2 0 0,0 3,20H21A2,2 0 0,0 23,18V6A2,2 0 0,0 21,4M21,18H3V6H21V18Z"/>
                         </svg>
-                        <span class="payment-text">Donate with Cash</span>
-                        <span class="payment-cards">Pay on delivery or in person</span>
+                        <span class="payment-text">Dhuro me Para të Gatshme</span>
+                        <span class="payment-cards">Paguaj në dorëzim ose personalisht</span>
                     </button>
                 </form>
             </div>
             
             <div class="selected-amount-display">
-                Selected amount: <span id="selected-amount">CHF {{ number_format($donationAmounts[0] / 100, 0) }}</span>
+                Shuma e zgjedhur: <span id="selected-amount">CHF {{ number_format($donationAmounts[0] / 100, 0) }}</span>
             </div>
         </div>
     </div>
@@ -247,28 +247,28 @@
             <svg class="icon" style="color: #1F6E38;" viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
             </svg>
-            Frequently Asked Questions
+            Pyetje të Bëra Shpesh
         </h3>
         <div class="faq-grid">
             <div class="faq-item">
-                <strong>Is my payment secure?</strong>
-                <p>Yes, all payments are processed through encrypted SSL connections with industry-standard security.</p>
+                <strong>A është pagesa ime e sigurt?</strong>
+                <p>Po, të gjitha pagesat përpunohen përmes lidhjeve SSL të enkriptuara me siguri standarde të industrisë.</p>
             </div>
             <div class="faq-item">
-                <strong>Can I get a refund?</strong>
-                <p>Membership fees are non-refundable after 7 days. Donations are final but tax-deductible.</p>
+                <strong>A mund të marr kthim parash?</strong>
+                <p>Tarifat e anëtarësisë nuk kthehen pas 7 ditësh. Dhuratat janë përfundimtare por janë të zbritshme nga taksat.</p>
             </div>
             <div class="faq-item">
-                <strong>How long does processing take?</strong>
-                <p>Stripe payments: 1-2 minutes. TWINT: Instant. Bank transfers: 1-3 business days.</p>
+                <strong>Sa kohë merr përpunimi?</strong>
+                <p>Pagesat Stripe: 1-2 minuta. TWINT: I menjëhershëm. Transfertat bankare: 1-3 ditë pune.</p>
             </div>
             <div class="faq-item">
-                <strong>Will I receive a receipt?</strong>
-                <p>Yes, you'll receive an email receipt immediately after successful payment.</p>
+                <strong>A do të marr një faturë?</strong>
+                <p>Po, do të merrni një faturë email menjëherë pas pagesës së suksesshme.</p>
             </div>
             <div class="faq-item">
-                <strong>Which payment methods do you accept?</strong>
-                <p>We accept credit/debit cards (Stripe), TWINT (Swiss mobile payment), and direct bank transfers.</p>
+                <strong>Cilat metoda pagese pranoni?</strong>
+                <p>Ne pranojmë karta krediti/debiti (Stripe), TWINT (pagesa mobile zvicerane), dhe transferta direkte bankare.</p>
             </div>
         </div>
     </div>
@@ -994,10 +994,10 @@
     <script>
         // Impact messages for different donation amounts
         const impactMessages = {
-            5000: "CHF 50 - Supports weekly community activities",
-            10000: "CHF 100 - Funds educational programs for a month",
-            20000: "CHF 200 - Provides meals for community events",
-            50000: "CHF 500 - Supports major facility improvements"
+            5000: "CHF 50 - Mbështet aktivitetet javore të komunitetit",
+            10000: "CHF 100 - Financon programet arsimore për një muaj",
+            20000: "CHF 200 - Siguron ushqim për ngjarjet e komunitetit",
+            50000: "CHF 500 - Mbështet përmirësimet e mëdha të objektit"
         };
 
         function selectDonation(amount, element, updateProgress = true) {
@@ -1011,7 +1011,7 @@
             
             // Update impact message
             const impactText = document.getElementById('impact-text');
-            impactText.textContent = impactMessages[amount] || `CHF ${amount/100} - Every contribution makes a difference`;
+            impactText.textContent = impactMessages[amount] || `CHF ${amount/100} - Çdo kontribut bën ndryshimin`;
             
             // Reset all donation cards
             document.querySelectorAll('.donation-card').forEach(el => {
@@ -1060,7 +1060,7 @@
             if (selectedAmountEl) selectedAmountEl.textContent = 'CHF ' + cleanValue.toFixed(0);
             
             // Update impact message
-            if (impactTextEl) impactTextEl.textContent = `CHF ${cleanValue.toFixed(0)} - Your custom contribution makes a difference`;
+            if (impactTextEl) impactTextEl.textContent = `CHF ${cleanValue.toFixed(0)} - Kontributi juaj i personalizuar bën ndryshimin`;
             
             // Deselect preset cards
             document.querySelectorAll('.donation-card').forEach(el => {
@@ -1130,11 +1130,11 @@
                     // Show a loading message
                     const button = form.querySelector('.payment-btn');
                     const originalText = button.querySelector('.payment-text').textContent;
-                    button.querySelector('.payment-text').textContent = 'Processing...';
+                    button.querySelector('.payment-text').textContent = 'Duke përpunuar...';
                     
                     // If form submission fails, restore original text after 3 seconds
                     setTimeout(() => {
-                        if (button.querySelector('.payment-text').textContent === 'Processing...') {
+                        if (button.querySelector('.payment-text').textContent === 'Duke përpunuar...') {
                             button.querySelector('.payment-text').textContent = originalText;
                             button.classList.remove('loading');
                             button.disabled = false;
