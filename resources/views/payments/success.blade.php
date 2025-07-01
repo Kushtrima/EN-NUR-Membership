@@ -4,23 +4,27 @@
     
     <div class="card text-center">
         <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
-        <h1 class="card-title">Payment Successful!</h1>
+        <h1 class="card-title">Pagesa e Suksesshme!</h1>
         <p style="font-size: 1.125rem; margin-bottom: 2rem;">
-            Thank you for your {{ $payment->payment_type }}!
+            Faleminderit për {{ $payment->payment_type === 'membership' ? 'anëtarësinë' : 'dhurimin' }} tuaj!
         </p>
         
         <div style="background-color: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; text-align: left;">
                 <div>
-                    <strong>Payment Type:</strong><br>
-                    {{ ucfirst($payment->payment_type) }}
+                    <strong>Lloji i Pagesës:</strong><br>
+                    @if($payment->payment_type === 'membership')
+                        Anëtarësi
+                    @else
+                        Dhurim
+                    @endif
                 </div>
                 <div>
-                    <strong>Amount:</strong><br>
+                    <strong>Shuma:</strong><br>
                     {{ $payment->formatted_amount }}
                 </div>
                 <div>
-                    <strong>Payment Method:</strong><br>
+                    <strong>Metoda e Pagesës:</strong><br>
                     @if($payment->payment_method === 'stripe' && isset($payment->metadata['payment_method_type']))
                         @switch($payment->metadata['payment_method_type'])
                             @case('card')
@@ -32,7 +36,7 @@
                                         <rect x="2" y="12" width="6" height="2" rx="1" fill="#9CA3AF"/>
                                     </svg>
                                     <span>
-                                        Credit/Debit Card
+                                        Kartë Krediti/Debiti
                                         @if(isset($payment->metadata['payment_method_details']['brand']))
                                             ({{ ucfirst($payment->metadata['payment_method_details']['brand']) }}
                                             •••• {{ $payment->metadata['payment_method_details']['last4'] ?? '' }})
@@ -60,42 +64,54 @@
                                 </div>
                                 @break
                             @default
-                                {{ ucfirst($payment->payment_method) }}
+                                @if($payment->payment_method === 'bank_transfer')
+                                    Transfer Bankar
+                                @elseif($payment->payment_method === 'twint')
+                                    TWINT
+                                @else
+                                    {{ ucfirst($payment->payment_method) }}
+                                @endif
                         @endswitch
                     @else
-                        {{ ucfirst($payment->payment_method) }}
+                        @if($payment->payment_method === 'bank_transfer')
+                            Transfer Bankar
+                        @elseif($payment->payment_method === 'twint')
+                            TWINT
+                        @else
+                            {{ ucfirst($payment->payment_method) }}
+                        @endif
                     @endif
                 </div>
                 <div>
-                    <strong>Transaction ID:</strong><br>
+                    <strong>ID e Transaksionit:</strong><br>
                     {{ $payment->transaction_id }}
                 </div>
                 <div>
-                    <strong>Date:</strong><br>
+                    <strong>Data:</strong><br>
                     {{ $payment->created_at->format('M d, Y H:i') }}
                 </div>
                 <div>
-                    <strong>Status:</strong><br>
-                    <span style="color: #28a745; font-weight: bold;">{{ ucfirst($payment->status) }}</span>
+                    <strong>Statusi:</strong><br>
+                    <span style="color: #28a745; font-weight: bold;">E Përfunduar</span>
                 </div>
             </div>
         </div>
 
         @if($payment->payment_type === 'membership')
             <div class="alert alert-success">
-                <strong>Welcome to our community!</strong><br>
-                Your membership is now active. You can access all member benefits immediately.
+                <strong>Mirë se vini në komunitetin tonë!</strong><br>
+                Anëtarësia juaj tani është aktive. Mund të aksesoni të gjitha përfitimet e anëtarëve menjëherë.
             </div>
         @else
             <div class="alert alert-success">
-                <strong>Thank you for your donation!</strong><br>
-                Your contribution helps us continue our mission and make a difference.
+                <strong>Faleminderit për dhurimin tuaj!</strong><br>
+                Kontributi juaj na ndihmon të vazhdojmë misionin tonë dhe të bëjmë ndryshimin.
             </div>
         @endif
 
         <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
-            <a href="{{ route('dashboard') }}" class="btn">Go to Dashboard</a>
-            <a href="{{ route('payment.create') }}" class="btn btn-secondary">Make Another Payment</a>
+            <a href="{{ route('dashboard') }}" class="btn">Shko në Panel</a>
+            <a href="{{ route('payment.create') }}" class="btn btn-secondary">Bëj Pagesë Tjetër</a>
         </div>
     </div>
 </x-app-layout> 

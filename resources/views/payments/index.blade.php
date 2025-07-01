@@ -1,46 +1,46 @@
 <x-app-layout>
 @include('components.confirmation-modal')
     <div class="card">
-        <h1 class="card-title">My Payments</h1>
-        <p>View and manage your payment history, receipts, and transaction details.</p>
+        <h1 class="card-title">Pagesat e Mia</h1>
+        <p>Shiko dhe menaxho historikun e pagesave të tua, faturat dhe detajet e transaksioneve.</p>
     </div>
 
     <!-- Payment Statistics -->
     <div class="card">
-        <h2 class="card-title">Payment Summary</h2>
+        <h2 class="card-title">Përmbledhja e Pagesave</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
             <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #1F6E38;">{{ $stats['total'] }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Total Payments</div>
+                <div style="font-size: 0.9rem; color: #666;">Gjithsej Pagesat</div>
             </div>
             <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #1F6E38;">{{ $stats['completed'] }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Completed</div>
+                <div style="font-size: 0.9rem; color: #666;">E Përfunduar</div>
             </div>
             <div style="background: rgba(193, 154, 97, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #C19A61;">{{ $stats['pending'] }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Pending</div>
+                <div style="font-size: 0.9rem; color: #666;">Në Pritje</div>
             </div>
             @if($stats['failed'] > 0)
             <div style="background: rgba(220, 53, 69, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #dc3545;">{{ $stats['failed'] }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Failed</div>
+                <div style="font-size: 0.9rem; color: #666;">Dështuar</div>
             </div>
             @endif
             <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #1F6E38;">CHF {{ number_format($stats['total_amount'], 2) }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Total Paid</div>
+                <div style="font-size: 0.9rem; color: #666;">Gjithsej i Paguar</div>
             </div>
             @if($stats['membership_payments'] > 0)
             <div style="background: rgba(193, 154, 97, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #C19A61;">{{ $stats['membership_payments'] }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Memberships</div>
+                <div style="font-size: 0.9rem; color: #666;">Anëtarësi</div>
             </div>
             @endif
             @if($stats['donation_total'] > 0)
             <div style="background: rgba(31, 110, 56, 0.1); border-radius: 8px; padding: 1rem; text-align: center;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #1F6E38;">CHF {{ number_format($stats['donation_total'], 2) }}</div>
-                <div style="font-size: 0.9rem; color: #666;">Donations</div>
+                <div style="font-size: 0.9rem; color: #666;">Dhurime</div>
             </div>
             @endif
         </div>
@@ -48,12 +48,12 @@
 
     <!-- Quick Actions -->
     <div class="card">
-        <h2 class="card-title">Export Options</h2>
+        <h2 class="card-title">Mundësitë e Eksportimit</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
             <!-- Quick Export Current View -->
             <div>
-                <h4 style="color: #1F6E38; margin-bottom: 0.5rem;">Export Current View</h4>
-                <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Export the payments currently displayed with applied filters.</p>
+                <h4 style="color: #1F6E38; margin-bottom: 0.5rem;">Eksporto Pamjen Aktuale</h4>
+                <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Eksporto pagesat e shfaqura aktualisht me filtrat e aplikuar.</p>
                 <form method="POST" action="{{ route('exports.user') }}" style="display: inline;">
                     @csrf
                     <!-- Pass current filters as hidden inputs -->
@@ -74,34 +74,34 @@
                         <svg style="width: 16px; height: 16px;" fill="white" viewBox="0 0 24 24">
                             <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
                         </svg>
-                        Export Filtered Results ({{ $payments->total() }} payments)
+                        Eksporto Rezultatet e Filtruar ({{ $payments->total() }} pagesat)
                     </button>
                 </form>
             </div>
             
             <!-- Advanced Export Options -->
             <div>
-                <h4 style="color: #1F6E38; margin-bottom: 0.5rem;">Advanced Export</h4>
-                <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Choose custom date ranges and specific filters for your export.</p>
+                <h4 style="color: #1F6E38; margin-bottom: 0.5rem;">Eksportim i Avancuar</h4>
+                <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Zgjidh intervale datash dhe filtra specifikë për eksportimin tënd.</p>
                 <a href="{{ route('exports.user.form') }}" 
                    style="background: #C19A61; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s ease;"
                    onmouseover="this.style.background='#a67c52'" onmouseout="this.style.background='#C19A61'">
                     <svg style="width: 16px; height: 16px;" fill="white" viewBox="0 0 24 24">
                         <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
                     </svg>
-                    Custom Export Options
+                    Opsionet e Eksportimit të Personalizuar
                 </a>
             </div>
             
             <!-- Export Summary -->
             <div>
-                <h4 style="color: #1F6E38; margin-bottom: 0.5rem;">Your Payment Summary</h4>
+                <h4 style="color: #1F6E38; margin-bottom: 0.5rem;">Përmbledhja e Pagesave Tuaja</h4>
                 <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; border-left: 4px solid #1F6E38;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem;">
-                        <div><strong>Total Payments:</strong> {{ $stats['total'] }}</div>
-                        <div><strong>Completed:</strong> {{ $stats['completed'] }}</div>
-                        <div><strong>Total Amount:</strong> CHF {{ number_format($stats['total_amount'], 2) }}</div>
-                        <div><strong>Memberships:</strong> {{ $stats['membership_payments'] }}</div>
+                        <div><strong>Gjithsej Pagesat:</strong> {{ $stats['total'] }}</div>
+                        <div><strong>E Përfunduar:</strong> {{ $stats['completed'] }}</div>
+                        <div><strong>Shuma Totale:</strong> CHF {{ number_format($stats['total_amount'], 2) }}</div>
+                        <div><strong>Anëtarësi:</strong> {{ $stats['membership_payments'] }}</div>
                     </div>
                 </div>
             </div>
@@ -110,12 +110,12 @@
 
     <!-- Filters and Search -->
     <div class="card">
-        <h2 class="card-title">Filter & Search</h2>
+        <h2 class="card-title">Filtrimi & Kërkimi</h2>
         <form method="GET" action="{{ route('payment.index') }}">
             <!-- Search Bar - First Row -->
             <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #1F6E38;">Search</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Transaction ID, type, method..." 
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #1F6E38;">Kërko</label>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="ID e transaksionit, lloji, metoda..." 
                        style="width: 100%; padding: 0.75rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s ease;"
                        onfocus="this.style.borderColor='#1F6E38'" onblur="this.style.borderColor='#ddd'">
             </div>
@@ -123,44 +123,44 @@
             <!-- All Filters and Buttons in One Row -->
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto auto; gap: 1rem; align-items: end;">
                 <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #1F6E38; font-size: 0.9rem;">Status</label>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #1F6E38; font-size: 0.9rem;">Statusi</label>
                     <select name="status" style="width: 100%; padding: 0.6rem; border: 2px solid #ddd; border-radius: 8px; font-size: 0.9rem;">
-                        <option value="">All Statuses</option>
-                        <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
-                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Failed</option>
-                        <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                        <option value="">Të Gjitha Statuset</option>
+                        <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>E Përfunduar</option>
+                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Në Pritje</option>
+                        <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Dështuar</option>
+                        <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>E Anuluar</option>
                     </select>
                 </div>
                 
                 <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #1F6E38; font-size: 0.9rem;">Type</label>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #1F6E38; font-size: 0.9rem;">Lloji</label>
                     <select name="type" style="width: 100%; padding: 0.6rem; border: 2px solid #ddd; border-radius: 8px; font-size: 0.9rem;">
-                        <option value="">All Types</option>
-                        <option value="membership" {{ request('type') === 'membership' ? 'selected' : '' }}>Membership</option>
-                        <option value="donation" {{ request('type') === 'donation' ? 'selected' : '' }}>Donation</option>
+                        <option value="">Të Gjitha Llojet</option>
+                        <option value="membership" {{ request('type') === 'membership' ? 'selected' : '' }}>Anëtarësi</option>
+                        <option value="donation" {{ request('type') === 'donation' ? 'selected' : '' }}>Dhurim</option>
                     </select>
                 </div>
                 
                 <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #1F6E38; font-size: 0.9rem;">Method</label>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #1F6E38; font-size: 0.9rem;">Metoda</label>
                     <select name="method" style="width: 100%; padding: 0.6rem; border: 2px solid #ddd; border-radius: 8px; font-size: 0.9rem;">
-                        <option value="">All Methods</option>
+                        <option value="">Të Gjitha Metodat</option>
                         <option value="stripe" {{ request('method') === 'stripe' ? 'selected' : '' }}>Stripe</option>
                         <option value="paypal" {{ request('method') === 'paypal' ? 'selected' : '' }}>PayPal</option>
                         <option value="twint" {{ request('method') === 'twint' ? 'selected' : '' }}>TWINT</option>
-                        <option value="bank_transfer" {{ request('method') === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                        <option value="bank_transfer" {{ request('method') === 'bank_transfer' ? 'selected' : '' }}>Transfer Bankar</option>
                     </select>
                 </div>
                 
                 <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #1F6E38; font-size: 0.9rem;">From Date</label>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #1F6E38; font-size: 0.9rem;">Nga Data</label>
                     <input type="date" name="date_from" value="{{ request('date_from') }}" 
                            style="width: 100%; padding: 0.6rem; border: 2px solid #ddd; border-radius: 8px; font-size: 0.9rem;">
                 </div>
                 
                 <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #1F6E38; font-size: 0.9rem;">To Date</label>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #1F6E38; font-size: 0.9rem;">Deri në Datë</label>
                     <input type="date" name="date_to" value="{{ request('date_to') }}" 
                            style="width: 100%; padding: 0.6rem; border: 2px solid #ddd; border-radius: 8px; font-size: 0.9rem;">
                 </div>
@@ -171,7 +171,7 @@
                         <svg style="width: 16px; height: 16px;" fill="white" viewBox="0 0 24 24">
                             <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
                         </svg>
-                        Filter
+                        Filtro
                     </button>
                 </div>
                 
@@ -181,7 +181,7 @@
                         <svg style="width: 16px; height: 16px;" fill="white" viewBox="0 0 24 24">
                             <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6M12,8A4,4 0 0,0 8,12A4,4 0 0,0 12,16A4,4 0 0,0 16,12A4,4 0 0,0 12,8Z"/>
                         </svg>
-                        Clear
+                        Pastro
                     </a>
                 </div>
             </div>
@@ -191,7 +191,7 @@
     <!-- Payments List -->
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 class="card-title" style="margin: 0;">Payment History ({{ $payments->total() }} payments)</h2>
+            <h2 class="card-title" style="margin: 0;">Historiku i Pagesave ({{ $payments->total() }} pagesat)</h2>
             @if($payments->count() > 0)
                 <div style="display: flex; gap: 1rem;">
                     <!-- Export All Payments Button -->
@@ -215,7 +215,7 @@
                             <svg style="width: 18px; height: 18px;" fill="white" viewBox="0 0 24 24">
                                 <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
                             </svg>
-                            Export All Payments ({{ $payments->total() }})
+                            Eksporto Të Gjitha Pagesat ({{ $payments->total() }})
                         </button>
                     </form>
                     
@@ -226,7 +226,7 @@
                         <svg style="width: 18px; height: 18px;" fill="white" viewBox="0 0 24 24">
                             <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
                         </svg>
-                        Custom Export
+                        Eksportim i Personalizuar
                     </a>
                 </div>
             @endif
@@ -237,13 +237,13 @@
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr style="background: #f8f9fa;">
-                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">Date</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">Type</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">Amount</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">Method</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">Status</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">Transaction ID</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">Actions</th>
+                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">Data</th>
+                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">Lloji</th>
+                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">Shuma</th>
+                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">Metoda</th>
+                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">Statusi</th>
+                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">ID e Transaksionit</th>
+                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid #1F6E38; font-weight: bold;">Veprimet</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -255,14 +255,24 @@
                                 </td>
                                 <td style="padding: 1rem;">
                                     <span style="background: {{ $payment->payment_type === 'membership' ? '#1F6E38' : '#C19A61' }}; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">
-                                        {{ ucfirst($payment->payment_type) }}
+                                        @if($payment->payment_type === 'membership')
+                                            Anëtarësi
+                                        @else
+                                            Dhurim
+                                        @endif
                                     </span>
                                 </td>
                                 <td style="padding: 1rem;">
                                     <div style="font-weight: bold; font-size: 1.1rem;">CHF {{ number_format($payment->amount / 100, 2) }}</div>
                                 </td>
                                 <td style="padding: 1rem;">
-                                    <div style="text-transform: capitalize;">{{ str_replace('_', ' ', $payment->payment_method) }}</div>
+                                    <div style="text-transform: capitalize;">
+                                        @if($payment->payment_method === 'bank_transfer')
+                                            Transfer Bankar
+                                        @else
+                                            {{ str_replace('_', ' ', $payment->payment_method) }}
+                                        @endif
+                                    </div>
                                 </td>
                                 <td style="padding: 1rem;">
                                     @php
@@ -275,7 +285,17 @@
                                         $statusColor = $statusColors[$payment->status] ?? '#6c757d';
                                     @endphp
                                     <span style="background: {{ $statusColor }}; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">
-                                        {{ ucfirst($payment->status) }}
+                                        @if($payment->status === 'completed')
+                                            E Përfunduar
+                                        @elseif($payment->status === 'pending')
+                                            Në Pritje
+                                        @elseif($payment->status === 'failed')
+                                            Dështuar
+                                        @elseif($payment->status === 'cancelled')
+                                            E Anuluar
+                                        @else
+                                            {{ ucfirst($payment->status) }}
+                                        @endif
                                     </span>
                                 </td>
                                 <td style="padding: 1rem;">
@@ -290,11 +310,11 @@
                                             <a href="{{ route('user.payments.receipt', $payment) }}" 
                                                style="background: #1F6E38; color: white; padding: 0.5rem 0.75rem; border-radius: 4px; text-decoration: none; font-size: 0.8rem; font-weight: bold; display: flex; align-items: center; gap: 0.4rem; height: 32px; box-sizing: border-box; white-space: nowrap;"
                                                target="_blank"
-                                               title="Download individual PDF receipt for this payment">
+                                               title="Shkarko faturë PDF për këtë pagesë">
                                                 <svg style="width: 14px; height: 14px;" fill="white" viewBox="0 0 24 24">
                                                     <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
                                                 </svg>
-                                                PDF Receipt
+                                                Fatura PDF
                                             </a>
                                             
                                             <!-- Quick Export This Payment -->
@@ -308,17 +328,21 @@
                                                         style="background: #C19A61; color: white; padding: 0.5rem 0.75rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.4rem; height: 32px; box-sizing: border-box; white-space: nowrap;"
                                                         onmouseover="this.style.background='#a67c52'" 
                                                         onmouseout="this.style.background='#C19A61'"
-                                                        title="Export this payment to PDF report">
+                                                        title="Eksporto këtë pagesë në raport PDF">
                                                     <svg style="width: 14px; height: 14px;" fill="white" viewBox="0 0 24 24">
                                                         <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
                                                     </svg>
-                                                    Export PDF
+                                                    Eksporto PDF
                                                 </button>
                                             </form>
                                         @else
                                             <span style="color: #6c757d; font-size: 0.8rem; font-style: italic;">
                                                 @if($payment->status === 'pending')
-                                                    Processing...
+                                                    Duke u procesuar...
+                                                @elseif($payment->status === 'failed')
+                                                    Dështuar
+                                                @elseif($payment->status === 'cancelled')
+                                                    E Anuluar
                                                 @else
                                                     {{ ucfirst($payment->status) }}
                                                 @endif
@@ -335,11 +359,11 @@
                                                     style="background: #dc3545; color: white; padding: 0.4rem 0.6rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.3rem; height: 28px; box-sizing: border-box;"
                                                     onmouseover="this.style.background='#c82333'" 
                                                     onmouseout="this.style.background='#dc3545'"
-                                                    title="Delete this payment">
+                                                    title="Fshij këtë pagesë">
                                                 <svg style="width: 12px; height: 12px;" fill="white" viewBox="0 0 24 24">
                                                     <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
                                                 </svg>
-                                                Delete
+                                                Fshij
                                             </button>
                                         </form>
                                     </div>
@@ -357,16 +381,16 @@
         @else
             <div style="text-align: center; padding: 3rem; color: #666; background: rgba(31, 110, 56, 0.05); border-radius: 8px;">
                 <div style="font-size: 3rem; margin-bottom: 1rem;">💳</div>
-                <h3 style="margin-bottom: 1rem;">No Payments Found</h3>
+                <h3 style="margin-bottom: 1rem;">Nuk u Gjetën Pagesa</h3>
                 @if(request()->hasAny(['search', 'status', 'type', 'method', 'date_from', 'date_to']))
-                    <p style="margin-bottom: 1.5rem;">No payments match your current filters. Try adjusting your search criteria.</p>
+                    <p style="margin-bottom: 1.5rem;">Asnjë pagesë nuk përputhet me filtrat aktuale. Provo të ndryshosh kriteret e kërkimit.</p>
                     <a href="{{ route('payment.index') }}" style="background: #1F6E38; color: white; padding: 0.75rem 1.5rem; border-radius: 4px; text-decoration: none; font-weight: bold;">
-                        Clear Filters
+                        Pastro Filtrat
                     </a>
                 @else
-                    <p style="margin-bottom: 1.5rem;">You haven't made any payments yet. Get started with your first payment!</p>
+                    <p style="margin-bottom: 1.5rem;">Ende nuk ke bërë asnjë pagesë. Fillo me pagesën e parë!</p>
                     <a href="{{ route('payment.create') }}" style="background: #1F6E38; color: white; padding: 0.75rem 1.5rem; border-radius: 4px; text-decoration: none; font-weight: bold;">
-                        Make Your First Payment
+                        Bëj Pagesën e Parë
                     </a>
                 @endif
             </div>

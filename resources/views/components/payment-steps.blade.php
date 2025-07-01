@@ -27,10 +27,10 @@
         </div>
         <div class="step-content" style="margin-left: 1rem; text-align: left;">
             <div class="step-title" style="font-weight: 600; color: {{ $currentStep >= 1 ? '#1F6E38' : '#6c757d' }}; font-size: 1rem; margin-bottom: 0.25rem;">
-                Select Amount
+                Zgjidh Shumën
             </div>
             <div class="step-description" style="font-size: 0.8rem; color: #6c757d; line-height: 1.3;">
-                Choose membership or donation
+                Zgjidh anëtarësinë ose dhurimin
             </div>
         </div>
     </div>
@@ -72,10 +72,10 @@
         </div>
         <div class="step-content" style="margin-left: 1rem; text-align: left;">
             <div class="step-title" style="font-weight: 600; color: {{ $currentStep >= 2 ? '#1F6E38' : '#6c757d' }}; font-size: 1rem; margin-bottom: 0.25rem;">
-                Choose Payment
+                Zgjidh Pagesën
             </div>
             <div class="step-description" style="font-size: 0.8rem; color: #6c757d; line-height: 1.3;">
-                Select payment method & details
+                Zgjidh metodën e pagesës dhe detajet
             </div>
         </div>
     </div>
@@ -116,10 +116,10 @@
         </div>
         <div class="step-content" style="margin-left: 1rem; text-align: left;">
             <div class="step-title" style="font-weight: 600; color: {{ $currentStep >= 3 ? '#1F6E38' : '#6c757d' }}; font-size: 1rem; margin-bottom: 0.25rem;">
-                Complete
+                Përfundo
             </div>
             <div class="step-description" style="font-size: 0.8rem; color: #6c757d; line-height: 1.3;">
-                Payment confirmation & receipt
+                Konfirmimi i pagesës dhe fatura
             </div>
         </div>
     </div>
