@@ -7,9 +7,9 @@
                 <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
             </svg>
             <div>
-                <h1 style="margin: 0; font-size: 2rem; font-weight: 700; color: white;">Payment Management</h1>
+                <h1 style="margin: 0; font-size: 2rem; font-weight: 700; color: white;">Menaxhimi i Pagesave</h1>
                 <p style="margin: 0; font-size: 1.1rem; opacity: 0.9; color: white;">
-                    Monitor all payments, verify bank transfers, and manage payment statuses
+                    Monitoroni të gjitha pagesat, verifikoni transfertat bankare dhe menaxhoni statuset e pagesave
                 </p>
             </div>
         </div>
@@ -19,19 +19,19 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
         <div class="card" style="text-align: center; padding: 1.5rem;">
             <div style="font-size: 2rem; font-weight: bold; color: #1F6E38;">{{ $stats['total'] ?? 0 }}</div>
-            <div style="color: #6c757d;">Total Payments</div>
+            <div style="color: #6c757d;">Pagesat Totale</div>
         </div>
         <div class="card" style="text-align: center; padding: 1.5rem;">
             <div style="font-size: 2rem; font-weight: bold; color: #28a745;">{{ $stats['completed'] ?? 0 }}</div>
-            <div style="color: #6c757d;">Completed</div>
+            <div style="color: #6c757d;">E Përfunduar</div>
         </div>
         <div class="card" style="text-align: center; padding: 1.5rem;">
             <div style="font-size: 2rem; font-weight: bold; color: #ffc107;">{{ $stats['pending'] ?? 0 }}</div>
-            <div style="color: #6c757d;">Pending Verification</div>
+            <div style="color: #6c757d;">Në Pritje për Verifikim</div>
         </div>
         <div class="card" style="text-align: center; padding: 1.5rem;">
             <div style="font-size: 2rem; font-weight: bold; color: #dc3545;">{{ $stats['failed'] ?? 0 }}</div>
-            <div style="color: #6c757d;">Failed</div>
+            <div style="color: #6c757d;">Dështuar</div>
         </div>
     </div>
 
@@ -44,10 +44,10 @@
                     <svg style="width: 16px; height: 16px; margin-right: 0.5rem; vertical-align: middle;" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
                     </svg>
-                    Search Payments
+                    Kërko Pagesat
                 </label>
                 <input type="text" name="search" class="form-control" 
-                       placeholder="Search by user name, email, or transaction ID..." 
+                       placeholder="Kërko sipas emrit të përdoruesit, email-it ose ID-së së transaksionit..." 
                        value="{{ request('search') }}"
                        style="font-size: 1rem; padding: 0.75rem 1rem; border: 2px solid #e9ecef; border-radius: 8px; transition: border-color 0.3s ease;"
                        onfocus="this.style.borderColor='#1F6E38'" 
@@ -59,40 +59,40 @@
                  <div style="display: grid; grid-template-columns: 140px 140px 1fr auto; gap: 1rem; align-items: end;">
                      <!-- Status Filter -->
                      <div>
-                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #495057;">Status</label>
+                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #495057;">Statusi</label>
                          <select name="status" class="form-control" style="border-radius: 6px;">
-                             <option value="">All</option>
-                             <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                             <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
-                             <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Failed</option>
-                             <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                             <option value="">Të Gjitha</option>
+                             <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Në Pritje</option>
+                             <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>E Përfunduar</option>
+                             <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Dështuar</option>
+                             <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>E Anuluar</option>
                          </select>
                      </div>
 
                      <!-- Payment Method Filter -->
                      <div>
-                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #495057;">Method</label>
+                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #495057;">Metoda</label>
                          <select name="method" class="form-control" style="border-radius: 6px;">
-                             <option value="">All</option>
+                             <option value="">Të Gjitha</option>
                              <option value="stripe" {{ request('method') === 'stripe' ? 'selected' : '' }}>Stripe</option>
                              <option value="paypal" {{ request('method') === 'paypal' ? 'selected' : '' }}>PayPal</option>
                              <option value="twint" {{ request('method') === 'twint' ? 'selected' : '' }}>TWINT</option>
-                             <option value="bank_transfer" {{ request('method') === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                             <option value="bank_transfer" {{ request('method') === 'bank_transfer' ? 'selected' : '' }}>Transfer Bankar</option>
                          </select>
                      </div>
 
                      <!-- Date Range Filter -->
                      <div>
-                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #495057;">Date Range</label>
+                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #495057;">Intervali i Datës</label>
                          <div style="display: flex; gap: 0.5rem;">
                              <input type="date" name="date_from" class="form-control" 
                                     value="{{ request('date_from') }}" 
                                     style="border-radius: 6px; font-size: 0.9rem;"
-                                    title="From Date">
+                                    title="Nga Data">
                              <input type="date" name="date_to" class="form-control" 
                                     value="{{ request('date_to') }}" 
                                     style="border-radius: 6px; font-size: 0.9rem;"
-                                    title="To Date">
+                                    title="Deri në Datë">
                          </div>
                      </div>
 
@@ -103,7 +103,7 @@
                              <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 24 24">
                                  <path d="M15.5,14L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
                              </svg>
-                             Apply Filters
+                             Apliko Filtrat
                          </button>
                          @if(request()->hasAny(['search', 'status', 'method', 'date_from', 'date_to']))
                              <a href="{{ route('admin.payments') }}" class="btn btn-secondary" 
@@ -111,7 +111,7 @@
                                  <svg style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 24 24">
                                      <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
                                  </svg>
-                                 Clear
+                                 Pastro
                              </a>
                          @endif
                      </div>
@@ -123,10 +123,10 @@
     <!-- Payments Table -->
     <div class="card">
         <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 1rem;">
-            <h2 class="card-title">All Payments ({{ $payments->total() }})</h2>
+            <h2 class="card-title">Të Gjitha Pagesat ({{ $payments->total() }})</h2>
             @if(auth()->user()->isSuperAdmin() && $payments->where('status', 'pending')->where('payment_method', 'bank_transfer')->count() > 0)
                 <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 0.75rem; color: #856404;">
-                    <strong>{{ $payments->where('status', 'pending')->where('payment_method', 'bank_transfer')->count() }}</strong> bank transfers awaiting verification
+                    <strong>{{ $payments->where('status', 'pending')->where('payment_method', 'bank_transfer')->count() }}</strong> transferta bankare në pritje për verifikim
                 </div>
             @endif
         </div>
@@ -143,10 +143,10 @@
                         </div>
                         <div>
                             <div style="font-weight: 600; color: #1F6E38; font-size: 1rem;">
-                                <span id="selected-count">0</span> payments selected
+                                <span id="selected-count">0</span> pagesa të zgjedhura
                             </div>
                             <div style="color: #6c757d; font-size: 0.875rem;">
-                                Choose an action to apply to selected payments
+                                Zgjidh një veprim për t'u aplikuar në pagesat e zgjedhura
                             </div>
                         </div>
                     </div>
@@ -159,7 +159,7 @@
                             <svg style="width: 16px; height: 16px;" fill="white" viewBox="0 0 24 24">
                                 <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
                             </svg>
-                            Mark as Completed
+                            Shëno si të Përfunduar
                         </button>
                         
                         <button onclick="bulkUpdateStatus('failed')" class="btn" 
@@ -169,7 +169,7 @@
                             <svg style="width: 16px; height: 16px;" fill="white" viewBox="0 0 24 24">
                                 <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
                             </svg>
-                            Mark as Failed
+                            Shëno si të Dështuar
                         </button>
                         
                         <button onclick="bulkSendNotifications()" class="btn" 
@@ -179,7 +179,7 @@
                             <svg style="width: 16px; height: 16px;" fill="white" viewBox="0 0 24 24">
                                 <path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z"/>
                             </svg>
-                            Send Notifications
+                            Dërgo Njoftimet
                         </button>
                         
                         <button onclick="clearBulkSelection()" class="btn" 
@@ -189,7 +189,7 @@
                             <svg style="width: 16px; height: 16px;" fill="white" viewBox="0 0 24 24">
                                 <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
                             </svg>
-                            Clear Selection
+                            Pastro Zgjedhjen
                         </button>
                     </div>
                 </div>
@@ -205,14 +205,14 @@
                                 </th>
                             @endif
                             <th>ID</th>
-                            <th>Date</th>
-                            <th>User</th>
-                            <th>Amount</th>
-                            <th>Type</th>
-                            <th>Method</th>
-                            <th>Status</th>
-                            <th>Transaction ID</th>
-                            <th>Actions</th>
+                            <th>Data</th>
+                            <th>Përdoruesi</th>
+                            <th>Shuma</th>
+                            <th>Lloji</th>
+                            <th>Metoda</th>
+                            <th>Statusi</th>
+                            <th>ID e Transaksionit</th>
+                            <th>Veprimet</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -243,7 +243,7 @@
                                     <span style="padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;
                                           background-color: {{ $payment->payment_type === 'membership' ? '#d4edda' : '#fff3cd' }};
                                           color: {{ $payment->payment_type === 'membership' ? '#155724' : '#856404' }};">
-                                        {{ ucfirst($payment->payment_type) }}
+                                        {{ $payment->payment_type === 'membership' ? 'Anëtarësi' : 'Dhurim' }}
                                     </span>
                                 </td>
                                 <td>
@@ -256,7 +256,17 @@
                                     <span class="status-badge status-{{ $payment->status }}" style="padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.7rem; font-weight: 600;
                                           background-color: {{ $payment->status === 'completed' ? '#d4edda' : ($payment->status === 'pending' ? '#fff3cd' : '#f8d7da') }};
                                           color: {{ $payment->status === 'completed' ? '#155724' : ($payment->status === 'pending' ? '#856404' : '#721c24') }};">
-                                        {{ ucfirst($payment->status) }}
+                                        @if($payment->status === 'completed')
+                                            E Përfunduar
+                                        @elseif($payment->status === 'pending')
+                                            Në Pritje
+                                        @elseif($payment->status === 'failed')
+                                            Dështuar
+                                        @elseif($payment->status === 'cancelled')
+                                            E Anuluar
+                                        @else
+                                            {{ ucfirst($payment->status) }}
+                                        @endif
                                         @if($payment->status === 'pending' && $payment->payment_method === 'bank_transfer')
                                             <span style="margin-left: 0.25rem;">⏳</span>
                                         @elseif($payment->status === 'pending' && $payment->payment_method === 'cash')
@@ -279,14 +289,14 @@
                                             @if($payment->status === 'pending')
                                                 <button onclick="updatePaymentStatus({{ $payment->id }}, 'completed')" 
                                                         class="btn" style="background: #28a745; color: white; padding: 0.3rem; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;"
-                                                        title="Mark as Completed">
+                                                        title="Shëno si të Përfunduar">
                                                     <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
                                                         <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"/>
                                                     </svg>
                                                 </button>
                                                 <button onclick="updatePaymentStatus({{ $payment->id }}, 'failed')" 
                                                         class="btn" style="background: #dc3545; color: white; padding: 0.3rem; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;"
-                                                        title="Mark as Failed">
+                                                        title="Shëno si të Dështuar">
                                                     <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
                                                         <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
                                                     </svg>
@@ -294,14 +304,14 @@
                                             @endif
                                             <button onclick="showPaymentDetails({{ $payment->id }})" 
                                                     class="btn btn-secondary" style="padding: 0.3rem; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;"
-                                                    title="View Details">
+                                                    title="Shiko Detajet">
                                                 <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
                                                 </svg>
                                             </button>
                                             <button onclick="sendPaymentNotification({{ $payment->id }})" 
                                                     class="btn" style="background: #17a2b8; color: white; padding: 0.3rem; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;"
-                                                    title="Send Notification">
+                                                    title="Dërgo Njoftim">
                                                 <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z"/>
                                                 </svg>
@@ -315,7 +325,7 @@
                                                         class="btn" style="background: #dc3545; color: white; padding: 0.3rem; border-radius: 4px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;"
                                                         onmouseover="this.style.background='#c82333'" 
                                                         onmouseout="this.style.background='#dc3545'"
-                                                        title="Delete Payment">
+                                                        title="Fshi Pagesën">
                                                     <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
                                                         <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
                                                     </svg>
@@ -333,7 +343,7 @@
             <!-- Pagination -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e9ecef;">
                 <div style="color: #6c757d; font-size: 0.9rem;">
-                    Showing {{ $payments->firstItem() ?? 0 }} to {{ $payments->lastItem() ?? 0 }} of {{ $payments->total() }} results
+                    Duke shfaqur {{ $payments->firstItem() ?? 0 }} deri {{ $payments->lastItem() ?? 0 }} nga {{ $payments->total() }} rezultate
                 </div>
                 
                 @if ($payments->hasPages())
@@ -344,7 +354,7 @@
                                 <svg style="width: 14px; height: 14px;" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/>
                                 </svg>
-                                Previous
+                                E Mëparshme
                             </span>
                         @else
                             <a href="{{ $payments->previousPageUrl() }}" 
@@ -354,7 +364,7 @@
                                 <svg style="width: 14px; height: 14px;" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/>
                                 </svg>
-                                Previous
+                                E Mëparshme
                             </a>
                         @endif
 
@@ -380,14 +390,14 @@
                                style="padding: 0.5rem 0.75rem; color: #1F6E38; border: 1px solid #1F6E38; border-radius: 6px; text-decoration: none; display: flex; align-items: center; gap: 0.25rem; transition: all 0.2s;"
                                onmouseover="this.style.background='#1F6E38'; this.style.color='white';"
                                onmouseout="this.style.background='transparent'; this.style.color='#1F6E38';">
-                                Next
+                                Tjetri
                                 <svg style="width: 14px; height: 14px;" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/>
                                 </svg>
                             </a>
                         @else
                             <span style="padding: 0.5rem 0.75rem; color: #6c757d; border: 1px solid #e9ecef; border-radius: 6px; background: #f8f9fa; cursor: not-allowed;">
-                                Next
+                                Tjetri
                                 <svg style="width: 14px; height: 14px;" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/>
                                 </svg>
@@ -401,8 +411,8 @@
                 <svg style="width: 64px; height: 64px; margin-bottom: 1rem;" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
                 </svg>
-                <h3>No payments found</h3>
-                <p>No payments match your current filters.</p>
+                <h3>Nuk u gjetën pagesa</h3>
+                <p>Asnjë pagesë nuk përputhet me filtrat tuaja aktualë.</p>
             </div>
         @endif
     </div>
@@ -416,13 +426,13 @@
                     <svg style="width: 24px; height: 24px;" fill="white" viewBox="0 0 24 24">
                         <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
                     </svg>
-                    Payment Details
+                    Detajet e Pagesës
                 </h3>
                 <button onclick="closePaymentDetails()" 
                         style="background: rgba(255,255,255,0.2); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; backdrop-filter: blur(10px);"
                         onmouseover="this.style.background='rgba(255,255,255,0.3)'; this.style.transform='scale(1.1)';"
                         onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='scale(1)';"
-                        title="Close">
+                        title="Mbyll">
                     <svg style="width: 20px; height: 20px;" fill="white" viewBox="0 0 24 24">
                         <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
                     </svg>

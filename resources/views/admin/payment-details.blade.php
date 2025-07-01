@@ -2,35 +2,35 @@
     <!-- Payment Information -->
     <div>
         <h4 style="color: #1F6E38; margin-bottom: 1rem; border-bottom: 2px solid #1F6E38; padding-bottom: 0.5rem;">
-            Payment Information
+            Informacionet e Pagesës
         </h4>
         
         <div style="space-y: 0.75rem;">
             <div style="margin-bottom: 0.75rem;">
-                <strong>Payment ID:</strong>
+                <strong>ID e Pagesës:</strong>
                 <span style="font-family: monospace; background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 3px;">
                     {{ $payment->id }}
                 </span>
             </div>
             
             <div style="margin-bottom: 0.75rem;">
-                <strong>Amount:</strong>
+                <strong>Shuma:</strong>
                 <span style="font-size: 1.1rem; font-weight: 600; color: #1F6E38;">
                     {{ $payment->formatted_amount }}
                 </span>
             </div>
             
             <div style="margin-bottom: 0.75rem;">
-                <strong>Type:</strong>
+                <strong>Lloji:</strong>
                 <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;
                       background-color: {{ $payment->payment_type === 'membership' ? '#d4edda' : '#fff3cd' }};
                       color: {{ $payment->payment_type === 'membership' ? '#155724' : '#856404' }};">
-                    {{ ucfirst($payment->payment_type) }}
+                    {{ $payment->payment_type === 'membership' ? 'Anëtarësi' : 'Dhurim' }}
                 </span>
             </div>
             
             <div style="margin-bottom: 0.75rem;">
-                <strong>Payment Method:</strong>
+                <strong>Metoda e Pagesës:</strong>
                 <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;
                       background-color: #e9ecef; color: #495057;">
                     {{ strtoupper(str_replace('_', ' ', $payment->payment_method)) }}
@@ -38,18 +38,27 @@
             </div>
             
             <div style="margin-bottom: 0.75rem;">
-                <strong>Status:</strong>
+                <strong>Statusi:</strong>
                 <span style="padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;
                       background-color: {{ $payment->status === 'completed' ? '#d4edda' : ($payment->status === 'pending' ? '#fff3cd' : '#f8d7da') }};
                       color: {{ $payment->status === 'completed' ? '#155724' : ($payment->status === 'pending' ? '#856404' : '#721c24') }};">
-                    {{ ucfirst($payment->status) }}
-
+                    @if($payment->status === 'completed')
+                        E Përfunduar
+                    @elseif($payment->status === 'pending')
+                        Në Pritje
+                    @elseif($payment->status === 'failed')
+                        Dështuar
+                    @elseif($payment->status === 'cancelled')
+                        E Anuluar
+                    @else
+                        {{ ucfirst($payment->status) }}
+                    @endif
                 </span>
             </div>
             
             @if($payment->transaction_id)
                 <div style="margin-bottom: 0.75rem;">
-                    <strong>Transaction ID:</strong>
+                    <strong>ID e Transaksionit:</strong>
                     <code style="background: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.8rem; word-break: break-all;">
                         {{ $payment->transaction_id }}
                     </code>
@@ -57,9 +66,9 @@
             @endif
             
             <div style="margin-bottom: 0.75rem;">
-                <strong>Created:</strong>
+                <strong>E Krijuar:</strong>
                 <div>
-                    {{ $payment->created_at->format('M d, Y \a\t H:i') }}
+                    {{ $payment->created_at->format('M d, Y \n\ë H:i') }}
                     <br>
                     <small style="color: #6c757d;">{{ $payment->created_at->diffForHumans() }}</small>
                 </div>
@@ -67,9 +76,9 @@
             
             @if($payment->updated_at != $payment->created_at)
                 <div style="margin-bottom: 0.75rem;">
-                    <strong>Last Updated:</strong>
+                    <strong>Përditësimi i Fundit:</strong>
                     <div>
-                        {{ $payment->updated_at->format('M d, Y \a\t H:i') }}
+                        {{ $payment->updated_at->format('M d, Y \n\ë H:i') }}
                         <br>
                         <small style="color: #6c757d;">{{ $payment->updated_at->diffForHumans() }}</small>
                     </div>
@@ -81,12 +90,12 @@
     <!-- User Information -->
     <div>
         <h4 style="color: #1F6E38; margin-bottom: 1rem; border-bottom: 2px solid #1F6E38; padding-bottom: 0.5rem;">
-            User Information
+            Informacionet e Përdoruesit
         </h4>
         
         <div style="space-y: 0.75rem;">
             <div style="margin-bottom: 0.75rem;">
-                <strong>Name:</strong>
+                <strong>Emri:</strong>
                 <div>{{ $payment->user->name }}</div>
             </div>
             
@@ -100,7 +109,7 @@
             </div>
             
             <div style="margin-bottom: 0.75rem;">
-                <strong>Role:</strong>
+                <strong>Roli:</strong>
                 <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;
                       background-color: {{ $payment->user->isSuperAdmin() ? '#dc3545' : ($payment->user->isAdmin() ? '#d4edda' : '#e9ecef') }};
                       color: {{ $payment->user->isSuperAdmin() ? 'white' : ($payment->user->isAdmin() ? '#155724' : '#495057') }};">
@@ -109,16 +118,16 @@
             </div>
             
             <div style="margin-bottom: 0.75rem;">
-                <strong>Email Verified:</strong>
+                <strong>Email i Verifikuar:</strong>
                 @if($payment->user->hasVerifiedEmail())
-                    <span style="color: #28a745;">Verified</span>
+                    <span style="color: #28a745;">I Verifikuar</span>
                 @else
-                    <span style="color: #dc3545;">Not verified</span>
+                    <span style="color: #dc3545;">I Paverifikuar</span>
                 @endif
             </div>
             
             <div style="margin-bottom: 0.75rem;">
-                <strong>Member Since:</strong>
+                <strong>Anëtar Që Prej:</strong>
                 <div>
                     {{ $payment->user->created_at->format('M d, Y') }}
                     <br>
@@ -127,13 +136,13 @@
             </div>
             
             <div style="margin-bottom: 0.75rem;">
-                <strong>Total Payments:</strong>
+                <strong>Pagesat Totale:</strong>
                 <div>
-                    {{ $payment->user->payments->count() }} payments
+                    {{ $payment->user->payments->count() }} pagesa
                     @if($payment->user->payments->where('status', 'completed')->count() > 0)
                         <br>
                         <small style="color: #6c757d;">
-                            CHF {{ number_format($payment->user->payments->where('status', 'completed')->sum('amount') / 100, 2) }} total
+                            CHF {{ number_format($payment->user->payments->where('status', 'completed')->sum('amount') / 100, 2) }} totali
                         </small>
                     @endif
                 </div>
@@ -145,10 +154,10 @@
 <!-- Payment Method Specific Information -->
 @if($payment->payment_method === 'bank_transfer' && $payment->status === 'pending')
     <div style="margin-top: 2rem; padding: 1rem; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px;">
-        <h5 style="color: #856404; margin-bottom: 0.5rem;">Bank Transfer Instructions</h5>
+        <h5 style="color: #856404; margin-bottom: 0.5rem;">Udhëzimet për Transfer Bankar</h5>
         <p style="margin: 0; color: #856404; font-size: 0.9rem;">
-            This payment is awaiting bank transfer verification. The user should transfer 
-            <strong>{{ $payment->formatted_amount }}</strong> with reference 
+            Kjo pagesë është në pritje për verifikimin e transferit bankar. Përdoruesi duhet të transferojë 
+            <strong>{{ $payment->formatted_amount }}</strong> me referencën 
             <code>PAY-{{ $payment->id }}-{{ strtoupper(substr($payment->payment_type, 0, 3)) }}</code>
         </p>
     </div>
@@ -159,25 +168,25 @@
 <!-- Admin Actions -->
 @if(auth()->user()->isSuperAdmin())
     <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #dee2e6;">
-        <h5 style="margin-bottom: 1rem;">Admin Actions</h5>
+        <h5 style="margin-bottom: 1rem;">Veprimet e Administratorit</h5>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
             @if($payment->status === 'pending')
                 <button onclick="updatePaymentStatus({{ $payment->id }}, 'completed'); closePaymentDetails();" 
                         class="btn" style="background: #28a745; color: white; font-size: 0.875rem;">
-                    Mark as Completed
+                    Shëno si të Përfunduar
                 </button>
                 <button onclick="updatePaymentStatus({{ $payment->id }}, 'failed'); closePaymentDetails();" 
                         class="btn" style="background: #dc3545; color: white; font-size: 0.875rem;">
-                    Mark as Failed
+                    Shëno si të Dështuar
                 </button>
             @endif
             <button onclick="sendPaymentNotification({{ $payment->id }})" 
                     class="btn" style="background: #17a2b8; color: white; font-size: 0.875rem;">
-                Send Notification
+                Dërgo Njoftim
             </button>
             <a href="{{ route('admin.payments.receipt', $payment) }}" target="_blank"
                class="btn" style="background: #6f42c1; color: white; font-size: 0.875rem; text-decoration: none;">
-                Generate Receipt
+                Gjenero Faturën
             </a>
         </div>
     </div>
