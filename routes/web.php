@@ -4748,9 +4748,8 @@ require __DIR__.'/auth.php';
             
             // Test amount validation
             if ($paymentType === 'membership') {
-                $expectedAmount = (int) config('app.membership_amount', 35000);
-                if ($amount !== $expectedAmount) {
-                    return response()->json(['error' => 'Invalid membership amount', 'expected' => $expectedAmount, 'received' => $amount]);
+                if (!in_array($amount, [40000, 36000])) { // CHF 400 or 360
+                    return response()->json(['error' => 'Invalid membership amount. Please select CHF 400 or CHF 360.', 'received' => $amount]);
                 }
             }
             

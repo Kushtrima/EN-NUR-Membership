@@ -23,10 +23,9 @@ class PaymentController extends Controller
      */
     public function create()
     {
-        $membershipAmount = config('app.membership_amount', 35000);
-        $donationAmounts = [5000, 10000, 20000, 50000]; // CHF 50, 100, 200, 500
+        $membershipAmounts = [40000, 36000]; // CHF 400, 360
 
-        return view('payments.create', compact('membershipAmount', 'donationAmounts'));
+        return view('payments.create', compact('membershipAmounts'));
     }
 
     /**
@@ -112,8 +111,8 @@ class PaymentController extends Controller
     public function processStripe(Request $request)
     {
         $request->validate([
-            'payment_type' => 'required|in:membership,donation',
-            'amount' => 'required|integer|min:500|max:1000000', // Max CHF 10,000
+            'payment_type' => 'required|in:membership',
+            'amount' => 'required|integer|min:36000|max:40000', // CHF 360-400
         ]);
 
         try {
@@ -121,15 +120,10 @@ class PaymentController extends Controller
             $amount = (int) $request->amount;
             $user = auth()->user();
 
-            // Validate amount based on payment type
+            // Validate amount for membership only
             if ($paymentType === 'membership') {
-                $expectedAmount = (int) config('app.membership_amount', 35000);
-                if ($amount !== $expectedAmount) {
-                    return redirect()->back()->with('error', 'Invalid membership amount.');
-                }
-            } elseif ($paymentType === 'donation') {
-                if ($amount < 500 || $amount > 1000000) {
-                    return redirect()->back()->with('error', 'Donation amount must be between CHF 5 and CHF 10,000.');
+                if (!in_array($amount, [40000, 36000])) { // CHF 400 or 360
+                    return redirect()->back()->with('error', 'Invalid membership amount. Please select CHF 400 or CHF 360.');
                 }
             }
 
@@ -442,9 +436,8 @@ class PaymentController extends Controller
 
             // Validate amount based on payment type
             if ($paymentType === 'membership') {
-                $expectedAmount = (int) config('app.membership_amount', 35000);
-                if ($amount !== $expectedAmount) {
-                    return redirect()->back()->with('error', 'Invalid membership amount.');
+                if (!in_array($amount, [40000, 36000])) { // CHF 400 or 360
+                    return redirect()->back()->with('error', 'Invalid membership amount. Please select CHF 400 or CHF 360.');
                 }
             } elseif ($paymentType === 'donation') {
                 if ($amount < 500 || $amount > 1000000) {
@@ -789,9 +782,8 @@ class PaymentController extends Controller
 
             // Validate amount based on payment type
             if ($paymentType === 'membership') {
-                $expectedAmount = (int) config('app.membership_amount', 35000);
-                if ($amount !== $expectedAmount) {
-                    return redirect()->back()->with('error', 'Invalid membership amount.');
+                if (!in_array($amount, [40000, 36000])) { // CHF 400 or 360
+                    return redirect()->back()->with('error', 'Invalid membership amount. Please select CHF 400 or CHF 360.');
                 }
             } elseif ($paymentType === 'donation') {
                 if ($amount < 500 || $amount > 1000000) {
@@ -1018,9 +1010,8 @@ class PaymentController extends Controller
 
             // Simple amount validation
             if ($paymentType === 'membership') {
-                $expectedAmount = 35000; // CHF 350.00
-                if ($amount !== $expectedAmount) {
-                    return redirect()->back()->with('error', 'Invalid membership amount. Expected CHF 350.00');
+                if (!in_array($amount, [40000, 36000])) { // CHF 400 or 360
+                    return redirect()->back()->with('error', 'Invalid membership amount. Please select CHF 400 or CHF 360.');
                 }
             }
 
@@ -1152,9 +1143,8 @@ class PaymentController extends Controller
 
             // Validate amount based on payment type
             if ($paymentType === 'membership') {
-                $expectedAmount = (int) config('app.membership_amount', 35000);
-                if ($amount !== $expectedAmount) {
-                    return redirect()->back()->with('error', 'Invalid membership amount.');
+                if (!in_array($amount, [40000, 36000])) { // CHF 400 or 360
+                    return redirect()->back()->with('error', 'Invalid membership amount. Please select CHF 400 or CHF 360.');
                 }
             } elseif ($paymentType === 'donation') {
                 if ($amount < 500 || $amount > 1000000) {

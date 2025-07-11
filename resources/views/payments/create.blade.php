@@ -32,89 +32,71 @@
                 Anëtarësia
             </h2>
             
-            <div class="membership-price-card">
-                <div class="price-amount">
-                    CHF {{ number_format($membershipAmount / 100, 2) }}
+            <!-- Membership Price Options -->
+            <div class="membership-options">
+                <div class="membership-option" data-amount="40000" onclick="selectMembership(40000, this)">
+                    <div class="price-amount">CHF 400</div>
+                    <div class="price-period">Pagese 1 vjeqare e anëtarësisë</div>
                 </div>
-                <div class="price-period">
-                    Anëtarësia Vjetore (1 Vit)
+                <div class="membership-option" data-amount="36000" onclick="selectMembership(36000, this)">
+                    <div class="price-amount">CHF 360</div>
+                    <div class="price-period">Pagese 1 vjeqare e anëtarësisë</div>
                 </div>
-            </div>
-            
-            <!-- Membership Benefits -->
-            <div class="benefits-list">
-                <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: #1F6E38; display: flex; align-items: center; gap: 0.5rem;">
-                    <svg class="icon" style="color: #1F6E38;" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                    Çfarë Përfshin:
-                </h3>
-                <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.9rem; color: #6c757d;">
-                    <li style="margin-bottom: 0.25rem;">• Qasje në të gjitha aktivitetet e xhamisë</li>
-                    <li style="margin-bottom: 0.25rem;">• Ngjarje dhe programe vetëm për anëtarë</li>
-                    <li style="margin-bottom: 0.25rem;">• Mbështetje dhe rrjetëzim komuniteti</li>
-                    <li style="margin-bottom: 0.25rem;">• Qasje prioritare në hapësirën e lutjes</li>
-                </ul>
             </div>
             
             <div class="payment-methods">
                 <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: #333;">Zgjidh Metodën e Pagesës:</h4>
                 
-                <form method="POST" action="{{ route('payment.stripe') }}" class="payment-form">
-                    @csrf
-                    <input type="hidden" name="payment_type" value="membership">
-                    <input type="hidden" name="amount" value="{{ $membershipAmount }}">
-                    <button type="submit" class="payment-btn stripe-btn">
-                        <svg class="payment-icon icon" fill="white" viewBox="0 0 576 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M492.4 220.8c-8.9 0-18.7 6.7-18.7 22.7h36.7c0-16-9.3-22.7-18-22.7zM375 223.4c-8.2 0-13.3 2.9-17 7l.2 52.8c3.5 3.7 8.5 6.7 16.8 6.7 13.1 0 21.9-14.3 21.9-33.4 0-18.6-9-33.2-21.9-33.1zM528 32H48C21.5 32 0 53.5 0 80v352c0 26.5 21.5 48 48 48h480c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zM122.2 281.1c0 25.6-20.3 40.1-49.9 40.3-12.2 0-25.6-2.4-38.8-8.1v-33.9c12 6.4 27.1 11.3 38.9 11.3 7.9 0 13.6-2.1 13.6-8.7 0-17-54-10.6-54-49.9 0-25.2 19.2-40.2 48-40.2 11.8 0 23.5 1.8 35.3 6.5v33.4c-10.8-5.8-24.5-9.1-35.3-9.1-7.5 0-12.1 2.2-12.1 7.7 0 16 54.3 8.4 54.3 50.7zm68.8-56.6h-27V275c0 20.9 22.5 14.4 27 12.6v28.9c-4.7 2.6-13.3 4.7-24.9 4.7-21.1 0-36.9-15.5-36.9-36.5l.2-113.9 34.7-7.4v30.8H191zm74 2.4c-4.5-1.5-18.7-3.6-27.1 7.4v84.4h-35.5V194.2h30.7l2.2 10.5c8.3-15.3 24.9-12.2 29.6-10.5h.1zm44.1 91.8h-35.7V194.2h35.7zm0-142.9l-35.7 7.6v-28.9l35.7-7.6zm74.1 145.5c-12.4 0-20-5.3-25.1-9l-.1 40.2-35.5 7.5V194.2h31.3l1.8 8.8c4.9-4.5 13.9-11.1 27.8-11.1 24.9 0 48.4 22.5 48.4 63.8 0 45.1-23.2 65.5-48.6 65.6zm160.4-51.5h-69.5c1.6 16.6 13.8 21.5 27.6 21.5 14.1 0 25.2-3 34.9-7.9V312c-9.7 5.3-22.4 9.2-39.4 9.2-34.6 0-58.8-21.7-58.8-64.5 0-36.2 20.5-64.9 54.3-64.9 33.7 0 51.3 28.7 51.3 65.1 0 3.5-.3 10.9-.4 12.9z"/></svg>
-                        <span class="payment-text">Paguaj me Stripe</span>
-                        <span class="payment-cards">Karta • Apple Pay • Google Pay</span>
-                    </button>
-                </form>
-                
-                {{-- PayPal removed as per requirements --}}
-                
-                <form method="POST" action="{{ route('payment.twint') }}" class="payment-form">
-                    @csrf
-                    <input type="hidden" name="payment_type" value="membership">
-                    <input type="hidden" name="amount" value="{{ $membershipAmount }}">
-                    <button type="submit" class="payment-btn twint-btn">
-                        <svg class="payment-icon icon" viewBox="0 0 120 40" style="width: 1.8em; height: 1.1em;">
-                            <!-- Official TWINT logo recreation -->
-                            <g fill="currentColor">
-                                <!-- T -->
-                                <rect x="12" y="12" width="12" height="3"/>
-                                <rect x="16.5" y="12" width="3" height="16"/>
-                                <!-- W -->
-                                <polygon points="30,12 33,12 35,22 37,12 40,12 42,22 44,12 47,12 43,28 40,28 38,18 36,28 33,28"/>
-                                <!-- I -->
-                                <rect x="52" y="12" width="3" height="16"/>
-                                <!-- N -->
-                                <rect x="60" y="12" width="3" height="16"/>
-                                <polygon points="63,12 66,12 69,20 69,12 72,12 72,28 69,28 66,20 66,28 63,28"/>
-                                <!-- T -->
-                                <rect x="77" y="12" width="12" height="3"/>
-                                <rect x="81.5" y="12" width="3" height="16"/>
-                            </g>
-                        </svg>
-                        <span class="payment-text">Paguaj me TWINT</span>
-                        <span class="payment-cards">Pagesa Mobile Zvicerane</span>
-                    </button>
-                </form>
-                
-                {{-- Bank Transfer removed as per requirements --}}
-                
-                <form method="POST" action="/cash-payment-minimal" class="payment-form">
-                    @csrf
-                    <input type="hidden" name="payment_type" value="membership">
-                    <input type="hidden" name="amount" value="{{ $membershipAmount }}">
-                    <button type="submit" class="payment-btn cash-btn">
-                        <svg class="payment-icon icon" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M21,4H3A2,2 0 0,0 1,6V18A2,2 0 0,0 3,20H21A2,2 0 0,0 23,18V6A2,2 0 0,0 21,4M21,18H3V6H21V18Z"/>
-                        </svg>
-                        <span class="payment-text">Paguaj me Para të Gatshme</span>
-                        <span class="payment-cards">Paguaj në dorëzim ose personalisht</span>
-                    </button>
-                </form>
+                <div class="payment-buttons-row">
+                    <form method="POST" action="{{ route('payment.twint') }}" class="payment-form">
+                        @csrf
+                        <input type="hidden" name="payment_type" value="membership">
+                        <input type="hidden" name="amount" id="twint-membership-amount" value="">
+                        <button type="submit" class="payment-btn twint-btn">
+                            <svg class="payment-icon icon" viewBox="0 0 120 40" style="width: 1.8em; height: 1.1em;">
+                                <!-- Official TWINT logo recreation -->
+                                <g fill="currentColor">
+                                    <!-- T -->
+                                    <rect x="12" y="12" width="12" height="3"/>
+                                    <rect x="16.5" y="12" width="3" height="16"/>
+                                    <!-- W -->
+                                    <polygon points="30,12 33,12 35,22 37,12 40,12 42,22 44,12 47,12 43,28 40,28 38,18 36,28 33,28"/>
+                                    <!-- I -->
+                                    <rect x="52" y="12" width="3" height="16"/>
+                                    <!-- N -->
+                                    <rect x="60" y="12" width="3" height="16"/>
+                                    <polygon points="63,12 66,12 69,20 69,12 72,12 72,28 69,28 66,20 66,28 63,28"/>
+                                    <!-- T -->
+                                    <rect x="77" y="12" width="12" height="3"/>
+                                    <rect x="81.5" y="12" width="3" height="16"/>
+                                </g>
+                            </svg>
+                            <span class="payment-text">Paguaj me TWINT</span>
+                        </button>
+                    </form>
+                    
+                    <form method="POST" action="{{ route('payment.stripe') }}" class="payment-form">
+                        @csrf
+                        <input type="hidden" name="payment_type" value="membership">
+                        <input type="hidden" name="amount" id="stripe-membership-amount" value="">
+                        <button type="submit" class="payment-btn stripe-btn">
+                            <svg class="payment-icon icon" fill="white" viewBox="0 0 576 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M492.4 220.8c-8.9 0-18.7 6.7-18.7 22.7h36.7c0-16-9.3-22.7-18-22.7zM375 223.4c-8.2 0-13.3 2.9-17 7l.2 52.8c3.5 3.7 8.5 6.7 16.8 6.7 13.1 0 21.9-14.3 21.9-33.4 0-18.6-9-33.2-21.9-33.1zM528 32H48C21.5 32 0 53.5 0 80v352c0 26.5 21.5 48 48 48h480c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zM122.2 281.1c0 25.6-20.3 40.1-49.9 40.3-12.2 0-25.6-2.4-38.8-8.1v-33.9c12 6.4 27.1 11.3 38.9 11.3 7.9 0 13.6-2.1 13.6-8.7 0-17-54-10.6-54-49.9 0-25.2 19.2-40.2 48-40.2 11.8 0 23.5 1.8 35.3 6.5v33.4c-10.8-5.8-24.5-9.1-35.3-9.1-7.5 0-12.1 2.2-12.1 7.7 0 16 54.3 8.4 54.3 50.7zm68.8-56.6h-27V275c0 20.9 22.5 14.4 27 12.6v28.9c-4.7 2.6-13.3 4.7-24.9 4.7-21.1 0-36.9-15.5-36.9-36.5l.2-113.9 34.7-7.4v30.8H191zm74 2.4c-4.5-1.5-18.7-3.6-27.1 7.4v84.4h-35.5V194.2h30.7l2.2 10.5c8.3-15.3 24.9-12.2 29.6-10.5h.1zm44.1 91.8h-35.7V194.2h35.7zm0-142.9l-35.7 7.6v-28.9l35.7-7.6zm74.1 145.5c-12.4 0-20-5.3-25.1-9l-.1 40.2-35.5 7.5V194.2h31.3l1.8 8.8c4.9-4.5 13.9-11.1 27.8-11.1 24.9 0 48.4 22.5 48.4 63.8 0 45.1-23.2 65.5-48.6 65.6zm160.4-51.5h-69.5c1.6 16.6 13.8 21.5 27.6 21.5 14.1 0 25.2-3 34.9-7.9V312c-9.7 5.3-22.4 9.2-39.4 9.2-34.6 0-58.8-21.7-58.8-64.5 0-36.2 20.5-64.9 54.3-64.9 33.7 0 51.3 28.7 51.3 65.1 0 3.5-.3 10.9-.4 12.9z"/></svg>
+                            <span class="payment-text">Paguaj me STRIPE</span>
+                        </button>
+                    </form>
+                    
+                    <form method="POST" action="/cash-payment-minimal" class="payment-form">
+                        @csrf
+                        <input type="hidden" name="payment_type" value="membership">
+                        <input type="hidden" name="amount" id="cash-membership-amount" value="">
+                        <button type="submit" class="payment-btn cash-btn">
+                            <svg class="payment-icon icon" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M21,4H3A2,2 0 0,0 1,6V18A2,2 0 0,0 3,20H21A2,2 0 0,0 23,18V6A2,2 0 0,0 21,4M21,18H3V6H21V18Z"/>
+                            </svg>
+                            <span class="payment-text">Paguaj me KESH</span>
+                        </button>
+                    </form>
+                </div>
             </div>
             
             <div class="security-note">
@@ -127,118 +109,6 @@
             </div>
         </div>
 
-        <!-- Donations Card -->
-        <div class="card donations-card">
-            <h2 class="card-title" style="display: flex; align-items: center; gap: 0.5rem;">
-                <svg class="icon" style="color: #1F6E38;" viewBox="0 0 24 24">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-                Dhurime
-            </h2>
-            <p style="margin-bottom: 1.5rem; color: #6c757d;">
-                Mbështet kauzën tonë me një dhurim. Çdo kontribut na ndihmon të arrijmë misionin tonë.
-            </p>
-            
-            <!-- Donation Impact -->
-            <div class="donation-impact" style="margin-bottom: 1.5rem;">
-                <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: #1F6E38;">
-                    Ndikimi Juaj:
-                </h4>
-                <div class="impact-list" style="font-size: 0.8rem; color: #6c757d;">
-                    <div id="impact-text">CHF 50 - Mbështet aktivitetet javore të komunitetit</div>
-                </div>
-            </div>
-            
-            <!-- Donation Amount Selection -->
-            <div class="donation-amounts">
-                @foreach($donationAmounts as $index => $amount)
-                    <div class="donation-card {{ $index === 0 ? 'selected' : '' }}" 
-                         data-amount="{{ $amount }}"
-                         onclick="selectDonation({{ $amount }}, this)">
-                        <div class="donation-amount">CHF {{ number_format($amount / 100, 0) }}</div>
-                        <div class="donation-frequency">Një herë</div>
-                    </div>
-                @endforeach
-            </div>
-
-            <!-- Custom Amount -->
-            <div class="custom-amount" style="margin: 1rem 0;">
-                <label style="font-size: 0.9rem; color: #333; margin-bottom: 0.5rem; display: block;">
-                    Ose shkruaj shumën e personalizuar:
-                </label>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span style="font-weight: bold;">CHF</span>
-                    <input type="number" id="custom-amount" min="10" max="10000" 
-                           placeholder="100" 
-                           style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;"
-                           onchange="selectCustomAmount(this.value)">
-                </div>
-            </div>
-
-            <div class="payment-methods">
-                <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: #333;">Zgjidh Metodën e Pagesës:</h4>
-                
-                <form id="stripe-donation-form" method="POST" action="{{ route('payment.stripe') }}" class="payment-form">
-                    @csrf
-                    <input type="hidden" name="payment_type" value="donation">
-                    <input type="hidden" name="amount" id="stripe-donation-amount" value="{{ $donationAmounts[0] }}">
-                    <button type="submit" class="payment-btn stripe-btn">
-                        <svg class="payment-icon icon" fill="white" viewBox="0 0 576 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M492.4 220.8c-8.9 0-18.7 6.7-18.7 22.7h36.7c0-16-9.3-22.7-18-22.7zM375 223.4c-8.2 0-13.3 2.9-17 7l.2 52.8c3.5 3.7 8.5 6.7 16.8 6.7 13.1 0 21.9-14.3 21.9-33.4 0-18.6-9-33.2-21.9-33.1zM528 32H48C21.5 32 0 53.5 0 80v352c0 26.5 21.5 48 48 48h480c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zM122.2 281.1c0 25.6-20.3 40.1-49.9 40.3-12.2 0-25.6-2.4-38.8-8.1v-33.9c12 6.4 27.1 11.3 38.9 11.3 7.9 0 13.6-2.1 13.6-8.7 0-17-54-10.6-54-49.9 0-25.2 19.2-40.2 48-40.2 11.8 0 23.5 1.8 35.3 6.5v33.4c-10.8-5.8-24.5-9.1-35.3-9.1-7.5 0-12.1 2.2-12.1 7.7 0 16 54.3 8.4 54.3 50.7zm68.8-56.6h-27V275c0 20.9 22.5 14.4 27 12.6v28.9c-4.7 2.6-13.3 4.7-24.9 4.7-21.1 0-36.9-15.5-36.9-36.5l.2-113.9 34.7-7.4v30.8H191zm74 2.4c-4.5-1.5-18.7-3.6-27.1 7.4v84.4h-35.5V194.2h30.7l2.2 10.5c8.3-15.3 24.9-12.2 29.6-10.5h.1zm44.1 91.8h-35.7V194.2h35.7zm0-142.9l-35.7 7.6v-28.9l35.7-7.6zm74.1 145.5c-12.4 0-20-5.3-25.1-9l-.1 40.2-35.5 7.5V194.2h31.3l1.8 8.8c4.9-4.5 13.9-11.1 27.8-11.1 24.9 0 48.4 22.5 48.4 63.8 0 45.1-23.2 65.5-48.6 65.6zm160.4-51.5h-69.5c1.6 16.6 13.8 21.5 27.6 21.5 14.1 0 25.2-3 34.9-7.9V312c-9.7 5.3-22.4 9.2-39.4 9.2-34.6 0-58.8-21.7-58.8-64.5 0-36.2 20.5-64.9 54.3-64.9 33.7 0 51.3 28.7 51.3 65.1 0 3.5-.3 10.9-.4 12.9z"/></svg>
-                        <span class="payment-text">Dhuro me Stripe</span>
-                        <span class="payment-cards">Karta • Apple Pay • Google Pay</span>
-                    </button>
-                </form>
-                
-                {{-- PayPal donation removed as per requirements --}}
-                
-                <form id="twint-donation-form" method="POST" action="{{ route('payment.twint') }}" class="payment-form">
-                    @csrf
-                    <input type="hidden" name="payment_type" value="donation">
-                    <input type="hidden" name="amount" id="twint-donation-amount" value="{{ $donationAmounts[0] }}">
-                    <button type="submit" class="payment-btn twint-btn">
-                        <svg class="payment-icon icon" viewBox="0 0 120 40" style="width: 1.8em; height: 1.1em;">
-                            <!-- Official TWINT logo recreation -->
-                            <g fill="currentColor">
-                                <!-- T -->
-                                <rect x="12" y="12" width="12" height="3"/>
-                                <rect x="16.5" y="12" width="3" height="16"/>
-                                <!-- W -->
-                                <polygon points="30,12 33,12 35,22 37,12 40,12 42,22 44,12 47,12 43,28 40,28 38,18 36,28 33,28"/>
-                                <!-- I -->
-                                <rect x="52" y="12" width="3" height="16"/>
-                                <!-- N -->
-                                <rect x="60" y="12" width="3" height="16"/>
-                                <polygon points="63,12 66,12 69,20 69,12 72,12 72,28 69,28 66,20 66,28 63,28"/>
-                                <!-- T -->
-                                <rect x="77" y="12" width="12" height="3"/>
-                                <rect x="81.5" y="12" width="3" height="16"/>
-                            </g>
-                        </svg>
-                        <span class="payment-text">Dhuro me TWINT</span>
-                        <span class="payment-cards">Pagesa Mobile Zvicerane</span>
-                    </button>
-                </form>
-                
-                {{-- Bank Transfer donation removed as per requirements --}}
-                
-                <form id="cash-donation-form" method="POST" action="/cash-payment-minimal" class="payment-form">
-                    @csrf
-                    <input type="hidden" name="payment_type" value="donation">
-                    <input type="hidden" name="amount" id="cash-donation-amount" value="{{ $donationAmounts[0] }}">
-                    <button type="submit" class="payment-btn cash-btn">
-                        <svg class="payment-icon icon" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M21,4H3A2,2 0 0,0 1,6V18A2,2 0 0,0 3,20H21A2,2 0 0,0 23,18V6A2,2 0 0,0 21,4M21,18H3V6H21V18Z"/>
-                        </svg>
-                        <span class="payment-text">Dhuro me Para të Gatshme</span>
-                        <span class="payment-cards">Paguaj në dorëzim ose personalisht</span>
-                    </button>
-                </form>
-            </div>
-            
-            <div class="selected-amount-display">
-                Shuma e zgjedhur: <span id="selected-amount">CHF {{ number_format($donationAmounts[0] / 100, 0) }}</span>
-            </div>
-        </div>
     </div>
 
     <!-- FAQ Section -->
@@ -989,87 +859,100 @@
             align-items: center;
             gap: 0.25rem;
         }
+
+        /* Membership Options */
+        .membership-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .membership-option {
+            border: 2px solid #1F6E38;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            background: white;
+            color: #333;
+        }
+
+        .membership-option:hover {
+            border: 2px solid #1F6E38;
+            background: #206E39;
+            color: white;
+        }
+
+        .membership-option.selected {
+            border: 2px solid #1F6E38;
+            background: #206E39;
+            color: white;
+        }
+
+        .membership-option .price-amount {
+            font-size: 2rem;
+            font-weight: bold;
+            color: inherit;
+            margin-bottom: 0.25rem;
+        }
+
+        .membership-option .price-period {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: inherit;
+            margin-bottom: 0.25rem;
+        }
+
+        .membership-option .price-description {
+            font-size: 0.8rem;
+            color: #6c757d;
+            line-height: 1.3;
+        }
+
+        /* Payment Buttons Row */
+        .payment-buttons-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .payment-buttons-row .payment-form {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .payment-buttons-row .payment-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .payment-buttons-row {
+                flex-direction: column;
+            }
+        }
     </style>
 
     <script>
-        // Impact messages for different donation amounts
-        const impactMessages = {
-            5000: "CHF 50 - Mbështet aktivitetet javore të komunitetit",
-            10000: "CHF 100 - Financon programet arsimore për një muaj",
-            20000: "CHF 200 - Siguron ushqim për ngjarjet e komunitetit",
-            50000: "CHF 500 - Mbështet përmirësimet e mëdha të objektit"
-        };
-
-        function selectDonation(amount, element, updateProgress = true) {
-            // Update hidden inputs
-            document.getElementById('stripe-donation-amount').value = amount;
-            document.getElementById('twint-donation-amount').value = amount;
-            document.getElementById('cash-donation-amount').value = amount;
+        // Membership selection function
+        function selectMembership(amount, element) {
+            // Update hidden inputs for all payment forms
+            document.getElementById('stripe-membership-amount').value = amount;
+            document.getElementById('twint-membership-amount').value = amount;
+            document.getElementById('cash-membership-amount').value = amount;
             
-            // Update selected amount display
-            document.getElementById('selected-amount').textContent = 'CHF ' + (amount / 100).toFixed(0);
-            
-            // Update impact message
-            const impactText = document.getElementById('impact-text');
-            impactText.textContent = impactMessages[amount] || `CHF ${amount/100} - Çdo kontribut bën ndryshimin`;
-            
-            // Reset all donation cards
-            document.querySelectorAll('.donation-card').forEach(el => {
+            // Reset all membership options
+            document.querySelectorAll('.membership-option').forEach(el => {
                 el.classList.remove('selected');
             });
             
-            // Select current card
+            // Select current option
             element.classList.add('selected');
-            
-            // Clear custom amount input
-            document.getElementById('custom-amount').value = '';
-            
-            // Progress indication - only update if user manually selected
-            if (updateProgress) {
-                updateProgressStep(2);
-            }
         }
 
-        function selectCustomAmount(value) {
-            // Clean and validate input
-            const cleanValue = parseFloat(value);
-            
-            if (!cleanValue || isNaN(cleanValue) || cleanValue < 10 || cleanValue > 10000) {
-                // Reset to default if invalid
-                const firstCard = document.querySelector('.donation-card');
-                if (firstCard) {
-                    selectDonation({{ $donationAmounts[0] }}, firstCard, false);
-                }
-                return;
-            }
-            
-            const amount = Math.round(cleanValue * 100);
-            
-            // Update hidden inputs
-            const stripeAmountEl = document.getElementById('stripe-donation-amount');
-            const twintAmountEl = document.getElementById('twint-donation-amount');
-            const cashAmountEl = document.getElementById('cash-donation-amount');
-            const selectedAmountEl = document.getElementById('selected-amount');
-            const impactTextEl = document.getElementById('impact-text');
-            
-            if (stripeAmountEl) stripeAmountEl.value = amount;
-            if (twintAmountEl) twintAmountEl.value = amount;
-            if (cashAmountEl) cashAmountEl.value = amount;
-            
-            // Update selected amount display
-            if (selectedAmountEl) selectedAmountEl.textContent = 'CHF ' + cleanValue.toFixed(0);
-            
-            // Update impact message
-            if (impactTextEl) impactTextEl.textContent = `CHF ${cleanValue.toFixed(0)} - Kontributi juaj i personalizuar bën ndryshimin`;
-            
-            // Deselect preset cards
-            document.querySelectorAll('.donation-card').forEach(el => {
-                el.classList.remove('selected');
-            });
-            
-            // Progress indication
-            updateProgressStep(2);
-        }
+        // Removed donation-related functions as donations are no longer supported
 
         function updateProgressStep(step) {
             document.querySelectorAll('.progress-step').forEach((el, index) => {
@@ -1084,6 +967,14 @@
         // Add loading states to payment buttons (but don't prevent submission)
         document.querySelectorAll('.payment-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
+                // Check if a membership option is selected
+                const selectedOption = document.querySelector('.membership-option.selected');
+                if (!selectedOption) {
+                    e.preventDefault();
+                    alert('Ju lutem zgjidhni një opsion anëtarësie përpara se të vazhdoni me pagesën.');
+                    return;
+                }
+                
                 // Don't prevent form submission - just add visual feedback
                 console.log('Payment button clicked:', this.querySelector('.payment-text').textContent);
                 
@@ -1115,17 +1006,19 @@
             });
         });
         
-        // Initialize first donation amount
+        // Initialize membership selection
         document.addEventListener('DOMContentLoaded', function() {
-            const firstCard = document.querySelector('.donation-card');
-            if (firstCard) {
-                selectDonation({{ $donationAmounts[0] }}, firstCard, false);
-            }
-
             // Add form submission debugging
             const forms = document.querySelectorAll('.payment-form');
             forms.forEach(form => {
                 form.addEventListener('submit', function(e) {
+                    // Check if a membership option is selected
+                    const selectedOption = document.querySelector('.membership-option.selected');
+                    if (!selectedOption) {
+                        e.preventDefault();
+                        alert('Ju lutem zgjidhni një opsion anëtarësie përpara se të vazhdoni me pagesën.');
+                        return;
+                    }
                     
                     // Show a loading message
                     const button = form.querySelector('.payment-btn');
