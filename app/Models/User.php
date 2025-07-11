@@ -26,6 +26,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'city',
         'marital_status',
         'phone_number',
+        'username',
         'email',
         'password',
         'role',
@@ -144,5 +145,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isFullyVerified(): bool
     {
         return $this->hasVerifiedEmail() && $this->hasAcceptedTerms();
+    }
+
+    /**
+     * Find user by username for authentication.
+     */
+    public static function findByUsername(string $username): ?User
+    {
+        return static::where('username', $username)->first();
     }
 } 

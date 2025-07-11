@@ -64,7 +64,8 @@ class EnsureTermsAccepted
         }
 
         // Check if user has verified email
-        if (!$user->hasVerifiedEmail()) {
+        // Skip email verification for users created with usernames (admin-created users)
+        if (!$user->hasVerifiedEmail() && !$user->username) {
             return redirect()->route('verification.notice');
         }
 

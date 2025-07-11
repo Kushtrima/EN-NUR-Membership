@@ -796,6 +796,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('/debug-users', [AdminController::class, 'debugUsers'])->name('debug.users');
         Route::get('/setup-expired-memberships', [AdminController::class, 'setupExpiredMemberships'])->name('setup.expired.memberships');
         
+        // User creation without email verification (Super Admin only)
+        Route::get('/users/create-without-email', [AdminController::class, 'showCreateUserWithoutEmail'])->name('users.create-without-email');
+        Route::post('/users/create-without-email', [AdminController::class, 'createUserWithoutEmail'])->name('users.store-without-email');
+        
         // Fix dates to make memberships expired
         Route::get('/fix-membership-dates', function() {
             // Find the two users
@@ -4019,7 +4023,9 @@ require __DIR__.'/auth.php';
         }
     });
 
-    require __DIR__.'/auth.php';
+
+
+require __DIR__.'/auth.php';
 
     // Simple email diagnostic route
     Route::get('/email-diagnosis', function() {

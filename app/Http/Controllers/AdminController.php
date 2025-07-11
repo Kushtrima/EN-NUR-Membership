@@ -1265,4 +1265,85 @@ class AdminController extends Controller
             return response('<h2>❌ Error Setting Up Memberships</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
         }
     }
+
+    /**
+     * Show the form for creating a user without email verification (Admin Panel).
+     */
+    public function showCreateUserWithoutEmail()
+    {
+        return view('admin.create-user-without-email');
+    }
+
+    /**
+     * Create a user without email verification using override key (Admin Panel).
+     */
+    public function createUserWithoutEmail(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'date_of_birth' => 'required|date',
+            'address' => 'required|string|max:255',
+            'postal_code' => 'required|string|max:20',
+            'city' => 'required|string|max:255',
+            'marital_status' => 'required|string|in:single,married,divorced,widowed',
+            'phone_number' => 'required|string|max:20',
+            'username' => 'required|string|max:255|unique:users,username',
+            'password' => 'required|string|min:8|confirmed',
+            'override_key' => 'required|string',
+        ]);
+
+        // Check the override key
+        $correctKey = '&hg^^5%d(8jNbV$3@#$$';
+        if ($request->override_key !== $correctKey) {
+            return redirect()->back()
+                ->withErrors(['override_key' => 'Invalid override key.'])
+                ->withInput();
+        }
+
+        try {
+            // Create the user with username-based authentication
+            $user = User::create([
+                'name' => $request->name,
+                'first_name' => $request->first_name,
+                'date_of_birth' => $request->date_of_birth,
+                'address' => $request->address,
+                'postal_code' => $request->postal_code,
+                'city' => $request->city,
+                'marital_status' => $request->marital_status,
+                'phone_number' => $request->phone_number,
+                'username' => $request->username,
+                'email' => $request->username . '@local.system', // Generate a system email for internal use
+                'password' => Hash::make($request->password),
+                'email_verified_at' => now(), // Auto-verify since it's system generated
+                'role' => 'user',
+            ]);
+
+            // Log the override usage for security
+            Log::info('Admin created user with username authentication', [
+                'admin_id' => auth()->id(),
+                'admin_email' => auth()->user()->email,
+                'created_user_id' => $user->id,
+                'created_user_username' => $user->username,
+                'created_user_email' => $user->email,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'timestamp' => now(),
+            ]);
+
+            return redirect()->route('admin.users')
+                ->with('success', 'User created successfully with username authentication.');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to create user with username authentication', [
+                'admin_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'request_data' => $request->except(['password', 'password_confirmation', 'override_key']),
+            ]);
+
+            return redirect()->back()
+                ->withErrors(['general' => 'Failed to create user. Please try again.'])
+                ->withInput();
+        }
+    }
 } 

@@ -8,16 +8,17 @@
                     </svg>
                 </div>
                 <h1 class="auth-title">Mirë se erdhe përsëri</h1>
-                <p class="auth-subtitle">Kyçu në llogarinë tënde</p>
+
             </div>
             
             <form method="POST" action="{{ route('login') }}" class="auth-form">
                 @csrf
 
                 <div class="form-group">
-                    <label for="email" class="form-label">Email</label>
-                    <input id="email" class="form-control" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" placeholder="Shkruaj email-in tënd">
-                    @error('email')
+                    <label for="login" class="form-label">Email ose Username</label>
+                    <input id="login" class="form-control" type="text" name="login" value="{{ old('login') }}" required autofocus autocomplete="username" placeholder="Shkruaj email-in ose username-in tënd">
+
+                    @error('login')
                         <div class="error-message">{{ $message }}</div>
                     @enderror
                 </div>
