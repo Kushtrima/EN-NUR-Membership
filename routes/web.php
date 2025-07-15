@@ -85,18 +85,64 @@ Route::get('/fix-username-database', function() {
             ], 200, [], JSON_PRETTY_PRINT);
         }
         
-        // Run migrations
-        \Artisan::call('migrate', ['--force' => true]);
-        $output = \Artisan::output();
+        // Run ONLY the specific username migration to avoid conflicts
+        \Artisan::call('migrate', [
+            '--path' => 'database/migrations/2025_07_11_130652_add_username_to_users_table.php',
+            '--force' => true
+        ]);
+        $output1 = \Artisan::output();
+        
+        // Also run the marital status update migration if needed
+        \Artisan::call('migrate', [
+            '--path' => 'database/migrations/2025_07_11_200535_update_marital_status_enum_values.php',
+            '--force' => true
+        ]);
+        $output2 = \Artisan::output();
         
         // Check if username field exists now
         $hasUsernameAfter = \Schema::hasColumn('users', 'username');
         
         return response()->json([
             'status' => 'SUCCESS',
-            'migration_output' => $output,
+            'username_migration_output' => $output1,
+            'marital_status_migration_output' => $output2,
             'username_field_exists' => $hasUsernameAfter,
-            'message' => 'Username field migration completed!'
+            'message' => 'Specific username field migration completed!'
+        ], 200, [], JSON_PRETTY_PRINT);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'status' => 'FAILED'
+        ], 500, [], JSON_PRETTY_PRINT);
+    }
+});
+
+Route::get('/add-username-field-direct', function() {
+    try {
+        // Direct approach - add username field if it doesn't exist
+        $hasUsername = \Schema::hasColumn('users', 'username');
+        
+        if ($hasUsername) {
+            return response()->json([
+                'status' => 'ALREADY_EXISTS',
+                'message' => 'Username field already exists',
+                'username_field_exists' => true
+            ], 200, [], JSON_PRETTY_PRINT);
+        }
+        
+        // Add username field directly using raw SQL for PostgreSQL
+        \DB::statement('ALTER TABLE users ADD COLUMN username VARCHAR(255) NULL');
+        \DB::statement('CREATE UNIQUE INDEX users_username_unique ON users (username) WHERE username IS NOT NULL');
+        
+        // Verify it was added
+        $hasUsernameAfter = \Schema::hasColumn('users', 'username');
+        
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => 'Username field added directly to users table',
+            'username_field_exists' => $hasUsernameAfter,
+            'method' => 'Direct SQL modification for PostgreSQL'
         ], 200, [], JSON_PRETTY_PRINT);
         
     } catch (\Exception $e) {
