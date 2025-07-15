@@ -93,6 +93,53 @@ Route::get('/debug-user-verification', function() {
     }
 });
 
+Route::get('/force-verify-username-user', function() {
+    try {
+        if (!auth()->check()) {
+            return response()->json([
+                'error' => 'Not authenticated',
+                'status' => 'FAILED'
+            ], 401, [], JSON_PRETTY_PRINT);
+        }
+        
+        $user = auth()->user();
+        
+        // Force verify email for username users
+        if ($user->username && str_contains($user->email, '@local.system')) {
+            $user->update([
+                'email_verified_at' => now(),
+            ]);
+            
+            // Clear any cached user data
+            $user->refresh();
+            
+            return response()->json([
+                'status' => 'SUCCESS',
+                'message' => 'Username user email verification forced',
+                'user_id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'email_verified_at' => $user->email_verified_at,
+                'has_verified_email' => $user->hasVerifiedEmail(),
+                'redirect_to' => 'dashboard'
+            ], 200, [], JSON_PRETTY_PRINT);
+        }
+        
+        return response()->json([
+            'status' => 'NO_ACTION',
+            'message' => 'User is not a username user',
+            'username' => $user->username,
+            'email' => $user->email
+        ], 200, [], JSON_PRETTY_PRINT);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'status' => 'FAILED'
+        ], 500, [], JSON_PRETTY_PRINT);
+    }
+});
+
 Route::get('/debug-info', function() {
     $info = [
         'laravel_working' => 'YES - Laravel is booting successfully!',
