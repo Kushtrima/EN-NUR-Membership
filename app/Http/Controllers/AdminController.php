@@ -1279,6 +1279,9 @@ class AdminController extends Controller
      */
     public function createUserWithoutEmail(Request $request)
     {
+        // Validate with flexible marital status (in case database hasn't been updated)
+        $maritalStatusOptions = ['single', 'married', 'divorced', 'widowed'];
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'first_name' => 'required|string|max:255',
@@ -1286,7 +1289,7 @@ class AdminController extends Controller
             'address' => 'required|string|max:255',
             'postal_code' => 'required|string|max:20',
             'city' => 'required|string|max:255',
-            'marital_status' => 'required|string|in:single,married,divorced,widowed',
+            'marital_status' => 'required|string|in:' . implode(',', $maritalStatusOptions),
             'phone_number' => 'required|string|max:20',
             'username' => 'required|string|max:255|unique:users,username',
             'password' => 'required|string|min:8|confirmed',

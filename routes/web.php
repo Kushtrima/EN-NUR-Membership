@@ -14,6 +14,33 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
 
+Route::get('/test-username-db', function() {
+    try {
+        // Test if username field exists
+        $hasUsername = \Schema::hasColumn('users', 'username');
+        
+        // Test marital status enum values
+        $testUser = new \App\Models\User();
+        $fillable = $testUser->getFillable();
+        
+        // Check if we can create a test query with marital status
+        $testQuery = \App\Models\User::where('marital_status', 'divorced')->toSql();
+        
+        return response()->json([
+            'username_field_exists' => $hasUsername,
+            'user_fillable_fields' => $fillable,
+            'test_query_works' => !empty($testQuery),
+            'database_connection' => 'SUCCESS'
+        ], 200, [], JSON_PRETTY_PRINT);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'database_connection' => 'FAILED'
+        ], 500, [], JSON_PRETTY_PRINT);
+    }
+});
+
 Route::get('/debug-info', function() {
     $info = [
         'laravel_working' => 'YES - Laravel is booting successfully!',
