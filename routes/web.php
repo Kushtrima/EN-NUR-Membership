@@ -43,10 +43,10 @@ Route::get('/test-username-db', function() {
 
 Route::get('/run-migrations', function() {
     try {
-        // Security check - only allow with specific key
+        // Security check - only allow with specific key (URL-safe version)
         $key = request()->get('key');
-        if ($key !== '&hg^^5%d(8jNbV$3@#$$') {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        if ($key !== 'migrate-username-field-2025') {
+            return response()->json(['error' => 'Unauthorized - Invalid key'], 403);
         }
         
         // Run migrations
@@ -61,6 +61,42 @@ Route::get('/run-migrations', function() {
             'migration_output' => $output,
             'username_field_exists' => $hasUsername,
             'message' => 'Migrations completed successfully!'
+        ], 200, [], JSON_PRETTY_PRINT);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'status' => 'FAILED'
+        ], 500, [], JSON_PRETTY_PRINT);
+    }
+});
+
+Route::get('/fix-username-database', function() {
+    try {
+        // Simple route - no parameters needed, just visit the URL
+        // Extra security: only work if username field is missing
+        $hasUsername = \Schema::hasColumn('users', 'username');
+        
+        if ($hasUsername) {
+            return response()->json([
+                'status' => 'ALREADY_FIXED',
+                'message' => 'Username field already exists in database',
+                'username_field_exists' => true
+            ], 200, [], JSON_PRETTY_PRINT);
+        }
+        
+        // Run migrations
+        \Artisan::call('migrate', ['--force' => true]);
+        $output = \Artisan::output();
+        
+        // Check if username field exists now
+        $hasUsernameAfter = \Schema::hasColumn('users', 'username');
+        
+        return response()->json([
+            'status' => 'SUCCESS',
+            'migration_output' => $output,
+            'username_field_exists' => $hasUsernameAfter,
+            'message' => 'Username field migration completed!'
         ], 200, [], JSON_PRETTY_PRINT);
         
     } catch (\Exception $e) {
