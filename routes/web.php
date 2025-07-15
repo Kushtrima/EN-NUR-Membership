@@ -140,6 +140,47 @@ Route::get('/force-verify-username-user', function() {
     }
 });
 
+Route::get('/fix-username-verification/{username}', function($username) {
+    try {
+        // Find user by username - bypass authentication check
+        $user = \App\Models\User::where('username', $username)
+            ->where('email', 'LIKE', '%@local.system')
+            ->first();
+        
+        if (!$user) {
+            return response()->json([
+                'error' => 'Username user not found',
+                'status' => 'FAILED'
+            ], 404, [], JSON_PRETTY_PRINT);
+        }
+        
+        // Force verify email for username users
+        $user->update([
+            'email_verified_at' => now(),
+        ]);
+        
+        // Clear any cached user data
+        $user->refresh();
+        
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => 'Username user email verification fixed',
+            'user_id' => $user->id,
+            'username' => $user->username,
+            'email' => $user->email,
+            'email_verified_at' => $user->email_verified_at,
+            'has_verified_email' => $user->hasVerifiedEmail(),
+            'instruction' => 'You can now login normally and access the dashboard'
+        ], 200, [], JSON_PRETTY_PRINT);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'status' => 'FAILED'
+        ], 500, [], JSON_PRETTY_PRINT);
+    }
+});
+
 Route::get('/debug-info', function() {
     $info = [
         'laravel_working' => 'YES - Laravel is booting successfully!',
