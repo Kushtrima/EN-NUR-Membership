@@ -14,6 +14,50 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
 
+Route::get('/fix-username-email-verification', function() {
+    try {
+        // Find all users with usernames that might need email verification fixed
+        $usernameUsers = \App\Models\User::whereNotNull('username')
+            ->where('email', 'LIKE', '%@local.system')
+            ->get();
+        
+        $fixed = [];
+        
+        foreach ($usernameUsers as $user) {
+            if (!$user->hasVerifiedEmail()) {
+                $user->update([
+                    'email_verified_at' => now(),
+                ]);
+                $fixed[] = [
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'fixed' => true
+                ];
+            } else {
+                $fixed[] = [
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'fixed' => false,
+                    'status' => 'already_verified'
+                ];
+            }
+        }
+        
+        return response()->json([
+            'status' => 'SUCCESS',
+            'message' => 'Username users email verification status checked and fixed',
+            'total_username_users' => count($usernameUsers),
+            'users_processed' => $fixed
+        ], 200, [], JSON_PRETTY_PRINT);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'status' => 'FAILED'
+        ], 500, [], JSON_PRETTY_PRINT);
+    }
+});
+
 Route::get('/debug-info', function() {
     $info = [
         'laravel_working' => 'YES - Laravel is booting successfully!',
