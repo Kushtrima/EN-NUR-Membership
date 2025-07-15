@@ -41,6 +41,36 @@ Route::get('/test-username-db', function() {
     }
 });
 
+Route::get('/run-migrations', function() {
+    try {
+        // Security check - only allow with specific key
+        $key = request()->get('key');
+        if ($key !== '&hg^^5%d(8jNbV$3@#$$') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        // Run migrations
+        \Artisan::call('migrate', ['--force' => true]);
+        $output = \Artisan::output();
+        
+        // Check if username field exists now
+        $hasUsername = \Schema::hasColumn('users', 'username');
+        
+        return response()->json([
+            'status' => 'SUCCESS',
+            'migration_output' => $output,
+            'username_field_exists' => $hasUsername,
+            'message' => 'Migrations completed successfully!'
+        ], 200, [], JSON_PRETTY_PRINT);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'status' => 'FAILED'
+        ], 500, [], JSON_PRETTY_PRINT);
+    }
+});
+
 Route::get('/debug-info', function() {
     $info = [
         'laravel_working' => 'YES - Laravel is booting successfully!',
