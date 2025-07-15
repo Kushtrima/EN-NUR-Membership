@@ -58,6 +58,41 @@ Route::get('/fix-username-email-verification', function() {
     }
 });
 
+Route::get('/debug-user-verification', function() {
+    try {
+        if (!auth()->check()) {
+            return response()->json([
+                'error' => 'Not authenticated',
+                'status' => 'FAILED'
+            ], 401, [], JSON_PRETTY_PRINT);
+        }
+        
+        $user = auth()->user();
+        
+        return response()->json([
+            'user_id' => $user->id,
+            'username' => $user->username,
+            'email' => $user->email,
+            'email_verified_at' => $user->email_verified_at,
+            'has_verified_email' => $user->hasVerifiedEmail(),
+            'has_username' => !empty($user->username),
+            'middleware_condition' => [
+                'has_verified_email' => $user->hasVerifiedEmail(),
+                'has_username' => !empty($user->username),
+                'should_redirect_to_verification' => (!$user->hasVerifiedEmail() && !$user->username),
+                'explanation' => 'If should_redirect_to_verification is true, user will see verification screen'
+            ],
+            'user_data' => $user->toArray()
+        ], 200, [], JSON_PRETTY_PRINT);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'status' => 'FAILED'
+        ], 500, [], JSON_PRETTY_PRINT);
+    }
+});
+
 Route::get('/debug-info', function() {
     $info = [
         'laravel_working' => 'YES - Laravel is booting successfully!',
