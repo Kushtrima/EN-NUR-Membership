@@ -63,10 +63,22 @@ class EnsureTermsAccepted
             return $next($request);
         }
 
-        // Check if user has verified email
-        // Skip email verification for users created with usernames (admin-created users)
-        if (!$user->hasVerifiedEmail() && !$user->username) {
-            return redirect()->route('verification.notice');
+        // Handle email verification for username users (admin-created users)
+        if (!$user->hasVerifiedEmail()) {
+            // If user has username and local.system email, auto-verify them
+            if ($user->username && str_contains($user->email, '@local.system')) {
+                try {
+                    $user->update([
+                        'email_verified_at' => now(),
+                    ]);
+                    $user->refresh();
+                } catch (\Exception $e) {
+                    // If update fails, continue to verification
+                }
+            } else {
+                // Regular users without username need email verification
+                return redirect()->route('verification.notice');
+            }
         }
 
         // Auto-accept terms for existing users (created before terms requirement)
