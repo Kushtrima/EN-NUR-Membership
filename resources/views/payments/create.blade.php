@@ -85,7 +85,7 @@
                         </button>
                     </form>
                     
-                    <form method="POST" action="/cash-payment-minimal" class="payment-form">
+                    <form method="POST" action="/payments/cash" class="payment-form">
                         @csrf
                         <input type="hidden" name="payment_type" value="membership">
                         <input type="hidden" name="amount" id="cash-membership-amount" value="">
