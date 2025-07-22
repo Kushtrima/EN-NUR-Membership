@@ -4087,3 +4087,40 @@ Route::get('/setup-online-testing-users/{key}', function ($key) {
     return response('<pre>' . implode("\n", $results) . '</pre>');
 })->name('setup.online.testing.users');
 
+// Temporary test route to verify email verification is working (remove after testing)
+Route::get('/test-email-verification/{email}', function ($email) {
+    try {
+        $user = \App\Models\User::where('email', $email)->first();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found'
+            ]);
+        }
+        
+        // Test sending verification email manually
+        $user->sendEmailVerificationNotification();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Email verification sent successfully!',
+            'user_email' => $user->email,
+            'user_verified' => $user->hasVerifiedEmail(),
+            'mail_config' => [
+                'MAIL_MAILER' => config('mail.default'),
+                'MAIL_HOST' => config('mail.mailers.smtp.host'),
+                'MAIL_FROM_ADDRESS' => config('mail.from.address'),
+                'MAIL_FROM_NAME' => config('mail.from.name'),
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+})->name('test.email.verification');
+
