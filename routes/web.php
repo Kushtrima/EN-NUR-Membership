@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     // Redirect authenticated users to dashboard
@@ -3955,3 +3957,4 @@ require __DIR__.'/auth.php';
 
 
 require __DIR__.'/auth.php';
+
