@@ -1460,6 +1460,34 @@
         function closePaymentDetails() {
             document.getElementById('payment-details-modal').style.display = 'none';
         }
+
+        // Payment Status Update Functions
+        async function updatePaymentStatus(paymentId, status) {
+            if (!confirm(`Are you sure you want to mark this payment as ${status}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/admin/payments/${paymentId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ status })
+                });
+                
+                if (response.ok) {
+                    alert(`Payment successfully marked as ${status}`);
+                    location.reload();
+                } else {
+                    alert('Failed to update payment status');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error updating payment status');
+            }
+        }
     </script>
     
     <!-- Payment Details Modal -->

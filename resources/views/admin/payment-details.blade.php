@@ -180,10 +180,6 @@
                     Shëno si të Dështuar
                 </button>
             @endif
-            <button onclick="sendPaymentNotification({{ $payment->id }})" 
-                    class="btn" style="background: #17a2b8; color: white; font-size: 0.875rem;">
-                Dërgo Njoftim
-            </button>
             <a href="{{ route('admin.payments.receipt', $payment) }}" target="_blank"
                class="btn" style="background: #6f42c1; color: white; font-size: 0.875rem; text-decoration: none;">
                 Gjenero Faturën
