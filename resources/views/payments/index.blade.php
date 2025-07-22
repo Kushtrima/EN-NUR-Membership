@@ -214,14 +214,13 @@
                                                 <input type="hidden" name="end_date" value="{{ $payment->created_at->format('Y-m-d') }}">
                                                 <input type="hidden" name="type" value="{{ $payment->payment_type }}">
                                                 <button type="submit" 
-                                                        style="background: #C19A61; color: white; padding: 0.5rem 0.75rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.4rem; height: 32px; box-sizing: border-box; white-space: nowrap;"
+                                                        style="background: #C19A61; color: white; padding: 0.6rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; box-sizing: border-box;"
                                                         onmouseover="this.style.background='#a67c52'" 
                                                         onmouseout="this.style.background='#C19A61'"
                                                         title="Eksporto këtë pagesë në raport PDF">
-                                                    <svg style="width: 14px; height: 14px;" fill="white" viewBox="0 0 24 24">
+                                                    <svg style="width: 16px; height: 16px;" fill="white" viewBox="0 0 24 24">
                                                         <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
                                                     </svg>
-                                                    Eksporto PDF
                                                 </button>
                                             </form>
                                         @else
@@ -245,14 +244,13 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" 
-                                                    style="background: #dc3545; color: white; padding: 0.4rem 0.6rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: all 0.3s ease; display: flex; align-items: center; gap: 0.3rem; height: 28px; box-sizing: border-box;"
+                                                    style="background: #dc3545; color: white; padding: 0.6rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; box-sizing: border-box;"
                                                     onmouseover="this.style.background='#c82333'" 
                                                     onmouseout="this.style.background='#dc3545'"
                                                     title="Fshij këtë pagesë">
-                                                <svg style="width: 12px; height: 12px;" fill="white" viewBox="0 0 24 24">
+                                                <svg style="width: 16px; height: 16px;" fill="white" viewBox="0 0 24 24">
                                                     <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
                                                 </svg>
-                                                Fshij
                                             </button>
                                         </form>
                                     </div>
