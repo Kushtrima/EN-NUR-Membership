@@ -195,16 +195,25 @@
                                 </td>
                                 <td>{{ $payment->created_at->format('M d, Y') }}</td>
                                 <td>
-                                    @if($payment->status === 'completed')
-                                        <a href="{{ route('payment.index') }}" 
-                                           style="background: #1F6E38; color: white; border: none; padding: 0.3rem 0.5rem; border-radius: 4px; text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;"
-                                           title="Shiko të Gjitha Pagesat & Eksporto PDF">
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        @if($payment->status === 'completed')
+                                            <a href="{{ route('payment.index') }}" 
+                                               style="background: #1F6E38; color: white; border: none; padding: 0.3rem 0.5rem; border-radius: 4px; text-decoration: none; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.25rem;"
+                                               title="Shiko të Gjitha Pagesat & Eksporto PDF">
+                                                <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                                </svg>
+                                                Shiko
+                                            </a>
+                                        @endif
+                                        <button onclick="deletePayment({{ $payment->id }})" 
+                                                style="background: #dc3545; color: white; border: none; padding: 0.3rem 0.5rem; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+                                                title="Fshi Pagesën">
                                             <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                                             </svg>
-                                            Shiko
-                                        </a>
-                                    @endif
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -230,4 +239,34 @@
             </div>
         @endif
     </div>
+
+    <script>
+        function deletePayment(paymentId) {
+            if (confirm('Jeni i sigurt që doni ta fshini këtë pagesë? Ky veprim nuk mund të zhbëhet.')) {
+                // Create a form dynamically and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/payments/${paymentId}`;
+                form.style.display = 'none';
+                
+                // Add CSRF token
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                form.appendChild(csrfToken);
+                
+                // Add DELETE method
+                const methodField = document.createElement('input');
+                methodField.type = 'hidden';
+                methodField.name = '_method';
+                methodField.value = 'DELETE';
+                form.appendChild(methodField);
+                
+                // Append form to body and submit
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
 </x-app-layout> 
