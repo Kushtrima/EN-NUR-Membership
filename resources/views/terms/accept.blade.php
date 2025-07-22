@@ -68,7 +68,7 @@
                     <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                         <input type="checkbox" name="accept_terms" value="1" required 
                                style="width: 18px; height: 18px; accent-color: #1F6E38;">
-                        <span style="font-weight: 500;">Kam lexuar dhe pranoj <a href="{{ route('terms.full') }}" target="_blank" style="color: #1F6E38; text-decoration: none;">Kushtet e përgjithshme të Kontratës</a></span>
+                        <span style="font-weight: 500;">Kam lexuar dhe pranoj Kushtet e përgjithshme të Kontratës</span>
                     </label>
                     @error('accept_terms')
                         <div style="color: #dc3545; font-size: 0.875rem; margin-top: 0.5rem;">{{ $message }}</div>
@@ -90,7 +90,7 @@
         <!-- Footer Note -->
         <div style="text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #dee2e6; color: #666; font-size: 0.9rem;">
             <p>Duke pranuar këto kushte, ju konfirmoni se jeni të paktën 18 vjeç dhe keni kapacitetin ligjor për të hyrë në këtë marrëveshje.</p>
-            <p>Nëse keni ndonjë pyetje, ju lutemi na kontaktoni në <a href="mailto:info@en-nur.org" style="color: #1F6E38;">info@en-nur.org</a></p>
+            <p>Nëse keni ndonjë pyetje, ju lutemi na kontaktoni në <a href="mailto:info@xhamia-en-nur.ch" style="color: #1F6E38;">info@xhamia-en-nur.ch</a></p>
         </div>
     </div>
 </x-app-layout> 
