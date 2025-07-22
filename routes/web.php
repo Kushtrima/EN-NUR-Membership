@@ -3958,3 +3958,132 @@ require __DIR__.'/auth.php';
 
 require __DIR__.'/auth.php';
 
+// Temporary route to setup real user renewals online (remove after testing)
+Route::get('/setup-online-testing-users/{key}', function ($key) {
+    // Security check
+    if ($key !== 'setup-testing-2025') {
+        abort(404);
+    }
+    
+    $targetUsers = [
+        'k.arifi@bsrgroup.ch' => [
+            'name' => 'Kushtrim Arifi',
+            'days' => -10,
+            'description' => 'EXPIRED (10 days ago) - RED badge'
+        ],
+        'infinitdizzajn@gmail.com' => [
+            'name' => 'Infinit Dizzajn', 
+            'days' => 15,
+            'description' => '15D to expire - ORANGE badge'
+        ]
+    ];
+    
+    $results = [];
+    
+    foreach ($targetUsers as $email => $config) {
+        try {
+            // Find or create user
+            $user = \App\Models\User::where('email', $email)->first();
+            
+            if (!$user) {
+                $user = \App\Models\User::create([
+                    'name' => $config['name'],
+                    'email' => $email,
+                    'password' => bcrypt('password123'),
+                    'role' => 'user',
+                    'email_verified_at' => now(),
+                    'created_at' => now()->subMonths(6),
+                    'updated_at' => now(),
+                ]);
+                $results[] = "✅ Created user: {$config['name']} ({$email})";
+            } else {
+                $results[] = "✅ Found existing user: {$user->name} ({$email})";
+            }
+            
+            // Create membership payment if doesn't exist
+            $membershipPayment = \App\Models\Payment::where('user_id', $user->id)
+                ->where('payment_type', 'membership')
+                ->where('status', 'completed')
+                ->first();
+            
+            if (!$membershipPayment) {
+                $membershipPayment = \App\Models\Payment::create([
+                    'user_id' => $user->id,
+                    'amount' => 35000, // CHF 350
+                    'payment_type' => 'membership',
+                    'payment_method' => 'stripe',
+                    'status' => 'completed',
+                    'stripe_payment_intent_id' => 'pi_test_' . uniqid(),
+                    'created_at' => now()->subMonths(3),
+                    'updated_at' => now()->subMonths(3),
+                ]);
+                $results[] = "✅ Created CHF 350 membership payment for {$config['name']}";
+            } else {
+                $results[] = "✅ Found existing membership payment for {$user->name}";
+            }
+            
+            // Remove existing renewal and create new one
+            \App\Models\MembershipRenewal::where('user_id', $user->id)->delete();
+            
+            $daysUntilExpiry = $config['days'];
+            $membershipStartDate = now()->subMonths(6);
+            $membershipEndDate = $daysUntilExpiry > 0 
+                ? now()->addDays($daysUntilExpiry)
+                : now()->addDays($daysUntilExpiry);
+            
+            $renewal = \App\Models\MembershipRenewal::create([
+                'user_id' => $user->id,
+                'payment_id' => $membershipPayment->id,
+                'membership_start_date' => $membershipStartDate,
+                'membership_end_date' => $membershipEndDate,
+                'days_until_expiry' => $daysUntilExpiry,
+                'is_expired' => $daysUntilExpiry <= 0,
+                'is_hidden' => false, // VISIBLE so they show in dashboard
+                'is_renewed' => false,
+                'created_at' => now()->subMonths(3),
+                'updated_at' => now(),
+            ]);
+            
+            $results[] = "✅ {$config['name']}: {$config['description']}";
+            $results[] = "   Start: {$membershipStartDate->format('M d, Y')}";
+            $results[] = "   End: {$membershipEndDate->format('M d, Y')}";
+            $results[] = "   Days: {$daysUntilExpiry}";
+            
+        } catch (\Exception $e) {
+            $results[] = "❌ Error setting up {$email}: " . $e->getMessage();
+        }
+    }
+    
+    // Test dashboard logic
+    $allRenewals = \App\Models\MembershipRenewal::with('user')
+        ->where('is_hidden', false)
+        ->where('is_renewed', false)
+        ->get();
+
+    $expired = $allRenewals->filter(function ($renewal) {
+        return $renewal->calculateDaysUntilExpiry() <= 0;
+    })->count();
+
+    $expiring30Days = $allRenewals->filter(function ($renewal) {
+        $days = $renewal->calculateDaysUntilExpiry();
+        return $days > 0 && $days <= 30;
+    })->count();
+
+    $dashboardBoxes = $allRenewals->filter(function ($renewal) {
+        $daysUntilExpiry = $renewal->calculateDaysUntilExpiry();
+        return $daysUntilExpiry <= 30 && $daysUntilExpiry > -30;
+    })->count();
+    
+    $results[] = "";
+    $results[] = "📊 DASHBOARD STATISTICS:";
+    $results[] = "- Total users: " . \App\Models\User::count();
+    $results[] = "- Total revenue: CHF " . number_format(\App\Models\Payment::where('status', 'completed')->sum('amount') / 100, 2);
+    $results[] = "- Expired users: {$expired}";
+    $results[] = "- Expiring within 30 days: {$expiring30Days}";  
+    $results[] = "- Dashboard boxes will show: {$dashboardBoxes} users";
+    $results[] = "";
+    $results[] = "🚀 SETUP COMPLETE! Visit /dashboard to see the results.";
+    
+    return response('<pre>' . implode("\n", $results) . '</pre>');
+})->name('setup.online.testing.users');
+
