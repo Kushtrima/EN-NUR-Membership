@@ -161,17 +161,21 @@ class DashboardController extends Controller
             return 4; // Should not happen in this filter
         })->values();
 
-        // Calculate statistics using calculated values
-        $expired = $allRenewals->filter(function ($renewal) {
+        // Calculate statistics using calculated values (only visible, non-hidden renewals)
+        $visibleRenewals = $allRenewals->filter(function ($renewal) {
+            return !$renewal->is_hidden && !$renewal->is_renewed;
+        });
+
+        $expired = $visibleRenewals->filter(function ($renewal) {
             return $renewal->calculateDaysUntilExpiry() <= 0;
         })->count();
 
-        $expiring7Days = $allRenewals->filter(function ($renewal) {
+        $expiring7Days = $visibleRenewals->filter(function ($renewal) {
             $days = $renewal->calculateDaysUntilExpiry();
             return $days > 0 && $days <= 7;
         })->count();
 
-        $expiring30Days = $allRenewals->filter(function ($renewal) {
+        $expiring30Days = $visibleRenewals->filter(function ($renewal) {
             $days = $renewal->calculateDaysUntilExpiry();
             return $days > 0 && $days <= 30;
         })->count();
