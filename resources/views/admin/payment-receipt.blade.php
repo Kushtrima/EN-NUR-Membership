@@ -320,9 +320,12 @@
     <div class="footer" style="position: absolute; bottom: 15mm; left: 15mm; right: 15mm;">
         <p>This is an official receipt for your payment. Please keep this for your records.</p>
         <p>Generated on {{ now()->format('F d, Y \a\t H:i T') }}</p>
-        <p style="margin-top: 10px;">
-            {{ config('app.name') }} - Serving the Muslim Community | Tax-exempt Religious Organization
-        </p>
+        <div style="margin-top: 10px; font-size: 11px; line-height: 1.5; color: #000;">
+            <strong>Islamische Verein EN-NUR</strong><br>
+            Ziegeleistrasse 2, 8253 Diessenhofen<br>
+            <a href="mailto:info@xhamia-en-nur.ch" style="color: #1A53F2; text-decoration: underline;">info@xhamia-en-nur.ch</a><br>
+            Tel: <a href="tel:0526541460" style="color: #1A53F2; text-decoration: underline;">052 654 14 60</a>
+        </div>
     </div>
 </body>
 </html> 

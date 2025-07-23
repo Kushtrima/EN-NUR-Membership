@@ -463,6 +463,12 @@
     <footer style="background: linear-gradient(135deg, #1F6E38, #165028); color: white; text-align: center; padding: 1rem 0; margin-top: 2rem; border-top: 3px solid #C19A61;">
         <div class="container">
             <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+            <div class="mt-2" style="font-size: 0.95rem; line-height: 1.5;">
+                <strong>Islamische Verein EN-NUR</strong><br>
+                Ziegeleistrasse 2, 8253 Diessenhofen<br>
+                <a href="mailto:info@xhamia-en-nur.ch" style="color: #F1FF30; text-decoration: underline;">info@xhamia-en-nur.ch</a><br>
+                Tel: <a href="tel:0526541460" style="color: #F1FF30; text-decoration: underline;">052 654 14 60</a>
+            </div>
         </div>
     </footer>
 </body>
