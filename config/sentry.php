@@ -129,6 +129,4 @@ return [
         'default_integrations' => env('SENTRY_TRACE_DEFAULT_INTEGRATIONS_ENABLED', true),
     ],
 
-    'enable' => env('APP_ENV') === 'production',
-
 ];
