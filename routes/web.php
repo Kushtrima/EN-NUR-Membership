@@ -4129,3 +4129,8 @@ Route::get('/sentry-test', function () {
     throw new \Exception('Test Sentry error from production!');
 });
 
+// Temporary route to check current environment
+Route::get('/env-check', function () {
+    return env('APP_ENV');
+});
+
