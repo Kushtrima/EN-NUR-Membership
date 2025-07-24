@@ -207,34 +207,15 @@
                                     <div style="display: flex; gap: 0.5rem; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
                                         @if($payment->status === 'completed')
                                             <!-- Quick Export This Payment -->
-                                            <form method="POST" action="{{ route('exports.user') }}" style="display: inline; margin: 0;">
-                                                @csrf
-                                                <!-- Export only this specific payment by date -->
-                                                <input type="hidden" name="start_date" value="{{ $payment->created_at->format('Y-m-d') }}">
-                                                <input type="hidden" name="end_date" value="{{ $payment->created_at->format('Y-m-d') }}">
-                                                <input type="hidden" name="type" value="{{ $payment->payment_type }}">
-                                                <button type="submit" 
-                                                        style="background: #C19A61; color: white; padding: 0.6rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; box-sizing: border-box;"
-                                                        onmouseover="this.style.background='#a67c52'" 
-                                                        onmouseout="this.style.background='#C19A61'"
-                                                        title="Eksporto këtë pagesë në raport PDF">
-                                                    <svg style="width: 16px; height: 16px;" fill="white" viewBox="0 0 24 24">
-                                                        <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
-                                                    </svg>
-                                                </button>
-                                            </form>
-                                        @else
-                                            <span style="color: #6c757d; font-size: 0.8rem; font-style: italic;">
-                                                @if($payment->status === 'pending')
-                                                    Duke u procesuar...
-                                                @elseif($payment->status === 'failed')
-                                                    Dështuar
-                                                @elseif($payment->status === 'cancelled')
-                                                    E Anuluar
-                                                @else
-                                                    {{ ucfirst($payment->status) }}
-                                                @endif
-                                            </span>
+                                            <a href="{{ route('user.payments.receipt', $payment) }}"
+                                               style="background: #C19A61; color: white; padding: 0.6rem; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; box-sizing: border-box;"
+                                               onmouseover="this.style.background='#a67c52'" 
+                                               onmouseout="this.style.background='#C19A61'"
+                                               title="Eksporto këtë pagesë në PDF">
+                                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                                </svg>
+                                            </a>
                                         @endif
                                         
                                         <!-- Delete Button (smaller and less prominent) -->
