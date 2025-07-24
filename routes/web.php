@@ -4124,3 +4124,8 @@ Route::get('/test-email-verification/{email}', function ($email) {
     }
 })->name('test.email.verification');
 
+// Sentry test route (remove after verification)
+Route::get('/sentry-test', function () {
+    throw new \Exception('Test Sentry error from production!');
+});
+
