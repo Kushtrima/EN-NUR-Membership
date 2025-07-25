@@ -15,6 +15,23 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+// Temporary diagnostic route for Stripe debugging
+Route::get('/stripe-debug', function () {
+    if (config('app.env') !== 'production') {
+        return response()->json(['error' => 'Only available in production'], 403);
+    }
+    
+    return response()->json([
+        'environment' => config('app.env'),
+        'stripe_key_set' => config('services.stripe.key') ? 'YES' : 'NO',
+        'stripe_secret_set' => config('services.stripe.secret') ? 'YES' : 'NO',
+        'webhook_secret_set' => config('services.stripe.webhook_secret') ? 'YES' : 'NO',
+        'stripe_key_prefix' => config('services.stripe.key') ? substr(config('services.stripe.key'), 0, 10) : 'NOT_SET',
+        'stripe_secret_prefix' => config('services.stripe.secret') ? substr(config('services.stripe.secret'), 0, 10) : 'NOT_SET',
+        'config_cached' => file_exists(base_path('bootstrap/cache/config.php')),
+    ]);
+})->name('stripe.debug');
+
 Route::get('/', function () {
     // Redirect authenticated users to dashboard
     if (auth()->check()) {
@@ -4123,14 +4140,4 @@ Route::get('/test-email-verification/{email}', function ($email) {
         ], 500);
     }
 })->name('test.email.verification');
-
-// Sentry test route (remove after verification)
-Route::get('/sentry-test', function () {
-    throw new \Exception('Test Sentry error from production!');
-});
-
-// Temporary route to check current environment
-Route::get('/env-check', function () {
-    return env('APP_ENV');
-});
 
