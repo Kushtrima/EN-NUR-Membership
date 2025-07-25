@@ -136,13 +136,13 @@ services:
       - key: CUSTOM_MAIL_PASSWORD
         fromSecret: CUSTOM_MAIL_PASSWORD_SECRET
       
-      # Payment Configuration (Demo Keys - Replace with real ones)
+      # Payment Configuration (Production Keys)
       - key: STRIPE_KEY
-        value: pk_test_demo_key_replace_with_real
+        fromSecret: STRIPE_KEY
       - key: STRIPE_SECRET
-        value: sk_test_demo_key_replace_with_real
+        fromSecret: STRIPE_SECRET
       - key: STRIPE_WEBHOOK_SECRET
-        value: whsec_demo_replace_with_real
+        fromSecret: STRIPE_WEBHOOK_SECRET
       
       - key: PAYPAL_MODE
         value: sandbox

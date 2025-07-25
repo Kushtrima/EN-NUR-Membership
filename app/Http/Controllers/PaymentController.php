@@ -152,8 +152,8 @@ class PaymentController extends Controller
                 Stripe::setApiKey($stripeSecret);
 
                 $sessionData = [
-                    // Enhanced payment methods: Cards, Apple Pay, Google Pay
-                    'payment_method_types' => ['card', 'apple_pay', 'google_pay'],
+                    // Payment method: Card only
+                    'payment_method_types' => ['card'],
                     'line_items' => [[
                         'price_data' => [
                             'currency' => 'chf',
