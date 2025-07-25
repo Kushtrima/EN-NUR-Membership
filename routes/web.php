@@ -4126,3 +4126,15 @@ Route::get('/test-email-verification/{email}', function ($email) {
     }
 })->name('test.email.verification');
 
+// Temporary diagnostic route for environment checking
+Route::get('/env-check', function () {
+    return response()->json([
+        'php_memory_limit' => ini_get('memory_limit'),
+        'php_version' => PHP_VERSION,
+        'app_env' => config('app.env'),
+        'session_secure' => config('session.secure'),
+        'trusted_proxies' => config('trustedproxy.proxies'),
+        'force_https' => config('app.env') === 'production',
+    ]);
+})->name('env.check');
+
