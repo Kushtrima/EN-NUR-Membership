@@ -1,6 +1,12 @@
 # Use official PHP 8.2 with Apache
 FROM php:8.2-apache
 
+# Set PHP memory limit and other optimizations
+ENV PHP_MEMORY_LIMIT=512M
+ENV PHP_MAX_EXECUTION_TIME=300
+ENV PHP_UPLOAD_MAX_FILESIZE=64M
+ENV PHP_POST_MAX_SIZE=64M
+
 # Set working directory
 WORKDIR /var/www/html
 
