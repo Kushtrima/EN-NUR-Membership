@@ -7,10 +7,22 @@ echo "🚀 Starting EN NUR Membership System - Ultra-Robust Mode..."
 
 # Set PHP memory limit and other settings at runtime
 echo "🔧 Configuring PHP settings..."
-echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/memory-limit.ini
-echo "max_execution_time = 300" >> /usr/local/etc/php/conf.d/memory-limit.ini
-echo "upload_max_filesize = 64M" >> /usr/local/etc/php/conf.d/memory-limit.ini
-echo "post_max_size = 64M" >> /usr/local/etc/php/conf.d/memory-limit.ini
+# Create PHP configuration directory if it doesn't exist
+mkdir -p /usr/local/etc/php/conf.d/
+# Set memory limit with high priority
+echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/99-memory-limit.ini
+echo "max_execution_time = 300" >> /usr/local/etc/php/conf.d/99-memory-limit.ini
+echo "upload_max_filesize = 64M" >> /usr/local/etc/php/conf.d/99-memory-limit.ini
+echo "post_max_size = 64M" >> /usr/local/etc/php/conf.d/99-memory-limit.ini
+echo "max_input_vars = 3000" >> /usr/local/etc/php/conf.d/99-memory-limit.ini
+
+# Also try to set via environment for good measure
+export PHP_INI_SCAN_DIR="/usr/local/etc/php/conf.d"
+export PHP_MEMORY_LIMIT="512M"
+
+# Verify PHP config was applied
+echo "📊 PHP Configuration Check:"
+php -r "echo 'Memory Limit: ' . ini_get('memory_limit') . PHP_EOL;"
 
 # Set permissions first (critical for Laravel)
 echo "🔧 Setting proper permissions..."
