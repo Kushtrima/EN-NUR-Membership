@@ -184,22 +184,8 @@ class PaymentController extends Controller
                         ],
                         'setup_future_usage' => null, // Don't store payment methods
                     ],
-                    // Automatic payment method detection
-                    'automatic_payment_methods' => [
-                        'enabled' => true,
-                        'allow_redirects' => 'never', // Keep it simple for Swiss market
-                    ],
-                    // Enhanced UI customization
-                    'custom_text' => [
-                        'submit' => [
-                            'message' => 'Secure payment powered by Stripe'
-                        ]
-                    ],
                     // Optimized for Swiss market
                     'locale' => 'de', // Swiss German (can be made dynamic)
-                    'phone_number_collection' => [
-                        'enabled' => false, // Keep it simple
-                    ],
                 ];
 
                 $session = Session::create($sessionData);
