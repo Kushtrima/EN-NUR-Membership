@@ -5,6 +5,13 @@ set -e
 
 echo "🚀 Starting EN NUR Membership System - Ultra-Robust Mode..."
 
+# Set PHP memory limit and other settings at runtime
+echo "🔧 Configuring PHP settings..."
+echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/memory-limit.ini
+echo "max_execution_time = 300" >> /usr/local/etc/php/conf.d/memory-limit.ini
+echo "upload_max_filesize = 64M" >> /usr/local/etc/php/conf.d/memory-limit.ini
+echo "post_max_size = 64M" >> /usr/local/etc/php/conf.d/memory-limit.ini
+
 # Set permissions first (critical for Laravel)
 echo "🔧 Setting proper permissions..."
 chown -R www-data:www-data /var/www/html
