@@ -102,3 +102,8 @@ jspm_packages/
 # Temporary files
 /temp/
 /tmp/ storage/logs/*.log
+
+# Office documents (prevent accidental credential/PII commits)
+*.docx
+*.doc
+~$*
