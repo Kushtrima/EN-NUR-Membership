@@ -111,8 +111,10 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
                 return $user !== null;
             }
 
-            // In production/staging, only allow admins and super admins
-            return $user && $user->isAdmin();
+            // In production/staging, only super admins can access Telescope.
+            // Telescope records request bodies, mail content, and queries —
+            // tighter than "any admin" per audit finding 1.7.
+            return $user && $user->isSuperAdmin();
         });
     }
 
