@@ -1296,9 +1296,9 @@ class AdminController extends Controller
             'override_key' => 'required|string',
         ]);
 
-        // Check the override key
-        $correctKey = '&hg^^5%d(8jNbV$3@#$$';
-        if ($request->override_key !== $correctKey) {
+        // Check the override key (set via ADMIN_OVERRIDE_KEY env var)
+        $correctKey = config('security.admin_override_key');
+        if (empty($correctKey) || !hash_equals($correctKey, (string) $request->override_key)) {
             return redirect()->back()
                 ->withErrors(['override_key' => 'Invalid override key.'])
                 ->withInput();
