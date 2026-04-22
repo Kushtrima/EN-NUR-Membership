@@ -25,6 +25,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'super_admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
             'terms.accepted' => \App\Http\Middleware\EnsureTermsAccepted::class,
         ]);
+
+        // Stripe cannot send our CSRF token on webhook POSTs.
+        // Authenticity is enforced by Stripe-Signature verification
+        // in PaymentController::stripeWebhook instead.
+        $middleware->validateCsrfTokens(except: [
+            'webhook/stripe',
+        ]);
     })
     ->withSchedule(function ($schedule) {
         // Database backup schedule
