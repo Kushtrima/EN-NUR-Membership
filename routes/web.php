@@ -1864,94 +1864,6 @@ Route::get('/create-admin', function() {
     }
 });
 
-Route::get('/setup-super-admin', function() {
-    if (env('APP_ENV') !== 'production') {
-        return response('Only available in production', 403);
-    }
-    
-    try {
-        $email = 'kushtrim.m.arifi@gmail.com';
-        $name = 'SUPER ADMIN';
-        $password = env('SUPER_ADMIN_PASSWORD', 'change-me');
-        
-        // Check if user already exists
-        $existingUser = DB::table('users')->where('email', $email)->first();
-        
-        $output = [];
-        
-        if ($existingUser) {
-            // Update existing user to super admin with FRESH password hash
-            $freshHash = Hash::make($password);
-            DB::table('users')
-                ->where('email', $email)
-                ->update([
-                    'name' => $name,
-                    'password' => $freshHash,
-                    'role' => 'super_admin',
-                    'email_verified_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            
-            $output[] = "✅ Updated existing user to SUPER ADMIN";
-            $output[] = "🔄 Generated FRESH password hash";
-            $output[] = "📧 Email: {$email}";
-            $output[] = "👤 Name: {$name}";
-            $output[] = "🔐 Role: super_admin";
-        } else {
-            // Create new super admin user with FRESH password hash
-            $freshHash = Hash::make($password);
-            DB::table('users')->insert([
-                'name' => $name,
-                'email' => $email,
-                'email_verified_at' => now(),
-                'password' => $freshHash,
-                'role' => 'super_admin',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            
-            $output[] = "✅ Created new SUPER ADMIN user";
-            $output[] = "🔄 Generated FRESH password hash";
-            $output[] = "📧 Email: {$email}";
-            $output[] = "👤 Name: {$name}";
-            $output[] = "🔐 Role: super_admin";
-        }
-        
-        // Verify the user was created/updated correctly
-        $user = DB::table('users')->where('email', $email)->first();
-        $output[] = "🔍 Verification:";
-        $output[] = "  - User ID: {$user->id}";
-        $output[] = "  - Name: {$user->name}";
-        $output[] = "  - Email: {$user->email}";
-        $output[] = "  - Role: {$user->role}";
-        $output[] = "  - Email Verified: " . ($user->email_verified_at ? 'Yes' : 'No');
-        
-        // Show login credentials
-        $output[] = "🎯 LOGIN CREDENTIALS:";
-        $output[] = "  📧 Email: {$email}";
-        $output[] = "  🔑 Password: {$password}";
-        $output[] = "  🌐 Login URL: https://en-nur-membership.onrender.com/login";
-        
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Super admin account ready!',
-            'output' => $output,
-            'credentials' => [
-                'email' => $email,
-                'password' => $password,
-                'login_url' => 'https://en-nur-membership.onrender.com/login'
-            ]
-        ]);
-        
-    } catch (Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-    }
-});
-
 Route::get('/debug-login', function() {
     if (env('APP_ENV') !== 'production') {
         return response('Only available in production', 403);
@@ -2043,18 +1955,6 @@ Route::get('/clean-setup-super-admin', function () {
         return response('Error: ' . $e->getMessage(), 500);
     }
 })->name('clean.setup.super.admin');
-
-// Setup super admin route (for initial setup)
-Route::get('/setup-super-admin', function () {
-    try {
-        Artisan::call('admin:setup-super-admin');
-        $output = Artisan::output();
-        
-        return response('<pre>' . $output . '</pre><br><a href="/login">Login as Super Admin</a>');
-    } catch (\Exception $e) {
-        return response('Error: ' . $e->getMessage(), 500);
-    }
-})->name('setup.super.admin');
 
 // Diagnostic route to check dashboard state
 Route::get('/admin-diagnose', function () {
