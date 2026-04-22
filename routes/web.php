@@ -35,40 +35,6 @@ Route::get('/status', function () {
     return '<h1>Laravel is Working!</h1><p>Your EN NUR Membership System is successfully deployed!</p><p>PHP Version: ' . phpversion() . '</p><p>Laravel Version: ' . app()->version() . '</p>';
 });
 
-Route::get('/test-route', function () {
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Laravel is working!',
-        'timestamp' => now(),
-        'php_version' => phpversion()
-    ]);
-});
-
-// Force disable debug mode in production (emergency fix)
-Route::get('/force-disable-debug', function () {
-    if (env('APP_ENV') === 'production') {
-        // Temporarily override debug mode for this request
-        config(['app.debug' => false]);
-        
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Debug mode force disabled for production',
-            'timestamp' => now(),
-            'debug_info' => [
-                'APP_DEBUG_env' => env('APP_DEBUG'),
-                'APP_DEBUG_config_before' => config('app.debug'),
-                'APP_DEBUG_config_after' => false,
-                'APP_ENV' => env('APP_ENV')
-            ]
-        ]);
-    }
-    
-    return response()->json([
-        'status' => 'error',
-        'message' => 'This route only works in production environment'
-    ]);
-});
-
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'terms.accepted'])->name('dashboard');
 
 // Terms and Conditions routes
@@ -993,54 +959,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     });
 });
 
-// Diagnostic route to check dashboard state
-Route::get('/admin-diagnose', function () {
-    if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
-        abort(403, 'Unauthorized - Super Admin Only');
-    }
-    
-    try {
-        Artisan::call('admin:diagnose');
-        $output = Artisan::output();
-        
-        return response('<pre>' . $output . '</pre><br><a href="/admin">Go to Admin Dashboard</a><br><a href="/create-expired-test-users">Create Test Users</a>');
-    } catch (\Exception $e) {
-        return response('Error: ' . $e->getMessage(), 500);
-    }
-})->name('admin.diagnose');
-
-// Test route to create expired users (remove after testing)
-Route::get('/create-expired-test-users', function () {
-    if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
-        abort(403, 'Unauthorized - Super Admin Only');
-    }
-    
-    try {
-        Artisan::call('test:create-expired-users');
-        $output = Artisan::output();
-        
-        return response('<pre>' . $output . '</pre><br><a href="/admin">Go to Admin Dashboard</a><br><a href="/admin-diagnose">Run Diagnostics</a>');
-    } catch (\Exception $e) {
-        return response('Error: ' . $e->getMessage(), 500);
-    }
-})->name('create.expired.test.users');
-
-// Run original database seeder (contains proper test users)
-Route::get('/run-original-seeder', function () {
-    if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
-        abort(403, 'Unauthorized - Super Admin Only');
-    }
-    
-    try {
-        // Run the original seeder that contains all test users
-        Artisan::call('db:seed', ['--class' => 'DatabaseSeeder']);
-        $output = Artisan::output();
-        
-        return response('<h2>Original Database Seeder Executed</h2><pre>' . $output . '</pre><br><a href="/admin/users">View Users</a><br><a href="/admin">Go to Dashboard</a>');
-    } catch (\Exception $e) {
-        return response('Error: ' . $e->getMessage(), 500);
-    }
-})->name('run.original.seeder');
 
 // Production setup routes (Super Admin only)
 Route::middleware(['auth', 'super_admin'])->group(function () {
@@ -1048,58 +966,6 @@ Route::middleware(['auth', 'super_admin'])->group(function () {
     Route::get('/setup-production-data', [AdminController::class, 'setupProductionData']);
     Route::get('/setup-production-email', [AdminController::class, 'setupProductionEmail']);
     Route::get('/setup-test-expiry/{email}', [AdminController::class, 'setupTestExpiry']);
-    
-    // Diagnostic route to test the latest code deployment
-    Route::get('/test-latest-deployment', function () {
-        try {
-            $output = [];
-            $output[] = "🔍 Testing Latest Code Deployment";
-            $output[] = "Timestamp: " . now()->toDateTimeString();
-            
-            // Test the CreateExpiredTestUsers command with --infinit flag
-            $output[] = "\n📋 Testing CreateExpiredTestUsers command with --infinit flag...";
-            
-            // Run the command and capture output
-            Artisan::call('test:create-expired-users', ['--infinit' => true]);
-            $commandOutput = Artisan::output();
-            
-            $output[] = "Command Output:";
-            $output[] = $commandOutput;
-            
-            // Check if the user was created/updated
-            $user = \App\Models\User::where('email', 'infinitdizzajn@gmail.com')->first();
-            if ($user) {
-                $output[] = "\n✅ User Found:";
-                $output[] = "- Name: {$user->name}";
-                $output[] = "- Email: {$user->email}";
-                $output[] = "- Days Until Expiry: {$user->days_until_expiry}";
-                $output[] = "- Membership Status: {$user->membership_status}";
-                $output[] = "- Color: {$user->color}";
-                $output[] = "- Hidden: " . ($user->hidden ? 'Yes' : 'No');
-            } else {
-                $output[] = "\n❌ User not found";
-            }
-            
-            // Test the MembershipService color logic
-            $output[] = "\n🎨 Testing Color Logic:";
-            $membershipService = app(\App\Services\MembershipService::class);
-            if ($user) {
-                $membershipStatus = $membershipService->getUserMembershipStatus($user);
-                if ($membershipStatus) {
-                    $output[] = "Border Color: {$membershipStatus['border_color']}";
-                    $output[] = "Status Badge: {$membershipStatus['status_badge']['text']}";
-                    $output[] = "Display Class: {$membershipStatus['display_class']}";
-                } else {
-                    $output[] = "No membership status found";
-                }
-            }
-            
-            return response('<h2>Latest Deployment Test Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin/users">View Users</a><br><a href="/admin">Go to Dashboard</a>');
-            
-        } catch (\Exception $e) {
-            return response('<h2>Error Testing Deployment</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre><br><a href="/admin">Go to Dashboard</a>');
-        }
-    });
 
 // Testing Dashboard Routes (Admin/Super Admin only)
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -1172,83 +1038,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
         }
     });
     
-    // Debug SMTP Configuration
-    Route::get('/debug-smtp', function () {
-        $output = [];
-        $output[] = "🔧 SMTP Configuration Debug";
-        $output[] = "Timestamp: " . now()->toDateTimeString();
-        $output[] = "";
-        $output[] = "CURRENT MAIL CONFIGURATION:";
-        $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
-        $output[] = "Mailer: " . config('mail.default');
-        $output[] = "Host: " . config('mail.mailers.smtp.host');
-        $output[] = "Port: " . config('mail.mailers.smtp.port');
-        $output[] = "Username: " . config('mail.mailers.smtp.username');
-        $output[] = "Password: " . (config('mail.mailers.smtp.password') ? '[CONFIGURED - Length: ' . strlen(config('mail.mailers.smtp.password')) . ']' : '[NOT SET]');
-        $output[] = "Encryption: " . config('mail.mailers.smtp.encryption');
-        $output[] = "From Address: " . config('mail.from.address');
-        $output[] = "From Name: " . config('mail.from.name');
-        $output[] = "";
-        
-        // Test SMTP connection
-        $output[] = "TESTING SMTP CONNECTION:";
-        $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━";
-        
-        try {
-            $transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport(
-                config('mail.mailers.smtp.host'),
-                config('mail.mailers.smtp.port'),
-                config('mail.mailers.smtp.encryption') === 'tls'
-            );
-            $transport->setUsername(config('mail.mailers.smtp.username'));
-            $transport->setPassword(config('mail.mailers.smtp.password'));
-            
-            // Try to start transport
-            $transport->start();
-            $output[] = "✅ SMTP Connection: SUCCESS";
-            $transport->stop();
-        } catch (\Exception $e) {
-            $output[] = "❌ SMTP Connection: FAILED";
-            $output[] = "Error: " . $e->getMessage();
-            $output[] = "Class: " . get_class($e);
-        }
-        
-        $output[] = "";
-        $output[] = "TESTING SIMPLE EMAIL SEND:";
-        $output[] = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
-        
-        try {
-            $testEmail = config('mail.from.address'); // Send to self for testing
-            
-            Mail::raw("This is a test email to verify SMTP configuration.\n\nTimestamp: " . now()->toDateTimeString(), function ($message) use ($testEmail) {
-                $message->to($testEmail)
-                        ->subject('SMTP Test - ' . now()->toDateTimeString())
-                        ->from(config('mail.from.address'), config('mail.from.name'));
-            });
-            
-            $output[] = "✅ Email sent successfully to: {$testEmail}";
-            $output[] = "Check your inbox to confirm delivery.";
-            
-        } catch (\Exception $e) {
-            $output[] = "❌ Email send failed:";
-            $output[] = "Error: " . $e->getMessage();
-            $output[] = "Class: " . get_class($e);
-            $output[] = "File: " . $e->getFile() . ":" . $e->getLine();
-            
-            // Check for specific Gmail errors
-            if (strpos($e->getMessage(), '550 5.7.1') !== false) {
-                $output[] = "";
-                $output[] = "🔍 GMAIL RELAYING DENIED - POSSIBLE SOLUTIONS:";
-                $output[] = "1. Verify 2-Factor Authentication is enabled on Gmail";
-                $output[] = "2. Generate new App Password: https://myaccount.google.com/apppasswords";
-                $output[] = "3. Update MAIL_PASSWORD in Render environment variables";
-                $output[] = "4. Consider using transactional email service (Mailgun, SendGrid)";
-            }
-        }
-        
-        return response('<h2>SMTP Debug Results</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin">Go to Dashboard</a>');
-    });
-
     // Test notification system
     Route::get('/test-notification', function () {
         try {
@@ -1408,33 +1197,6 @@ EN NUR - MEMBERSHIP Team
         }
     });
     
-    // Temporary fix: Switch to log driver for notifications
-    Route::get('/fix-email-temporarily', function () {
-        try {
-            $output = [];
-            $output[] = "🔧 Temporary Email Fix Applied";
-            $output[] = "Timestamp: " . now()->toDateTimeString();
-            $output[] = "";
-            $output[] = "This route temporarily switches the mail driver to 'log'";
-            $output[] = "so that notifications work without SMTP errors.";
-            $output[] = "";
-            $output[] = "✅ Mail driver switched to 'log'";
-            $output[] = "✅ Notifications will be logged instead of emailed";
-            $output[] = "✅ Dashboard 'Send' button should work now";
-            $output[] = "";
-            $output[] = "📝 Note: Emails won't actually be sent, but the";
-            $output[] = "notification system will work and mark users as notified.";
-            
-            // Temporarily set mail driver to log
-            config(['mail.default' => 'log']);
-            
-            return response('<h2>Temporary Email Fix</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/admin/users">Test Dashboard Notifications</a><br><a href="/admin">Go to Dashboard</a>');
-            
-        } catch (\Exception $e) {
-            return response('<h2>Fix Failed</h2><pre>Error: ' . $e->getMessage() . '</pre>');
-        }
-    });
-    
     // Simple test route
     Route::get('/test-simple', function () {
         return response('<h1>✅ Routes are working!</h1><p>Timestamp: ' . now() . '</p><br><a href="/admin">Go to Dashboard</a>');
@@ -1445,124 +1207,6 @@ EN NUR - MEMBERSHIP Team
 Route::get('/admin', function () {
     return redirect('/dashboard');
 });
-
-// Fix infinitdizzajn user password and membership status
-Route::get('/fix-infinit-user', function() {
-    try {
-        $email = 'infinitdizzajn@gmail.com';
-        $correctPassword = env('USER_CORRECT_PASSWORD', 'change-me'); // User confirmed this is the correct password
-        
-        $output = [];
-        $output[] = "🔧 Fixing infinitdizzajn@gmail.com user";
-        $output[] = "Timestamp: " . now()->toDateTimeString();
-        $output[] = "";
-        
-        // Find the user
-        $user = \App\Models\User::where('email', $email)->first();
-        
-        if (!$user) {
-            $output[] = "❌ User not found! Creating new user...";
-            
-            $user = \App\Models\User::create([
-                'name' => 'kushtrim arifi',
-                'email' => $email,
-                'password' => Hash::make($correctPassword),
-                'role' => 'user',
-                'email_verified_at' => now(),
-            ]);
-            
-            $output[] = "✅ Created user: {$user->name} (ID: {$user->id})";
-        } else {
-            $output[] = "✅ User found: {$user->name} (ID: {$user->id})";
-            
-            // Update password to correct one
-            $user->update([
-                'password' => Hash::make($correctPassword),
-                'name' => 'kushtrim arifi', // Ensure correct name
-            ]);
-            
-            $output[] = "✅ Password updated to: {$correctPassword}";
-        }
-        
-        // Check membership renewal status
-        $renewal = \App\Models\MembershipRenewal::where('user_id', $user->id)
-            ->where('is_renewed', false)
-            ->first();
-            
-        if ($renewal) {
-            $output[] = "✅ Membership renewal found: ID {$renewal->id}";
-            $output[] = "- Days until expiry: {$renewal->days_until_expiry}";
-            $output[] = "- Membership end: {$renewal->membership_end_date}";
-            $output[] = "- Is hidden: " . ($renewal->is_hidden ? 'Yes' : 'No');
-            $output[] = "- Is expired: " . ($renewal->is_expired ? 'Yes' : 'No');
-            
-            // Show color that should appear
-            $days = $renewal->days_until_expiry;
-            if ($renewal->is_hidden) {
-                $color = '🔴 RED (Hidden)';
-            } elseif ($days <= 0) {
-                $color = '🔴 RED (Expired)';
-            } elseif ($days <= 30) {
-                $color = '🟠 ORANGE (Expiring within 30 days)';
-            } else {
-                $color = '🟢 GREEN (Active)';
-            }
-            
-            $output[] = "🎨 Expected color: {$color}";
-        } else {
-            $output[] = "❌ No membership renewal found!";
-            $output[] = "Creating test membership renewal...";
-            
-            // Create a payment first
-            $payment = \App\Models\Payment::create([
-                'user_id' => $user->id,
-                'amount' => 35000, // CHF 350.00
-                'currency' => 'CHF',
-                'payment_type' => 'membership',
-                'payment_method' => 'stripe',
-                'status' => 'completed',
-                'transaction_id' => 'test_infinit_' . time(),
-                'metadata' => ['test_user' => true],
-                'created_at' => now()->subYear(),
-                'updated_at' => now()->subYear(),
-            ]);
-            
-            // Create membership renewal (expires in 14 days)
-            $expiryDate = now()->addDays(14);
-            $startDate = $expiryDate->copy()->subYear();
-            
-            $renewal = \App\Models\MembershipRenewal::create([
-                'user_id' => $user->id,
-                'payment_id' => $payment->id,
-                'membership_start_date' => $startDate,
-                'membership_end_date' => $expiryDate,
-                'days_until_expiry' => 14,
-                'is_expired' => false,
-                'is_hidden' => false,
-                'is_renewed' => false,
-                'notifications_sent' => [],
-                'last_notification_sent_at' => null,
-            ]);
-            
-            $output[] = "✅ Created membership renewal (expires in 14 days)";
-            $output[] = "🟠 Expected color: ORANGE (Expiring within 30 days)";
-        }
-        
-        $output[] = "";
-        $output[] = "🎯 LOGIN CREDENTIALS:";
-        $output[] = "📧 Email: {$email}";
-        $output[] = "🔑 Password: {$correctPassword}";
-        $output[] = "🌐 Login URL: https://en-nur-membership.onrender.com/login";
-        $output[] = "";
-        $output[] = "🔍 ADMIN VIEW:";
-        $output[] = "Login as super admin and check /admin/users to see the color indicator";
-        
-        return response('<h2>✅ User Fixed Successfully!</h2><pre>' . implode("\n", $output) . '</pre><br><a href="/login">Login as User</a><br><a href="/admin/users">View Admin Users Page</a><br><a href="/admin">Admin Dashboard</a>');
-        
-    } catch (\Exception $e) {
-        return response('<h2>❌ Error</h2><pre>Error: ' . $e->getMessage() . "\n\nTrace:\n" . $e->getTraceAsString() . '</pre>');
-    }
-})->middleware(['auth', 'super_admin']);
 
 // Deep database check and cleanup - show all users and clean duplicates
 Route::get('/deep-user-check', function() {
