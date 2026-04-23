@@ -157,10 +157,10 @@ else
     echo "✅ Users already exist - skipping seeder"
 fi
 
-# Optimize application - but keep routes uncached for now to allow access to debug routes
-echo "⚡ Optimizing application (no route caching)..."
+# Optimize application
+echo "⚡ Optimizing application..."
 php artisan config:cache
-# Skip route:cache to keep debug routes available
+php artisan route:cache
 php artisan view:cache
 
 # Setup production admin if specified
