@@ -213,6 +213,8 @@ class AdminController extends Controller
     // New payment management methods
     public function updatePaymentStatus(Request $request, Payment $payment)
     {
+        $this->authorize('adminWrite', $payment);
+
         $request->validate([
             'status' => 'required|in:pending,completed,failed,cancelled'
         ]);
@@ -294,13 +296,17 @@ class AdminController extends Controller
 
     public function getPaymentDetails(Payment $payment)
     {
+        $this->authorize('adminWrite', $payment);
+
         $payment->load('user');
-        
+
         return view('admin.payment-details', compact('payment'))->render();
     }
 
     public function sendPaymentNotification(Payment $payment)
     {
+        $this->authorize('adminWrite', $payment);
+
         try {
             // Create a simple notification email
             $user = $payment->user;
@@ -385,8 +391,10 @@ class AdminController extends Controller
     // Enhanced PDF receipt generation
     public function generatePaymentReceipt(Payment $payment)
     {
+        $this->authorize('adminWrite', $payment);
+
         $payment->load('user');
-        
+
         // Choose template based on payment type
         $template = $payment->payment_type === 'membership' 
             ? 'admin.payment-receipt-membership' 
@@ -406,6 +414,8 @@ class AdminController extends Controller
      */
     public function deletePayment(Payment $payment)
     {
+        $this->authorize('delete', $payment);
+
         try {
             // Log the deletion for audit trail
             Log::info('Payment deleted by admin', [
