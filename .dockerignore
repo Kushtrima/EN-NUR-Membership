@@ -69,6 +69,21 @@ setup-*.sh
 docker-compose.yml
 docker-compose.override.yml
 
+# Host-side helper shell scripts — not used at container runtime
+# (docker-startup.sh and docker-health-check.sh ARE used and kept)
+debug-agent.sh
+deploy-hooks.sh
+deploy-verify.sh
+final-verification.sh
+test-composer-scripts.sh
+verify-fix.sh
+
+# Debug/diagnostic PHP scripts at repo root
+diagnose_*.php
+
+# CI workflows
+.github/
+
 # Temporary files
 *.tmp
-*.temp 
+*.temp
