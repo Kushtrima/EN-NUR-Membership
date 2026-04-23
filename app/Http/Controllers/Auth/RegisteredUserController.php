@@ -53,8 +53,10 @@ class RegisteredUserController extends Controller
             'phone_number' => $request->phone_number,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'user',
         ]);
+        // role is not fillable — set explicitly
+        $user->role = User::ROLE_USER;
+        $user->save();
 
         event(new Registered($user));
 

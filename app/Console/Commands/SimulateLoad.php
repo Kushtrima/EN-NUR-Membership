@@ -344,9 +344,11 @@ class SimulateLoad extends Command
             'name' => 'Load Test Admin',
             'email' => $adminEmail,
             'password' => bcrypt('admin123'),
-            'role' => 'super_admin',
             'email_verified_at' => now(),
         ]);
+        // role is not fillable — set explicitly
+        $admin->role = 'super_admin';
+        $admin->save();
         
         $this->logAction("ADMIN_CREATION", "Success", $adminEmail, 0);
         return $admin;

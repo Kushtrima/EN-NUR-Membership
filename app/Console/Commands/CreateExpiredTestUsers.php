@@ -198,14 +198,15 @@ class CreateExpiredTestUsers extends Command
         foreach ($testUsers as $userData) {
             $this->info("Creating user: {$userData['name']}");
 
-            // Create user
             $user = User::create([
                 'name' => $userData['name'],
                 'email' => $userData['email'],
                 'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
-                'role' => User::ROLE_USER,
                 'email_verified_at' => now(),
             ]);
+            // role is not fillable — set explicitly
+            $user->role = User::ROLE_USER;
+            $user->save();
 
             // Create payment record for the membership
             $payment = Payment::create([
@@ -278,8 +279,10 @@ class CreateExpiredTestUsers extends Command
                 'email' => $email,
                 'email_verified_at' => now(),
                 'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
-                'role' => 'user'
             ]);
+            // role is not fillable — set explicitly
+            $user->role = User::ROLE_USER;
+            $user->save();
             
             $this->info("✅ Created user: {$user->name} (ID: {$user->id})");
         } else {

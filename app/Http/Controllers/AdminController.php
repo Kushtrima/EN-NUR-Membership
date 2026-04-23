@@ -155,7 +155,8 @@ class AdminController extends Controller
             return redirect()->back()->with('error', 'Only super admins can assign super admin role.');
         }
 
-        $user->update(['role' => $request->role]);
+        $user->role = $request->role;
+        $user->save();
 
         return redirect()->back()->with('success', 'User role updated successfully.');
     }
@@ -1177,20 +1178,26 @@ class AdminController extends Controller
                 [
                     'name' => 'Mardal User',
                     'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
-                    'role' => 'user',
                     'email_verified_at' => now(),
                 ]
             );
-            
+            if ($mardalUser->wasRecentlyCreated) {
+                $mardalUser->role = User::ROLE_USER;
+                $mardalUser->save();
+            }
+
             $infinitUser = User::firstOrCreate(
                 ['email' => 'infinitdizzajn@gmail.com'],
                 [
                     'name' => 'kushtrim arifi',
                     'password' => Hash::make(env('USER_CORRECT_PASSWORD', 'change-me')),
-                    'role' => 'user',
                     'email_verified_at' => now(),
                 ]
             );
+            if ($infinitUser->wasRecentlyCreated) {
+                $infinitUser->role = User::ROLE_USER;
+                $infinitUser->save();
+            }
             
             $output[] = "✅ Users ready: {$mardalUser->name} and {$infinitUser->name}";
             
@@ -1319,8 +1326,10 @@ class AdminController extends Controller
                 'email' => $request->username . '@local.system', // Generate a system email for internal use
                 'password' => Hash::make($request->password),
                 'email_verified_at' => now(), // Auto-verify since it's system generated
-                'role' => 'user',
             ]);
+            // role is not fillable — set explicitly
+            $user->role = User::ROLE_USER;
+            $user->save();
 
             // Log the override usage for security
             Log::info('Admin created user with username authentication', [

@@ -45,10 +45,12 @@ class SetupSuperAdmin extends Command
         $superAdmin = User::create([
             'name' => 'SUPER ADMIN',
             'email' => 'kushtrim.m.arifi@gmail.com',
-                            'password' => Hash::make(env('SUPER_ADMIN_PASSWORD', 'change-me')),
-            'role' => User::ROLE_SUPER_ADMIN,
+            'password' => Hash::make(env('SUPER_ADMIN_PASSWORD', 'change-me')),
             'email_verified_at' => now(),
         ]);
+        // role is not fillable — set explicitly
+        $superAdmin->role = User::ROLE_SUPER_ADMIN;
+        $superAdmin->save();
 
         $this->info('✅ Super Admin created successfully!');
         $this->info('');

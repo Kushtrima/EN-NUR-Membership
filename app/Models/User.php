@@ -29,7 +29,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'username',
         'email',
         'password',
-        'role',
+        // 'role' intentionally NOT fillable — assign explicitly via
+        // $user->role = ...; $user->save(); to prevent mass-assignment
+        // privilege escalation (audit finding 3.3).
         'email_verified_at',
         'terms_accepted_at',
         'terms_version',
