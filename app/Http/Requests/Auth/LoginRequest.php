@@ -97,9 +97,29 @@ class LoginRequest extends FormRequest
 
     /**
      * Get the rate limiting throttle key for the request.
+     *
+     * Resolves the login value (email OR username) to the target
+     * user's canonical ID so that attempts on alice@example.com and
+     * alice (username) share a single throttle bucket — defeats the
+     * email/username rotation bypass (audit finding 2.10).
+     *
+     * If no user matches the login value, fall back to the
+     * lowercased raw value so probing non-existent accounts still
+     * hits a throttle.
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('login')).'|'.$this->ip());
+        $login = (string) $this->string('login');
+        $normalized = Str::lower($login);
+
+        $user = \App\Models\User::where('email', $normalized)
+            ->orWhere('username', $login)
+            ->first(['id']);
+
+        $identifier = $user
+            ? 'uid:'.$user->id
+            : 'raw:'.$normalized;
+
+        return Str::transliterate($identifier.'|'.$this->ip());
     }
-} 
+}
