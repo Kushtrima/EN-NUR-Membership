@@ -790,7 +790,7 @@ class AdminController extends Controller
                 'MAIL_PORT' => config('mail.mailers.smtp.port'),
                 'MAIL_FROM_ADDRESS' => config('mail.from.address'),
                 'MAIL_FROM_NAME' => config('mail.from.name'),
-                'ADMIN_EMAIL' => env('ADMIN_EMAIL', 'Not set'),
+                'ADMIN_EMAIL' => config('security.admin_email') ?? 'Not set',
             ];
 
             // Test notification preparation
@@ -1202,7 +1202,7 @@ class AdminController extends Controller
                 ['email' => 'info@mardal.ch'],
                 [
                     'name' => 'Mardal User',
-                    'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
+                    'password' => Hash::make(config('security.test_user_password')),
                     'email_verified_at' => now(),
                 ]
             );
@@ -1215,7 +1215,7 @@ class AdminController extends Controller
                 ['email' => 'infinitdizzajn@gmail.com'],
                 [
                     'name' => 'kushtrim arifi',
-                    'password' => Hash::make(env('USER_CORRECT_PASSWORD', 'change-me')),
+                    'password' => Hash::make(config('security.user_correct_password')),
                     'email_verified_at' => now(),
                 ]
             );

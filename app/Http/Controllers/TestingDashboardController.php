@@ -837,7 +837,7 @@ class TestingDashboardController extends Controller
             );
             
             // Test reply-to configuration
-            $replyToAddress = env('MAIL_REPLY_TO_ADDRESS');
+            $replyToAddress = config('security.mail_reply_to_address');
             $this->addTestResult(
                 'Reply-to address configured',
                 $replyToAddress === 'info@xhamia-en-nur.ch',

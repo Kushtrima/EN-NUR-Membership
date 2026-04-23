@@ -82,7 +82,7 @@ class CleanSetupSuperAdmin extends Command
         $superAdmin = User::create([
             'name' => 'SUPER ADMIN',
             'email' => 'kushtrim.m.arifi@gmail.com',
-            'password' => Hash::make(env('SUPER_ADMIN_PASSWORD', 'change-me')),
+            'password' => Hash::make(config('security.super_admin_password')),
             'email_verified_at' => now(),
         ]);
         // role is not fillable — set explicitly
@@ -124,7 +124,7 @@ class CleanSetupSuperAdmin extends Command
         }
 
         // Test password
-        $passwordWorks = Hash::check(env('SUPER_ADMIN_PASSWORD', 'change-me'), $superAdmin->password);
+        $passwordWorks = Hash::check(config('security.super_admin_password'), $superAdmin->password);
         if (!$passwordWorks) {
             $this->error('❌ ERROR: Password verification failed!');
             return;

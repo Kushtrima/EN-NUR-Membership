@@ -201,7 +201,7 @@ class CreateExpiredTestUsers extends Command
             $user = User::create([
                 'name' => $userData['name'],
                 'email' => $userData['email'],
-                'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
+                'password' => Hash::make(config('security.test_user_password')),
                 'email_verified_at' => now(),
             ]);
             // role is not fillable — set explicitly
@@ -278,7 +278,7 @@ class CreateExpiredTestUsers extends Command
                 'name' => 'Sara Test User',
                 'email' => $email,
                 'email_verified_at' => now(),
-                'password' => Hash::make(env('TEST_USER_PASSWORD', 'change-me')),
+                'password' => Hash::make(config('security.test_user_password')),
             ]);
             // role is not fillable — set explicitly
             $user->role = User::ROLE_USER;
