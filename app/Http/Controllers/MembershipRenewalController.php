@@ -14,10 +14,7 @@ class MembershipRenewalController extends Controller
      */
     public function sendNotification(Request $request, MembershipRenewal $renewal)
     {
-        // Only super admins can send notifications
-        if (!auth()->user()->isSuperAdmin()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        $this->authorize('adminWrite', $renewal);
 
         try {
             // Send the notification email
@@ -56,10 +53,7 @@ class MembershipRenewalController extends Controller
      */
     public function hide(Request $request, MembershipRenewal $renewal)
     {
-        // Only super admins can delete renewals from dashboard
-        if (!auth()->user()->isSuperAdmin()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        $this->authorize('adminWrite', $renewal);
 
         $renewal->update([
             'is_hidden' => true,
@@ -77,10 +71,7 @@ class MembershipRenewalController extends Controller
      */
     public function show(Request $request, MembershipRenewal $renewal)
     {
-        // Only super admins can show renewals
-        if (!auth()->user()->isSuperAdmin()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        $this->authorize('adminWrite', $renewal);
 
         $renewal->update([
             'is_hidden' => false,
@@ -98,10 +89,7 @@ class MembershipRenewalController extends Controller
      */
     public function details(MembershipRenewal $renewal)
     {
-        // Only super admins can view details
-        if (!auth()->user()->isSuperAdmin()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+        $this->authorize('view', $renewal);
 
         return response()->json([
             'renewal' => $renewal->load('user', 'payment'),

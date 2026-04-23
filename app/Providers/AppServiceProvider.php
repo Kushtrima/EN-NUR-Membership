@@ -5,8 +5,10 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
+use App\Models\MembershipRenewal;
 use App\Models\Payment;
 use App\Models\User;
+use App\Policies\MembershipRenewalPolicy;
 use App\Policies\PaymentPolicy;
 use App\Policies\UserPolicy;
 
@@ -28,8 +30,9 @@ class AppServiceProvider extends ServiceProvider
      * explicitly. Keep this block in sync when new policies land.
      */
     protected array $policies = [
-        User::class    => UserPolicy::class,
-        Payment::class => PaymentPolicy::class,
+        User::class              => UserPolicy::class,
+        Payment::class           => PaymentPolicy::class,
+        MembershipRenewal::class => MembershipRenewalPolicy::class,
     ];
 
     /**
