@@ -75,31 +75,37 @@ class DashboardController extends Controller
     private function getSuperAdminAnalytics()
     {
         // 1. Payment Method Breakdown
-        $completedPayments = \App\Models\Payment::where('status', \App\Models\Payment::STATUS_COMPLETED);
-        $totalRevenue = $completedPayments->sum('amount') / 100;
-        
-        $paymentMethods = [
-            'stripe' => [
-                'count' => $completedPayments->where('payment_method', 'stripe')->count(),
-                'amount' => $completedPayments->where('payment_method', 'stripe')->sum('amount') / 100,
-                'percentage' => $totalRevenue > 0 ? round(($completedPayments->where('payment_method', 'stripe')->sum('amount') / 100) / $totalRevenue * 100, 1) : 0
-            ],
-            'paypal' => [
-                'count' => $completedPayments->where('payment_method', 'paypal')->count(),
-                'amount' => $completedPayments->where('payment_method', 'paypal')->sum('amount') / 100,
-                'percentage' => $totalRevenue > 0 ? round(($completedPayments->where('payment_method', 'paypal')->sum('amount') / 100) / $totalRevenue * 100, 1) : 0
-            ],
-            'bank_transfer' => [
-                'count' => $completedPayments->where('payment_method', 'bank_transfer')->count(),
-                'amount' => $completedPayments->where('payment_method', 'bank_transfer')->sum('amount') / 100,
-                'percentage' => $totalRevenue > 0 ? round(($completedPayments->where('payment_method', 'bank_transfer')->sum('amount') / 100) / $totalRevenue * 100, 1) : 0
-            ],
-            'twint' => [
-                'count' => $completedPayments->where('payment_method', 'twint')->count(),
-                'amount' => $completedPayments->where('payment_method', 'twint')->sum('amount') / 100,
-                'percentage' => $totalRevenue > 0 ? round(($completedPayments->where('payment_method', 'twint')->sum('amount') / 100) / $totalRevenue * 100, 1) : 0
-            ]
-        ];
+        //
+        // PRIOR BUG: the previous implementation chained where() calls on a
+        // shared Eloquent Builder ($completedPayments). Builder->where() is
+        // NOT a clone — each call mutated the same instance, so after
+        // filtering by payment_method='stripe' once, every subsequent
+        // payment_method filter accumulated, producing
+        //   WHERE payment_method='stripe' AND payment_method='paypal' AND ...
+        // which matched zero rows. Result: only the stripe row was correct;
+        // paypal, bank_transfer, twint silently showed 0/0/0%.
+        //
+        // Fixed with one grouped query (also closes N+1 finding 3.8).
+        $methodTotals = \App\Models\Payment::query()
+            ->where('status', \App\Models\Payment::STATUS_COMPLETED)
+            ->selectRaw('payment_method, COUNT(*) as method_count, COALESCE(SUM(amount), 0) as method_total')
+            ->groupBy('payment_method')
+            ->get()
+            ->keyBy('payment_method');
+
+        $totalRevenue = $methodTotals->sum('method_total') / 100;
+
+        $paymentMethods = [];
+        foreach (['stripe', 'paypal', 'bank_transfer', 'twint'] as $method) {
+            $row    = $methodTotals->get($method);
+            $count  = $row ? (int) $row->method_count : 0;
+            $amount = $row ? ((int) $row->method_total) / 100 : 0;
+            $paymentMethods[$method] = [
+                'count'      => $count,
+                'amount'     => $amount,
+                'percentage' => $totalRevenue > 0 ? round($amount / $totalRevenue * 100, 1) : 0,
+            ];
+        }
 
         // 2. Monthly Revenue Comparison
         $thisMonth = \App\Models\Payment::where('status', \App\Models\Payment::STATUS_COMPLETED)
