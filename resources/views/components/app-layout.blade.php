@@ -455,6 +455,21 @@
                 </div>
             @endif
 
+            {{-- Validation errors bag (e.g. wrong password on role change) --}}
+            @if(isset($errors) && $errors->any())
+                <div class="alert alert-danger">
+                    @if($errors->count() === 1)
+                        {{ $errors->first() }}
+                    @else
+                        <ul style="margin: 0; padding-left: 1.5rem;">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+            @endif
+
             <!-- Page Content -->
             {{ $slot }}
         </div>
