@@ -11,6 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // The 2024_01_01 create_users_table migration already creates
+        // the sessions table. Skip if it's already there so fresh
+        // installs and test DBs (sqlite :memory:) don't fail. Production
+        // already ran this long ago — the hasTable check is a no-op there.
+        if (Schema::hasTable('sessions')) {
+            return;
+        }
+
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();
