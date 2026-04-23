@@ -334,8 +334,8 @@ class PaymentController extends Controller
                 
                 Log::info('Stripe payment completed successfully', [
                     'payment_id' => $payment->id,
-                    'session_id' => $sessionId,
-                    'payment_intent' => $session->payment_intent,
+                    'session_id' => self::maskStripeId($sessionId),
+                    'payment_intent' => self::maskStripeId($session->payment_intent),
                     'amount' => $payment->amount
                 ]);
                 
@@ -1770,7 +1770,7 @@ class PaymentController extends Controller
         
         if (!$paymentId) {
             Log::warning('Checkout session completed without payment_id', [
-                'session_id' => $session->id
+                'session_id' => self::maskStripeId($session->id)
             ]);
             return;
         }
@@ -1779,7 +1779,7 @@ class PaymentController extends Controller
         if (!$payment) {
             Log::error('Payment not found for webhook', [
                 'payment_id' => $paymentId,
-                'session_id' => $session->id
+                'session_id' => self::maskStripeId($session->id)
             ]);
             return;
         }
@@ -1815,15 +1815,15 @@ class PaymentController extends Controller
 
             Log::info('Webhook payment processed successfully', [
                 'payment_id' => $paymentId,
-                'session_id' => $session->id
+                'session_id' => self::maskStripeId($session->id)
             ]);
 
         } catch (\Exception $e) {
             \DB::rollBack();
-            
+
             Log::error('Webhook payment processing failed', [
                 'payment_id' => $paymentId,
-                'session_id' => $session->id,
+                'session_id' => self::maskStripeId($session->id),
                 'error' => $e->getMessage()
             ]);
             
@@ -2100,4 +2100,19 @@ class PaymentController extends Controller
             return redirect()->back()->with('error', 'Payment confirmation failed. Please try again or contact support.');
         }
     }
-} 
+
+    /**
+     * Mask a Stripe identifier for log output — keeps the prefix
+     * (cs_/pi_/cus_/evt_) and first 6 characters of the suffix, then
+     * an ellipsis. Stripe IDs are not secrets but are traceable
+     * identifiers we do not need to fully expose in log aggregators
+     * or error-tracking services (audit finding 3.10).
+     */
+    private static function maskStripeId(?string $id): ?string
+    {
+        if ($id === null || $id === '') {
+            return $id;
+        }
+        return strlen($id) > 15 ? substr($id, 0, 12) . '…' : $id;
+    }
+}
