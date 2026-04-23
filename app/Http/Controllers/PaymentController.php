@@ -339,18 +339,18 @@ class PaymentController extends Controller
                     'amount' => $payment->amount
                 ]);
                 
-            } else {
-                // Demo mode - validate demo session
+            } elseif (app()->environment('local')) {
+                // Demo mode — LOCAL ENV ONLY. In production we never reach
+                // this branch because $stripeSecret is a real Stripe key.
+                // Kept for local development without Stripe test keys.
                 $demoSessionId = $payment->metadata['demo_session_id'] ?? null;
-                $expectedSessionId = 'demo_' . substr($payment->created_at->timestamp, -6) . '_' . $payment->id;
-                
+
                 if (!$demoSessionId || $sessionId !== $demoSessionId) {
-                    // For demo mode, accept if session_id looks valid
                     if (!$sessionId || !str_contains($sessionId, 'demo_')) {
                         $sessionId = 'STRIPE_DEMO_' . time();
                     }
                 }
-                
+
                 $payment->update([
                     'status' => Payment::STATUS_COMPLETED,
                     'transaction_id' => $sessionId,
@@ -359,11 +359,24 @@ class PaymentController extends Controller
                         'verification_status' => 'demo_mode'
                     ])
                 ]);
-                
-                Log::info('Demo payment completed', [
+
+                Log::info('Demo payment completed (local env only)', [
                     'payment_id' => $payment->id,
-                    'demo_session_id' => $sessionId
+                    'demo_session_id' => $sessionId,
                 ]);
+            } else {
+                // Stripe not configured in a non-local environment — refuse
+                // to complete the payment. This closes the demo-mode fallback
+                // that previously accepted fabricated session IDs
+                // (audit finding 2.7).
+                Log::error('Stripe success callback reached in non-local env without Stripe secret', [
+                    'payment_id' => $payment->id,
+                    'environment' => app()->environment(),
+                    'has_session_id' => !empty($sessionId),
+                ]);
+
+                return redirect()->route('payment.create')
+                    ->with('error', 'Payment provider is not configured. Please contact support.');
             }
 
             // Generate receipt and send notification
