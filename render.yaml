@@ -176,8 +176,11 @@ services:
         value: "64M"
       
       # PDF Configuration
+      # Remote URL fetch disabled — prevents SSRF via <img src="http://..."> in PDF templates.
+      # No current template loads remote images. Re-enable only if a future template
+      # requires it AND the URL list is explicitly allow-listed.
       - key: DOMPDF_ENABLE_REMOTE
-        value: "true"
+        value: "false"
       - key: DOMPDF_ENABLE_CSS_FLOAT
         value: "true"
       - key: DOMPDF_ENABLE_HTML5_PARSER
