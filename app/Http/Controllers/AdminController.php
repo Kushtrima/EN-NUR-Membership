@@ -122,6 +122,8 @@ class AdminController extends Controller
      */
     public function exportUser(User $user)
     {
+        $this->authorize('export', $user);
+
         $userData = [
             'user_info' => $user->toArray(),
             'payments' => $user->payments->toArray(),
@@ -146,6 +148,8 @@ class AdminController extends Controller
      */
     public function updateUserRole(Request $request, User $user)
     {
+        $this->authorize('updateRole', $user);
+
         $request->validate([
             'role' => 'required|in:user,admin,super_admin',
             'current_password' => 'required|string',
@@ -191,14 +195,14 @@ class AdminController extends Controller
      */
     public function deleteUser(User $user)
     {
-        // Prevent deletion if it's the last super admin
+        $this->authorize('delete', $user);
+
+        // Belt-and-suspenders: the policy already blocks self-delete and
+        // super-admin-delete, but we also verify we wouldn't end up with
+        // zero super admins (e.g. if a future policy change relaxes the
+        // super-admin-target rule).
         if ($user->isSuperAdmin() && User::where('role', 'super_admin')->count() === 1) {
             return redirect()->back()->with('error', 'Cannot delete the last super admin account.');
-        }
-
-        // Prevent deletion of super admins (except when handled above)
-        if ($user->isSuperAdmin()) {
-            return redirect()->back()->with('error', 'Super admin accounts cannot be deleted.');
         }
 
         $user->delete();
