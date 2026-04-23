@@ -164,9 +164,7 @@ services:
         value: "true"
       - key: TRUSTED_PROXIES
         value: "*"
-      - key: SANCTUM_STATEFUL_DOMAINS
-        value: "en-nur-membership.onrender.com"
-      
+
       # PHP Configuration
       - key: PHP_MEMORY_LIMIT
         value: "512M"
