@@ -21,6 +21,7 @@
 .env
 .env.backup
 .env.production
+.env.production.*
 .env.local
 .env.*.local
 .env.test
@@ -29,6 +30,7 @@
 .env.backup*
 .env.*.old
 .env.old
+.env.ready
 
 # IDE files
 .vscode/
