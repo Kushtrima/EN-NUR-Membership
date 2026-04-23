@@ -138,12 +138,24 @@ class AdminController extends Controller
 
     /**
      * Update user role.
+     *
+     * Requires the acting admin to re-enter their password. This
+     * prevents a hijacked admin session from silently promoting
+     * another account to super_admin, and provides an audit-log
+     * entry for every role change (finding 2.6).
      */
     public function updateUserRole(Request $request, User $user)
     {
         $request->validate([
-            'role' => 'required|in:user,admin,super_admin'
+            'role' => 'required|in:user,admin,super_admin',
+            'current_password' => 'required|string',
         ]);
+
+        // Re-authenticate the acting admin before any role mutation.
+        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, auth()->user()->password)) {
+            return redirect()->back()
+                ->withErrors(['current_password' => 'Your current password is incorrect.']);
+        }
 
         // Prevent changing own super admin role
         if ($user->isSuperAdmin() && auth()->id() === $user->id) {
@@ -155,8 +167,21 @@ class AdminController extends Controller
             return redirect()->back()->with('error', 'Only super admins can assign super admin role.');
         }
 
+        $oldRole = $user->role;
         $user->role = $request->role;
         $user->save();
+
+        Log::info('Admin role change', [
+            'target_user_id' => $user->id,
+            'target_email' => $user->email,
+            'old_role' => $oldRole,
+            'new_role' => $request->role,
+            'actor_id' => auth()->id(),
+            'actor_email' => auth()->user()->email,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'timestamp' => now()->toISOString(),
+        ]);
 
         return redirect()->back()->with('success', 'User role updated successfully.');
     }

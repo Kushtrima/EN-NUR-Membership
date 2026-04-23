@@ -168,7 +168,8 @@
                                         <form method="POST" action="{{ route('admin.users.update-role', $user) }}" style="display: inline;">
                                             @csrf
                                             @method('PATCH')
-                                            <select name="role" onchange="this.form.submit()" 
+                                            <select name="role" onchange="confirmRoleChange(this)"
+                                                    data-original-role="{{ $user->role }}"
                                                     style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; border: 1px solid #ddd;"
                                                     {{ $user->isSuperAdmin() && auth()->user()->id === $user->id ? 'disabled' : '' }}>
                                                 @foreach(\App\Models\User::getRoles() as $role => $label)
@@ -177,6 +178,7 @@
                                                     </option>
                                                 @endforeach
                                             </select>
+                                            <input type="hidden" name="current_password">
                                         </form>
                                     @else
                                         <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;
@@ -247,4 +249,33 @@
             <li><strong>Ruajtja e Të Dhënave:</strong> Të gjitha të dhënat e përdoruesve ruhen në mënyrë të sigurt dhe janë të qasshme vetëm nga administratorët.</li>
         </ul>
     </div>
+
+    <script>
+        // Require acting super admin to re-enter password before any role change
+        // (audit finding 2.6). Aborts and resets the dropdown if the password
+        // prompt is cancelled/empty.
+        function confirmRoleChange(selectEl) {
+            const form = selectEl.form;
+            const originalRole = selectEl.getAttribute('data-original-role');
+            const newRole = selectEl.value;
+
+            if (newRole === originalRole) {
+                return; // nothing to do
+            }
+
+            const pwd = window.prompt(
+                'Për të ndryshuar rolin e këtij përdoruesi në "' + newRole + '", ' +
+                'ju lutem futni fjalëkalimin tuaj të tanishëm:'
+            );
+
+            if (!pwd) {
+                // Cancelled or empty — revert dropdown to original and stop.
+                selectEl.value = originalRole;
+                return;
+            }
+
+            form.querySelector('input[name="current_password"]').value = pwd;
+            form.submit();
+        }
+    </script>
 </x-app-layout> 
