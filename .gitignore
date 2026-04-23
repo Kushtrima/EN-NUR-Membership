@@ -83,6 +83,7 @@ jspm_packages/
 # Testing
 /coverage/
 .phpunit.result.cache
+.phpunit.cache/
 
 # Deployment
 /deploy.php
